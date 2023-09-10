@@ -1,0 +1,115 @@
+%!TEX root = ../../da.tex
+
+
+\part{Introduction}
+\label{part:intro}
+
+% But science, he said, had been the wild card, the twist. With everything stumbling deeper into the ditch of shit, history itself become a slaughterhouse, science had started popping. Not all at once, no one big heroic thing, but there were cleaner, cheaper energy sources, more effective ways to get carbon out of the air, new drugs that did what antibiotics had done before, nanotechnology that was more than just car paint that healed itself \el
+% So everything, however deeply fucked in general, was lit increasingly by the new, by things that made people blink and sit up, but then the rest of it would just go on, deeper into the ditch. A progress accompanied by constant violence, he said, by sufferings unimaginable.
+
+\thispagestyle{plain}
+\begin{center}
+  \begin{minipage}{0.8\textwidth}
+
+    % \vspace{2\baselineskip}
+
+    But science, he said, had been the wild card, the twist. With \el history itself become a slaughterhouse, science had started popping. Not all at once, no one big heroic thing, but there were cleaner, cheaper energy sources, more effective ways to get carbon out of the air, new drugs that did what antibiotics had done before, nanotechnology that was more than just car paint that healed itself \el things that made people blink and sit up, but then the rest of it would just go on, deeper into the ditch.
+     % A progress accompanied by constant violence, he said, by sufferings unimaginable.
+
+    \vspace{\baselineskip}
+    {\hfill\raggedright --William Gibson, \textit{The Peripheral}\hspace{0.25cm}}
+  \end{minipage}
+\end{center}
+\vspace{1\baselineskip}
+
+% \footnote{Systems composed of atoms, as opposed to, for instance, finite-element simulations, or simulations of quantum fields, which are not considered here.}
+
+
+\begin{marginfigure}[25\baselineskip]
+  \includegraphics[scale=0.65]{img/plot/front/archer_usage.pdf}
+  \caption{
+  Monthly percentage of the ARCHER2 \gls{hpc} system used for first-principles (QM) simulations and classical \md codes from December 2021 to November 2022~\cite{archer_usage}.
+  }
+  \label{fig:archer_usage}
+\end{marginfigure}
+
+\marginnote[2\baselineskip]{Note that an index of abbreviations is provided in the Glossary on page~\pageref{main}.}
+
+
+\newthought{Computer simulations of atomistic systems} are an indispensable tool for chemistry, physics, and materials science. Consequently, a significant fraction of the computational resources available to scientific inquiry today are dedicated to this task, as indicated by \cref{fig:archer_usage}.
+
+Since the earliest days of computing, simple but fast models have been employed to investigate the behaviour of microscopic systems~\cite{mrtt1953p,wp1957p,r1964p,v1967p}. Today, interatomic potentials, or \ffs, play an important role in the study of dynamical behaviour of materials, molecules, and proteins. In \ffs, the quantum-mechanical \bo \pes on which the nuclei move is approximated in terms of interatomic potentials, often inspired by simple physical approximations, which are then parametrised to match reference calculations or experimental data~\cite{pc2003p,g2011p,psaa2015p}.
+
+In parallel, the rapid increase of available computational power over the last decades has enabled first-principles quantum-mechanical calculations, for instance with \dft~\cite{hk1964p,ks1965p,thxy2022p}, for ever-larger systems. As a result, high-accuracy \aimd~\cite{cp1985p} simulations for hundreds of atoms and tens of picoseconds are now performed routinely on modern \glsfirst{hpc} systems. Nevertheless, the computational cost of first-principles calculations restricts accessible size and length scales, limiting, for instance, the ability to converge thermodynamic observables. Therefore, computationally efficient models such as \ffs are still required, but can now make use of increasingly large datasets of reference calculations for parametrisation.
+
+\Gls{ml}~\cite{hastie2009} offers an array of methods to approximate functions based on a set of training examples, extending the concept of \ffs by doing away with simple functional forms and replacing them with high-dimensional regression models.
+At the expense of direct physical interpretability, and a lack of built-in physics and chemistry, which may affect and limit extrapolation, such \mlps~\cite{lgs2004q,lhsr2006q,bp2007q,bpkc2010q,ukkm2020q,uctm2021q,pt2021q} offer the advantage of flexibility, and the ability, at least in principle, to systematically improve by adding more reference data, combining computational efficiency\footnote{
+For instance, \cref{part:gka} of this thesis considers \mlps that are three to four orders of magnitude faster to evaluate than \dft for structures of similar size.
+% time to run schnet for 96 atoms: ~30ms
+% time to run aims for 96 atoms: ~180000ms
+} with high accuracy.
+
+In addition to learning a single \pes, \ml approaches have also been used to approximate general structure-\allowbreak property mappings across chemical space~\cite{rtml2012Aq,hl2021q}.
+Beyond such surrogate modeling approaches, \ml can also be integrated more deeply into electronic structure calculations, for instance via learned exchange-correlation functionals~\cite{kmhc2021q,seqd2022q} or wave function methods based on \nns~\cite{hscn2022a}.
+Many other applications of \ml in computational quantum physics, chemistry, and biology have been considered~\cite{mkr2016q,hsl2018q,ccvz2019q,ntmc2020q,sctm2020q}.
+% In this thesis, however, we focus on \ml related to the approximation of first-principles calculations.
+
+\newthought{The effective use of} \ml in the context of atomistic modeling can greatly benefit from an interdisciplinary approach.
+
+While the underlying first-principles methods can, in principle, be treated as black-box processes that generate data, knowledge of their structure can be used to construct data- and compute-efficient models. For instance, as explored in \cref{part:representations}, the symmetries of the \bo \pes can be directly included in model architecture, avoiding the need to infer them from data. 
+
+In the other direction, the use of \ml models for physical problems often requires an understanding of their architecture. \Cref{part:hf}, for instance, discusses \mpnns~\cite{gsvd2017q}, models based on convolutional neural networks~\cite{lbhj1989m,ksh2012m}, which originate from the domain of computer vision. When used as \mlps, they constitute a class of interatomic potentials that exhibit \newterm{semi-local} interactions. Such interactions do not appear in standard formulations of other \ffs, and adapted formulations of physical quantities are therefore required for their practical use.
+
+Finally, these modeling tasks can take also advantage of the rapid development of computational methods in \ml. The rapid proliferation of deep learning~\cite{s2015m} has yielded an array of tools and techniques that can be repurposed for such tasks.
+In particular, the training and use of deep \nns required the development of specialised programming frameworks~\cite{tensorflow,pytorch,jax} that make use of highly parallel accelerator devices such as \glspl{gpu} and \glspl{tpu}, and implement efficient \ad~\cite{rhw1986m,griewank2008,bprs2017m}. Many methods, and in particular \md, require derivatives of the \pes. Here, \ad can be used to simplify the implementation of \ffs without compromising computional efficiency. \Cref{part:hf} discusses how \ad can be used to efficiently compute physical quantities of interest for \mlps in a unified manner.
+
+\newthought{This thesis discusses} such connections between \ml and atomistic modeling for two topics: The construction of \newterm{representations} of atomistic systems, i.e., engineering suitable features for \ml, and the application of \mlps based on \mpnns to thermal transport simulations with the \gk method.
+
+\subsection{Description of Chapters}
+
+% Excluding this introduction, this thesis is split into five chapters.
+\begin{itemize}[itemsep=0pt,topsep=0.5\baselineskip]
+  \item \textbf{\Cref{part:foundation} (Foundation)} provides a brief review of foundational topics, establishing the context and notation for the presented work.
+  \item \textbf{\Cref{part:representations} (Review and Benchmark of Representations of Molecules and Materials)} discusses representations of atomistic systems. Methods for incorporating physical symmetries, as well as requirements of representations, are discussed, and common techniques are identified. A review of available representations is conducted, and selected methods are benchmarked for energy predictions on a number of datasets in experiments controlled for hyper-parameter optimisation, regression method, and dataset distribution. Tradeoffs between computational cost and accuracy are explored. We find that increased body-order leads to higher accuracy, but correspondingly higher computational cost, and that local representations outperform global ones.
+  \item \textbf{\Cref{part:hf} (Heat Flux for Semi-Local Machine-Learning Potentials)} considers the application of \mlps based on \mpnns to thermal transport simulations with the \gk method. Performing such simulations requires access to the \newterm{heat flux}, a derivative quantity that describes changes in energy density, and is known to be challenging to define and implement for many-body interatomic potentials. We tackle this problem with \ad. As a prerequisite, this requires an understanding of the types of potentials described by \mpnns, which admit semi-local interactions beyond local atomic neighbourhoods. A unified perspective on such potentials, which we term \glps, is introduced, and used to define and implement the stress. Finally, an adapted version of the heat flux, the \scare{unfolded} heat flux, is derived, which applies to \glps and can be implemented with \ad without compromising asymptotic linear scaling of computational cost.
+  \item \textbf{\Cref{part:gka} (Thermal Conductivity with Message-Passing Neural Networks)} applies the methods developed in \cref{part:hf} to computing the thermal conductivity of selected materials, first verifying the heat flux formulations, and then exploring the feasibility of \gk calculations with \mpnns. First, thermal conductivity for zirconia is computed across temperatures (\qtyrange{300}{1800}{K}) and phases (monoclinic, tetragonal) with a SchNet~\cite{sktm2017q,sstm2018q} \glp trained on \aimd trajectories. Results are in good agreement with another \mlp, as well as experiments. However, the potential is observed to break down at elevated temperatures. Finally, materials with low thermal conductivity, tin selenide at \qty{300}{K}, and high thermal conductivity, silicon at \qty{400}{K}, are investigated with \sok~\cite{fum2022q} \glps. For silicon, simulation size convergence is identified as a key issue, which limits the presented approach to materials with low thermal conductivity.
+  \item \textbf{\Cref{part:end} (Conclusion)} provides a summary of this thesis, discusses open questions and avenues for future work, and finally offers a broader perspective on future developments.
+\end{itemize}
+
+\subsection{Main Contributions}
+\begin{itemize}[itemsep=0pt,topsep=0.5\baselineskip]
+  \item \textbf{Review and benchmark of representations}: We survey common techniques to incorporate physical symmetries into representations of atomistic systems, and provide an extensive review of available representations. A benchmark of three selected representations on three datasets is conducted, controlling for other factors, to isolate the impact of the representation on predictive accuracy.
+  \item \textbf{Heat flux for message-passing machine-learning potentials}: A formulation of the heat flux suitable for interatomic potentials with semi-local interactions is derived, which includes \mlps based on \mpnns. This formulation can be implemented efficiently with \ad, and therefore enables the practical use of \mpnns for \gk simulations for the first time.
+  \item \textbf{Application of message-passing neural networks to predictions of thermal conductivity}: We apply two different \mpnn architectures to thermal transport simulations in three different materials, verifying the heat flux formulation introduced in this thesis. Challenges for future applications are outlined, and convergence is investigated in detail.
+  \item \textbf{Understanding graph-based interatomic potentials}: We discuss how interatomic potentials that use atomic neighbourhoods and are based on atom-pair vectors can be viewed as acting on a graph representation of atomistic systems. In this unified perspective, which includes finite-distance terms of classic \ffs, common \mlps, and \mlps based on \mpnns, local and semi-local interactions can be distinguished, and we discuss how common definitions of derivative quantities such as pairwise forces and atomic stress are affected by this distinction. This framework allows a unified \ad-based implementation of forces, stress and heat flux, which we provide, and yields the conceptual basis for the discussion of the heat flux.
+\end{itemize}
+
+\clearpage
+\subsection{Publications}
+Much of the presented work has been submitted to be published.\\
+The manuscripts are listed below:
+\\\\
+\PaperReps
+\\\\
+\PaperHF
+\\\\
+\PaperGLP
+\\\\
+I thank my co-authors for graciously allowing me to include text and figures from these works in this thesis.
+% \vspace{4\baselineskip}
+\vspace*{\fill}
+% 10.5281/zenodo.7963152
+\subsection{Data and Code Availability}
+All code and data used to produce the results presented in this thesis, as well as the document itself, are available at or referenced in\\
+\nicedoi{10.5281/zenodo.7963152} and \\
+\nicelink{https://github.com/sirmarcel/doctor-archive}.
+\\\\
+Data sources for individual chapters are additionally highlighted in their respective introductions. A brief overview of software developed for this work is given in \cref{ch:software}.
+\\\\
+Additional information, for instance future versions of this thesis, can be found at \nicelink{https://marcel.science/doctor}.\\
+\\\\
+Readers are heartily encouraged to contact~~\href{mailto:mail@marcel.science}{\texttt{mail@marcel.science}}\\
+with any questions or comments.
+\\\\\\\\
+{\footnotesize This is an update of the accepted version of this thesis, designated \texttt{v2.1}.\\
+The offical version, \texttt{v2.0}, can be found at \nicedoi{10.14279/depositonce-18647}.}

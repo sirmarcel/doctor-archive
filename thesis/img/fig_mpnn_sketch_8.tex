@@ -1,0 +1,93 @@
+
+    \begin{tikzpicture}[
+        scale=0.9,
+        x = 0.8cm,
+        y = 0.8cm,
+        >=stealth,
+        atom/.style = {circle, fill=black, minimum size=6pt,
+                  inner sep=0pt, outer sep=0pt,opacity=0.2},
+        ]
+
+    \node[atom] (atom_0) at (1.0,1.5){
+        };
+
+    \node[atom] (atom_1) at (2.0,1.5){
+        };
+
+    \node[atom] (atom_2) at (3.0,1.5){
+        };
+
+    \node[atom] (atom_3) at (4.0,1.5){
+        };
+
+    \node[atom] (atom_4) at (5.0,1.5){
+        };
+
+    \draw [->, very thick, color=black] (atom_0) to node [midway, below]{  
+\begin{tikzpicture}[
+    message/.style = {rectangle, minimum size=4pt,
+    inner sep=0pt, outer sep=0pt}]
+\node [message,fill=extra_2] 
+          () at (0,0.75) {};
+\node [message,fill=extra_3] 
+          () at (0,0.5) {};
+\node [message,fill=extra_4] 
+          () at (0,0.25) {};
+\end{tikzpicture}
+  } (atom_1);
+    \draw [->, very thick, color=black] (atom_1) to node [midway, below]{ 
+\begin{tikzpicture}[
+    message/.style = {rectangle, minimum size=4pt,
+    inner sep=0pt, outer sep=0pt}]
+\node [message,fill=extra_3] 
+          () at (0,0.75) {};
+\node [message,fill=extra_4] 
+          () at (0,0.5) {};
+\node [message,fill=extra_0] 
+          () at (0,0.25) {};
+\end{tikzpicture}
+ } (atom_2);
+    \draw [->, very thick, color=black] (atom_2) to node [midway, below]{ 
+\begin{tikzpicture}[
+    message/.style = {rectangle, minimum size=4pt,
+    inner sep=0pt, outer sep=0pt}]
+\node [message,fill=extra_4] 
+          () at (0,0.75) {};
+\node [message,fill=extra_0] 
+          () at (0,0.5) {};
+\node [message,fill=extra_1] 
+          () at (0,0.25) {};
+\end{tikzpicture}
+ } (atom_3);
+    \draw [->, very thick, color=black] (atom_3) to node [midway, below]{ 
+\begin{tikzpicture}[
+    message/.style = {rectangle, minimum size=4pt,
+    inner sep=0pt, outer sep=0pt}]
+\node [message,fill=extra_0] 
+          () at (0,0.75) {};
+\node [message,fill=extra_1] 
+          () at (0,0.5) {};
+\node [message,fill=extra_2] 
+          () at (0,0.25) {};
+\end{tikzpicture}
+ } (atom_4);
+    \draw [->, very thick, color=black] (atom_4) to [bend right=80] node [midway, below]{ 
+\begin{tikzpicture}[
+    message/.style = {rectangle, minimum size=4pt,
+    inner sep=0pt, outer sep=0pt}]
+\node [message,fill=extra_1] 
+          () at (0,0.75) {};
+\node [message,fill=extra_2] 
+          () at (0,0.5) {};
+\node [message,fill=extra_3] 
+          () at (0,0.25) {};
+\end{tikzpicture}
+ } (atom_0);
+
+    \node [] (number ) at (0.25, 0.3) {\small{ 8 }};
+
+    \draw [solid] (0, 0) rectangle (6, 3);
+
+    \end{tikzpicture}
+
+    

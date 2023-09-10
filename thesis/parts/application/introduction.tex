@@ -1,0 +1,60 @@
+%!TEX root = ../../da.tex
+
+\part[Thermal Conductivity with\\ Message-Passing Neural Networks]{Thermal Conductivity with Message-Passing Neural Networks}
+\label{part:gka}
+
+\thispagestyle{plain}
+\begin{center}
+  \begin{minipage}{0.8\textwidth}
+
+    \vspace{4\baselineskip}
+
+    % \hangindent=1cm
+    % \hangafter=1
+    % who were expelled from the academies for crazy \& publishing obscene odes on the windows of the skull, \el
+
+    \hangindent=1cm
+    \hangafter=1
+    \el who scribbled all night rocking and rolling over lofty incantations which in the yellow morning were stanzas of gibberish \el
+
+    \vspace{\baselineskip}
+    {\hfill\raggedright --Allen Ginsberg, \textit{Howl}\hspace{0.25cm}}
+  \end{minipage}
+\end{center}
+\vspace{2\baselineskip}
+
+\newthought{In the previous chapter,} we established a method to compute the heat flux for semi-local \mlps, providing the missing piece to use recently developed \mlps based on \mpnns for thermal conductivity calculations with the \gk method. In this chapter, we apply this ability to the calculation of the thermal conductivity of selected materials.
+
+First, in \cref{ch:gk-model,ch:gk-conv,ch:gk-res}, zirconia (\ch{ZrO2}) is studied in detail.
+Zirconia, alongside silicon, was one of the only two crystalline materials that had been investigated with \gls{aimd} when this project was started, in a work by Carbogno~\etal{}~\cite{crs2017t} that introduced a heat flux definition and a size extrapolation scheme for \gls{dft}.\footnote{Recently, this number was increased to approximately \num{60} materials in a large-scale effort by Knoop \etal~\cite{kpsc2023t} (see \cref{ch:gk-out}). Additionally, \ch{Li3CIO}~\cite{pbg2022t} and ICE-X~\cite{gsb2020t} were recently investigated.} Its highly anharmonic \gls{pes}~\cite{fpf2001t,clws2014t} make it a prototypical candidate for treatment with the \gk method.
+It has also recently been investigated with a local \mlp{} based on a \gls{soap}-like descriptor and Bayesian regression by Verdi~\etal{}~\cite{vkjk2021q}, as well as a \ff based on the Buckingham potential~\cite{mbm2020t}. Experimental measurements of thermal conductivity, surveyed in \cref{sec:si-gknet_zro_exp}, are also available.
+This prototypical material can therefore serve as a test case.
+
+In \cref{ch:gk-model}, the training and evaluation of a \glp using the SchNet architecture~\cite{sktm2017q,sstm2018q} is discussed: A simple training scheme based on $NpT$ \aimd simulations yields a potential that remains stable up to \qty{1800}{K}. In this temperature range, it can be used to predict thermal conductivities in the monoclinic and tetragonal phases of zirconia, using a workflow based on work by Knoop~\etal~\cite{ksc2023t}, discussed in \cref{ch:gk-conv}. The results are shown in \cref{ch:gk-res} and are consistent with other experimental and computational studies. Using this potential, we also verify the heat flux formulations of \cref{ch:gk-hf}.
+
+Having established workflows and the heat flux, we then further explore the practical feasibility of \gk calculations with \glps in \cref{ch:gk-out}. Using the recently developed equivariant \sok \glp~\cite{fum2022q}, thermal conductivity for two additional materials is investigated: tin selenide (\ch{SnSe}) and silicon (\ch{Si}).
+
+\clearpage
+These materials were chosen to cover the case of high and low anharmonicity, and correspondingly low and high thermal conductivity, compared to zirconia. Anharmonicity can be quantified with the anharmonicity measure\footnote{In a nutshell, it measures the deviation between forces obtained with a harmonic model and those obtained with \dft. $\anha{\leq}0.2$ is considered \scare{very harmonic} in reference~\cite{kpsc2020t}.} $\anha$ introduced by Knoop~\etal~\cite{kpsc2020t}. For \ch{SnSe}, $\anha=0.350$ at \qty{300}{K}~\cite{k2021t}, and for \ch{Si} $\anha = 0.177$ at \qty{400}{K}. \ch{ZrO2}, in comparison, is slightly more anharmonic than \ch{Si} in the monoclinic phase at \qty{300}{K}, with $\anha=0.183$, and strongly anharmonic in the tetragonal phase at \qty{1400}{K}, with $\anha=0.565$.\footnote{Details on the calculation of $\anha$ for \ch{Si} and \ch{ZrO2} can be found in \cref{sec:si-gka_anha}.} 
+
+For \ch{SnSe} at \qty{300}{K}, a \sok potential trained with \num{3000} reference calculations is in good agreement with experiments, size-extrapolated \aigk results, and \mlp results for the thermal conductivity at \qty{300}{K}.
+For \ch{Si} at \qty{400}{K}, i.e., in the regime of low anharmonicity, size convergence is found to pose a challenge: Full size convergence could not be achieved with the currently available implementation of the heat flux. The predicted value of $\kappa$ underestimates experimental values by approximately \qty{45}{\percent}. In addition to convergence issues, biased sampling of the \pes is conjectured as a possible cause.
+
+\subsection*{Related publications}
+Some results in this chapter have been submitted for publication:
+\\\\
+\PaperHF
+\\\\
+\PaperGLP
+\\\\
+In particular, results for \ch{ZrO2} have been reported in reference~\cite{lksr2023a}, and results for \ch{SnSe} have been reported in reference~\cite{lfk2023a}.
+
+\subsection*{Data and Code Availability}
+Data and code related to the reported results can be found at\\
+\nicedoi{10.5281/zenodo.7767432} for zirconia,\\
+\nicedoi{10.5281/zenodo.7852530} for tin selenide, and\\
+\nicedoi{10.5281/zenodo.7963152} for silicon.\\
+\\
+First-principles calculations are additionally available at\\
+\nicedoi{10.17172/NOMAD/2023.03.24-2} for zirconia, and\\
+\nicedoi{10.17172/NOMAD/2023.06.04-1} for silicon.

@@ -1,0 +1,230 @@
+%!TEX root = ../../da.tex
+
+\chapter{Atomistic Machine Learning}
+\label{ch:ml}
+
+% \begin{chapquote}{Ian M. Banks, \textit{Look to Windward}}
+% 	I am not an animal brain, I am not even some attempt to produce an AI through software running on a computer. I am a Culture Mind. We are close to gods, and on the far side.
+% \end{chapquote}
+
+\noindent
+\marginnote[2\baselineskip]{For a detailed introduction to \ml and statistical learning, see Hastie \etal~\cite{hastie2009}.}
+In this section, we briefly review core terminology and introduce notation for \ml, discuss applications relevant for this thesis, and introduce the main models we will be using: \glsfirst{krr} in \cref{part:representations} and \glsfirst{nn} regression in \cref{part:hf,part:gka}. The section concludes with a brief discussions of \glsfirst{ad}, required for the practical and efficient implementation of derivatives of complex models, and of particular importance for \cref{part:hf}.
+
+\section{Terminology and Notation}
+
+\marginnote[1\baselineskip]{We keep the definition of $\inspace$ deliberately vague at this point. For kernel methods, a set is sufficient, for instance. In practice, for computer implementation, we typically work with subsets of $\reals^d$ represented as vectors.
+
+In this thesis, we focus on \newterm{regression} tasks, where labels are continuous in $\outspace$. \newterm{Classification} deals with a finite number of discrete labels.}
+\paragraph{Supervised Learning} The task of supervised \ml is to obtain an approximation $f: \inspace \rightarrow \outspace$ of a \newterm{ground truth} relationship $t: \inspace \rightarrow \outspace$ between an input space $\inspace$ and an output space $\outspace$ based on a set of $\ntrain$ examples, the \newterm{training data} or \newterm{training set}
+\begin{equation}
+	\train = \curlyset{(\vec{x}_i, t(\vec{x}_i)=y_i)}{i=1...\ntrain} \, .
+\end{equation}
+At present, we consider a restricted form of this general task, the learning of mappings between atomistic systems $\system$ consisting of atoms $\atom$ to properties computed with a first-principles electronic structure method. For simplicity of notation, we focus on scalar properties,\footnote[][-1\baselineskip]{We can always consider constructing a separate model for each output. Multi-task learning is also possible. Some properties can also be naturally learned together, such as potential energy, forces, and stress.} $\outspace \subseteq \reals$.
+In the presence of noise, for instance Gaussian noise sampled from a fixed normal distribution $\epsilon{\sampled}\mathcal{N}$, values of the ground truth function, the \newterm{labels}, are observed as $y_i + \epsilon$. In the present setting of approximating numerical \qm calculations, noise plays a minor role, but nevertheless emerges later in the context of regularisation.
+
+\paragraph{Loss Functions} The quality of the approximation $f$ can be evaluated by computing a \newterm{loss} (or error) function $l(y, f(\vec{x})) \in \reals$ for the training data $\train$, or \newterm{test} data\footnote[][-4.0\baselineskip]{
+	Statistical learning theory often makes the assumption that $\train$ and $\test$ are drawn independently from the same distribution, the \gls{iid} assumption. In practice, this cannot always be assured. In \cref{part:representations}, efforts are made to approximate it for the purposes of benchmarking. Ensuring that test data is not used during training, not even for the definition of hyper-parameters, is standard practice to ensure that performance estimates are relevant.
+} $\test$. By convention, loss functions are defined such that lower loss corresponds to a better approximation. Training an \ml model therefore amounts to minimising the average of a loss function on $\train$. Evaluation consists of computing the loss on unseen data to estimate the degree to which the model can \newterm{generalise} outside of the training set. An overview of common loss functions, and in particular those used in this thesis, is given in \cref{sec:si-ml_lossf}.
+
+\clearpage
+\paragraph{Hyperparameters} \ml models typically possess some parameters that are not determined during training,\footnote{For instance, structural choices and discrete parameters are not amenable to the gradient descent approaches used for \nns. Training is formally understood as an optimisation in some fixed space of functions. Hyperparameters determine that space, or the function to be minimised, while parameters are the result of the minimisation.} but must be set in advance to define the overall search space of approximators. Such a parameters are called \hps. In this work, we distinguish between structural and numerical \hps, where the former includes structural choices, for instance the choices of \nn architecture, while the latter refers to parameters that can be varied continuously, for instance regularisation strength in \krr. Different approaches to setting \hps exist; one standard method adopted in this thesis is to optimise \hps by computing the loss for an auxiliary \newterm{validation} set that is extracted from $\train$ and not used for training. An overview of approaches can be found in~\cite[ch.~5]{rasmussen2006}.
+
+\paragraph{Regularisation} Expecting to approximate $t$ based on a finite number of examples relies on the assumption of some regularity, or smoothness.\footnote{This can also be viewed as a question of sampling: Given a signal of finite bandwidth, a finite number of samples is sufficient to reconstruct it~\cite{s1949m}; regularisation aims to match the bandwidth of the model to the available training data.} Such an assumption can be partially encoded in the ansatz for $f$, but is often also included in the training process in the form of regularisation. Intuitively, we can imagine an unregularised $f$ attempt to pass through every $y$ in $\train$ exactly, while permitting arbitrary behaviour in between. Regularisation aims to penalise such complex models.~\cite{tikhonov1995}
+
+
+\paragraph{Atomistic Systems} An atomistic system, or \newterm{configuration} or \newterm{structure} is described as a set of $N$ atoms $\system = \curlyset{\atom_i}{i=1...N}$, where each atom is associated with a position $\R_i$ and atomic properties $\aprop_i$. We typically restrict $\aprop_i$ to the atomic number $Z_i$. In periodic systems, $\R_i$ are taken to be in $\Rsc$ and $\system$ additionally depends on the lattice $\Basis$. In practice, we therefore describe a system $\system$ as a 3-tuple $(\Rgen, \Charges, \Basis)$; $\Basis$ can be empty for non-periodic systems, $\Rgen = \Rsc$ otherwise. \Cref{part:representations} explores approaches to map such a description to a fixed-size vector, which is more convenient for regression methods.
+
+One core concept in the construction of atomistic \ml models is the usage of \newterm{atomic environments} $\nbh{i}$, which is a finite set of atoms in the vicinity of $i$. Such neighbourhoods can be constructed in different ways, the most common of which is to introduce a cutoff radius $\cutoff$ such that $\nbh{i} = \curlyset{j}{\magnitude{\R_{ij}} \leq \cutoff, j \in \Rgen}$. We note that the definition of neighbourhoods in periodic systems can lead to difficulties; a common approach is to choose $i,j \in \Rsc$ and imbue $\R_{ij}$ with the \gls{mic} as discussed in \cref{ch:pbc}. This will be considered further in \cref{ch:glps}, where we argue that the decomposition into atomic environments naturally leads to a graph description.
+
+\clearpage
+% NICE: add some reviews on atomistic ML: choudhary2022 (10.1038/s41524-022-00734-6)
+\newthought{Let us now} briefly consider applications of \ml in the context of atomistic modeling, focusing on those investigated in this thesis.
+
+\section{Machine-Learning Potentials}
+\label{sec:ml-mlps}
+
+% QM can give us at least some hope that everything is smooth enough to work
+
+\marginnote[2\baselineskip]{A tutorial introduction to \mlps can be found in \cite{b2015q}.}
+In \cref{ch:md}, we already encountered the idea of a \glsfirst{mlp}~\cite{lgs2004q,lhsr2006q,bp2007q,bpkc2010q,lgs2004q,bp2007q,ukkm2020q,uctm2021q,pt2021q}, where the regression task is to approximate the mapping between positions $\Rgen$ and total potential energy $U$ based on a training set of first-principles reference calculations.
+
+An essential consideration for \mlps is the procurement of training data. If the \mlp encounters configurations for which it cannot make a reasonable prediction, unphysical behaviour and instability in the resulting \md can result.\footnote{Such instabilities are encountered in \cref{sec:gkm_limit}.} Approaches to mitigating this difficulty, which is inherent in data-driven models, are an active area of research today. Some regression methods, for instance \gls{gpr}, which we will encounter in \cref{sec:ml-krr}, include an estimate of model uncertainty, which can serve as criterion to add training data during \md. Committee models can also be used~\cite{b2015q,pck2017q,tudg2023a}; many other approaches and variations have been suggested~\cite{izgc2021q,stg2021q,pdjm2022q}. Since an ideal uncertainty estimate would be equivalent to making perfect predictions, approximate solutions must be used in practice, and verified empirically. Recent approaches that use uncertainty estimates to refine the \pes on-the-fly during \md simulations~\cite{capd2004q} have yielded promising results~\cite{jmka2020q,vkjk2021q,osoc2022a,xvjk2022a,cmhm2023a}.
+
+Many \mlps are based on an additive ansatz for the potential energy, encountered previously in \cref{ch:md}, decomposing $U$ into atomic potential energy contributions
+\begin{equation}
+	U = \sum_{i \in \Rsc} U_i \, ,
+\end{equation}
+where $U_i$ depends on on a finite atomic neighbourhood $\nbh{i}$ only.\footnote{This architecture is common in \ffs, and can also be motivated by the \scare{nearsightedness of electronic matter}~\cite{pk2005p}, which also motivates the development of linear-scaling \dft methods; see \cite[ch.~18]{martin2020}.}
+This construction ensures $\bigo{N}$ scaling of computational cost\footnote{Assuming constant density.} for energy\footnote{And consequently force and stress (see \cref{sec:ml-ad}).} prediction as only a bounded number of atoms must be considered for each $U_i$. It also ensures extensivity in a trivial sense.
+However, such strict locality limits the ability to model long-range effects.\footnote{In a system of fixed size, if all degrees of freedom are seen by the model, long-range effects can in principle be modeled implicitly~\cite{ctsm2017q}. However, it is unclear how such approximations can be expected to generalise across system sizes.}
+Attempts have therefore been made to re-introduce longer-range interactions into local models, for instance through explicit electrostatics~\cite{b2021q}, message passing mechanisms~\cite{gsvd2017q} (see \cref{ch:glps}), Fourier-space methods~\cite{gc2019q,yhgx2022a}, locality in other spaces~\cite{fum2022q}, or all-to-all transformer models~\cite{ucsm2021q}. Research in this area is ongoing.
+Models not based on a locality assumption have also been proposed, but are difficult to scale to larger systems~\cite{ctsm2017q,csmt2019q,sgmt2022q}.
+
+Despite these challenges, \mlps have become an important tool for atomistic simulations, and have attracted a large amount of research attention over the past years. Recent applications include the simulation of large proteins~\cite{ustm2022a} and the study of disordered silicon~\cite{dbde2021q}.
+% , and the study of excited states during photodynamics~\cite{wggm2022q}.
+% -> dropped at MS request
+
+\section{Screening Tasks}
+
+In screening-type applications, a large pool of candidates, for instance drug-like molecules, must be searched for compounds with certain desirable characteristics~\cite{psaa2015p}. This poses multiple challenges: The size of chemical space is formidable, even when restricted to subsets such as drug-like molecules~\cite{pmv2013p}, rendering brute-force approaches not always feasible. Additionally, even if the search space can be constrained sufficiently, the prediction of properties of interest can require much computational effort, restricting the reach of such approaches. Finally, the prediction of properties via quantum mechanical simulations requires the knowledge of structure first, additionally incurring computational cost due to structure relaxation.
+
+\ml models have been suggested as a way to circumvent some of these difficulties~\cite{rtml2012Aq,hl2021q}. \mlps can be used in place of ab initio approaches to perform structural relaxation, for instance for the purpose of crystal structure prediction~\cite{ptso2019q}. Structure-property models can be constructed to directly predict target properties for candidate structures without first-principles calculations, a task which we will investigate in \cref{ch:repsbench}. Specialised \ml models such as \gls{sisso}~\cite{ocsg2018q} can be used to construct data-driven analytical expressions for key properties, allowing rapid sampling and potentially more guided exploration of target spaces~\cite{fpsg2022q}. Generative models, which do not directly rely on supervised learning, have also been proposed to generate desired structures without a prior search~\cite{sg2020q,ggms2022q,tlmr2022q,wgbm2022a,bjbj2022a,mr2022q}.
+
+
+% \clearpage
+\section{Kernel Ridge Regression}
+\label{sec:ml-krr}
+
+% explicit hilbert space for RBF: shs2006m
+% KRM tutorial: mmts2001m
+% Kernel PCA: ssm1998m
+
+\Glsfirst{krr}~\cite{r2015Bq} writes the prediction as
+\begin{equation}
+	f(\vec{x}) = \sum_{i=1}^N \alpha_i k(\vec{x}, \vec{x_i}) \, \label{eq:ml-krr}
+\end{equation}
+where $k(\vec{x}, \vec{x}')$ is a \emph{kernel function} $k: \inspace \times \inspace \rightarrow \reals$,  such that the kernel matrix $\mat{K}_{ij} = k(\vec{x}_i, \vec{x}_j)$ is symmetric and positive semi-definite.\footnote[][-12\baselineskip]{
+	This means
+	\begin{align*}
+		&\mat{K}^\transpose = \mat{K}\\
+		&\vec{c}^\transpose \cdot \mat{K} \cdot \vec{c} \geq 0 \quad \forall \vec{c} \in \reals^\ntrain \, .
+	\end{align*}
+	Equality iff $\vec{c} = 0$ defines positive definiteness.
+	Sometimes, the term \scare{positive definite} is used in place of semi-definite, and \scare{strictly positive definite} in place of definite.~\cite{hss2008m}
+	At present, semi-definiteness is sufficient.
+
+	This condition ensures that $k(\vec{x}, \vec{x}')$ corresponds to an inner product $\braket{k(\cdot, \vec{x}),k(\cdot, \vec{x}')}_{\featsp}$ in a \gls{rkhs} $\featsp$ of real-valued functions~\cite{a1950m}.
+
+	$k_{\vec{x}} = k(\cdot, \vec{x})$ is the \emph{reproducing kernel} of this space, which means that the operation of computing $f(\vec{x})$ where $\vec{x} \in \inspace$ and $f \in \featsp$ can be expressed in terms of an inner product within $\featsp$:
+	\begin{equation*}
+		f(\vec{x}) = \braket{f, k_{\vec{x}}}_{\featsp} \, .
+	\end{equation*}
+	In other words, the kernel function provides a natural \scare{basis} to express functions in $\featsp$, providing the preliminaries for the \emph{representer theorem}~\cite{kw1971m,shs2001m}.
+
+	This theorem ensures that the $f$ minimising a regularised loss functional
+	\begin{equation*}
+		\argmin_{f \in \featsp} \frac{1}{\ntrain} \sum_{i=1}^\ntrain l(f(\vec{x}_i), y_i) + \lambda \magnitude{f}_{\featsp}^2 \, ,
+	\end{equation*}
+	with a loss function $l$ and the norm $\magnitude{\cdot}_{\featsp}$ in the \gls{rkhs} of $k$ admits a solution in the form given by \cref{eq:ml-krr}.
+}
+
+The regression weights $\vec{\alpha} = [\alpha_1,...,\alpha_\ntrain]^\transpose$ are obtained by minimising the squared deviation between predictions and labels
+\begin{equation}
+	\vec{\alpha}' = \argmin_{\alpha} \left(\mat{K} \vec{\alpha} - \vec{y}\right)^\transpose \cdot \left(\mat{K} \vec{\alpha} - \vec{y}\right) \, .
+\end{equation}
+% However, the resulting function aims to pass directly through all training examples, which is undesirable in practice: We typically expect either some level of noise in the labels, and would like to ensure some degree of smoothness in the interpolation, in order to improve generalisation on unseen data.
+% Regularisation is an important technique to tackle this issue.
+For \gls{krr}, regularisation is implemented by adding an additional term to the minimisation problem:
+\begin{equation}
+	\vec{\alpha}' = \argmin_{\alpha} \left(\mat{K} \vec{\alpha} - \vec{y}\right)^\transpose \cdot \left(\mat{K} \vec{\alpha} - \vec{y}\right) + \lambda \vec{\alpha}^\transpose \cdot \mat{K} \cdot \vec{\alpha} \, .\label{eq:ml-krr_regloss}
+\end{equation}
+The solution of this quadratic form is straightforward:
+\begin{equation}
+	\vec{\alpha} = \left(\mat{K} + \lambda \matone \right)^{-1} \vec{y} \, .
+\end{equation}
+In this form, we can also see that regularisation plays a role in improving the conditioning, and therefore numerical stability, during training.\footnote[][-1\baselineskip]{We note in passing that it also allows us to relax the requirement of semi-definiteness of $\mat{K}$. After all, in practice, we simply require the term in parentheses to be invertible.} Additionally, Cholesky decomposition is often used in place of explicit matrix inversion.
+
+Once $\vec{\alpha}$ is determined, predictions for new points $\vec{X}' = [\vec{x}'_1, \vec{x}'_2, ...]$ can be obtained by computing $\mat{L}_{ij} = k(\vec{x}_i, \vec{x}'_j)$ where $\vec{x}_i \in \train$. Then predictions $\vec{y}'$ are simply obtained by computing
+\begin{equation}
+	\vec{y}' = \mat{L}^\transpose \cdot \vec{\alpha} \, .
+\end{equation}
+
+\newthought{The choice of kernel,} in addition to $\lambda$, is the main (structural) \hp choice in \krr. Many kernel functions have been proposed. In this work, we employ the \gls{se} kernel\footnote{Also commonly called Gaussian kernel, or \gls{rbf} kernel.}
+\begin{equation}
+	k(\vec{x}, \vec{x}') = \exp{-\frac{\magnitude{\vec{x} - \vec{x}'}^2}{2 \sigma^2}} \, ,
+\end{equation}
+which encodes an expectation of smoothness~\cite{ssm1998Am} that can be understood intuitively by considering $k(\vec{x}, \cdot)$ as the basis functions in which the target is expanded. The numerical \hp $\sigma$ controls the width, and hence the smoothness, of the employed Gaussians.
+
+Other kernel functions range from the linear kernel $\braket{\vec{x}, \vec{x}'}$, the Laplacian kernel,\footnote{The \gls{rbf} kernel with the 1-norm instead of the 2-norm.} admitting cusps at the training data, to the Matérn family of kernels, providing a generalisation of the \gls{rbf} kernel~\cite{r2015Bq,rasmussen2006}.
+We note that kernel methods can be used beyond \krr; in essence, the identification of kernel evaluation with an inner product in a high-dimensional \gls{rkhs} can be used to transform linear methods into non-linear ones~\cite{ssm1998Bm,mmts2001m,hss2008m}.
+
+% \subsection{Learning with Atomic Contributions}
+
+For atomistic modeling, we must tackle one additional difficulty: In many cases, we must solve regression problems with labels per system, but features per atom.\footnote{These are local representations, introduced in \cref{ch:repsb}.}
+With \krr, the approach described in references~\cite{bc2015q,m2015q,lgr2022q} can be used: Starting from an additive ansatz for the per-system label, a modified kernel can be defined that sums over blocks of a larger atom-to-atom kernel matrix.
+
+% Making an additive ansatz for the system label yields a modification of \krr where kernel matrices are computed between atomic representations and then summed 
+% To start, we define $\tilde{\ntrain}$ as the total number of atoms in the training data, the incidence matrix $\mat{D} \in \{0,1\}^{\ntrain \times \tilde{\ntrain}}$, which consists of blocks of ones indicating where atoms (column index) belong to a system (row index).
+% We additionally introduce per-atom atom weights $\tilde{\vec{\alpha}}$ and an atom-atom kernel $\tilde{k}$, and make an additive ansatz:
+% \begin{equation}
+% 	f(\system) = \sum_{\atom_i \in \system} \sum_{\atom_j \in \train} \tilde{\alpha_j} \tilde{k}(\atom_i, \atom_j) \, .
+% \end{equation}
+% The matrix form of the minimisation problem then becomes
+% \begin{equation}
+% 	\tilde{\vec{\alpha}}' = \argmin_{\tilde{\vec{\alpha}}} \left(\mat{D} \tilde{\mat{K}} \tilde{\vec{\alpha}} - \vec{y}\right)^\transpose \cdot \left(\mat{D} \tilde{\mat{K}} \tilde{\vec{\alpha}} - \vec{y}\right) + \lambda \tilde{\vec{\alpha}}^\transpose \cdot \tilde{\mat{K}} \cdot \tilde{\vec{\alpha}} \, .
+% \end{equation}
+% The solution is given by
+% \begin{equation}
+% 	\tilde{\vec{\alpha}} = \mat{D}^{\transpose} \left(\mat{D} \tilde{\mat{K}} \mat{D}^{\transpose} + \lambda \matone \right) \, .
+% \end{equation}
+% This can be rephrased in terms of standard \krr by defining $\mat{K} = \mat{D} \tilde{\mat{K}} \mat{D}^{\transpose}$, $\tilde{\vec{\alpha}} = \mat{D}^\transpose \vec{\alpha}$ and $\mat{L} = \mat{D} \tilde{\mat{L}} \mat{D}'^\transpose$ where $\mat{D}'$ is the incidence matrix for new data points.
+% Essentially, given that we have labels only per system, the best we can do is to define a new kernel between systems that simply sums all possible atom-atom kernel values,\footnote[][-4\baselineskip]{In practice, this structure avoids having to compute the full atom-atom kernel matrix: It is typically more efficient to compute and sum blocks on the fly.} and then perform \krr with the resulting system-system kernel matrix. The atomic regression weights $\tilde{\vec{\alpha}}$ are simply blocks consisting of the system weight.
+% If atomic labels are available, for instance when forces are included, more advanced approaches can be taken~\cite{ctsm2017q}.
+
+\newthought{Finally, we note} that the results of \krr can also be obtained from a Bayesian perspective, which yields \glsfirst{gpr}.\marginnote[-\baselineskip]{An excellent visual introduction to Gaussian processes can be found in reference~\cite{gkd2019m}. A full exposition is given by Rasmussen and Williams~\cite{rasmussen2006}.} In \gls{gpr}, the kernel function takes the role of the covariance of a Gaussian process,\footnote{
+	In a nutshell, a collection of random variables (the input space $\inspace$) such that each subset is Gaussian. We can view it as a probability distribution over functions, which are obtained by drawing a sample for every point in $\inspace$. If the mean is zero, the covariance function entirely describes a Gaussian process.
+} which in turn is viewed as a prior probability distribution over possible functions.
+Adding training data, via Bayes rule~\cite{b1763m}, increasingly refines the posterior distribution to reflect added knowledge.
+Predictions are typically obtained as the mean of the resulting predictive distribution, and are identical to the ones obtained from \krr. The Bayesian perspective, however, affords a clear way to obtain and interpret predictive uncertainties.
+
+\section{Neural Networks}
+\label{sec:ml-nns}
+
+\marginnote[1\baselineskip]{Hastie~\etal~\cite{hastie2009} introduce \nns in the context of statistical learning.}
+While \krr models explicitly base their predictions on the training data, introducing additional model parameters for every additional training point, a \glsfirst{nn} has a fixed number of parameters, independent on dataset size.\footnote[][-0.5\baselineskip]{
+	This distinction between such \newterm{non-parametric} and \newterm{parametric} models becomes less clear once \hps are introduced. For good performance in practice, the size of a \gls{nn} is adapted to the amount of available data.
+} \Glspl{nn} are implemented as a complex, but fixed, function with many adjustable parameters.
+Their conceptual basis is simple: A function $f$ is constructed from multiple \newterm{layers} that each consist of functions that take linear combinations of inputs and process the result with an \newterm{activation function}\footnote{Choice of activation function is a structural \hp.} $\sigma$.
+Letting $l$ index the layer, defining $n_l$ as the \newterm{width} of that layer, and denoting the output of the previous layer as $\vec{x}^{l-1}$, we obtain\marginnote{Biases can be included by adding a constant entry to the inputs.
+
+We also note that this form can be seen as a simplified model of a neuron, with the inputs representing dendrites connecting to neighbouring neurons. This analogy lends \nns their name.}
+\begin{align}
+	\vec{x}^l = \defvec{\sigma(\vec{\alpha}_{lm}^\transpose \cdot \vec{x}^{l-1})}{m=1...n_l} \, .	
+\end{align}
+The $\vec{x}^0$ are the inputs to the resulting network, which are then transformed through successive layers, yielding more and more abstract representations of the data. The final layer is then constructed to produce outputs with the desired dimensionality. This construction is called a fully-connected feed-forward \nn, or multi-layer perceptron.
+In different limits, for instance network width or number of layers (\newterm{depth}), such \nns are universal function approximators~\cite{c1989m,g2003m}.
+
+% done: add citations for types of NNs. ConvNet, RNN, Neural ODEs, etc...
+In practice, fully connected layers are used as building blocks for more intricate architectures, which can involve convolutions~\cite{lbhj1989m,ksh2012m}, recurrence~\cite{hs1997m}, or even the solution of an ordinary differential equation~\cite{crbd2018m}. We will encounter a particular architecture, the \mpnn, in \cref{ch:glps}. For now, we consider a more fundamental question: How can we determine the parameters of a \nn? 
+
+In contrast with \krr, analytical solutions are typically not available, as the loss function is not generally convex. We therefore must find a different approach to solve the minimisation problem\marginnote{As above $l$ is a  loss function acting on single samples. More general forms are also possible.}
+% \marginnote[2\baselineskip]{In general, many different loss functions can be used, and different normalisation schemes introduced. We choose the \gls{mse} for illustration; it is also used in \cref{ch:gk-model}.}
+\begin{equation}
+	\mat{W} = \argmin_{\mat{W}'} \frac{1}{\ntrain} \sum_{i=1}^{\ntrain} l(f_{\mat{W}'}(\vec{x}_i) - y_i) \, ,
+\end{equation}
+where we have introduced $f_{\mat{W}}$ as the \nn with parameters $\mat{W}$.
+
+Variations on gradient descent are typically used to tackle this minimisation. In particular, standard neural network training proceeds via mini-batch\footnote[][-3\baselineskip]{Gradient descent proceeds by computing the gradient of the loss function over the entire training set, which is often not computationally feasible. Stochastic gradient descent proceeds by taking the gradient for single examples, leading to noisy gradient estimates. Mini-batch stochastic gradient descent is a compromise, taking some (randomly sampled) subset of the full training data. This \newterm{batch size} is a \hp. Batching in this form also yields computational advantages, as calculations can be vectorised.} \gls{sgd}, extended in different ways, for instance by adding a momentum term, or methods with an adaptive learning rate.
+The selection of the minimisation method and its parameters is a \hp, but standard methods like \gls{adam}~\cite{kb2014m} can often yield acceptable results.
+Training is terminated after a set number of iterations over the training set (\newterm{epochs}), or via \newterm{early stopping} approaches, where the loss on a validation set, typically set aside from $\train$, is used to terminate training when generalisation no longer improves. Early stopping can therefore be interpreted as a form of regularisation.
+
+% more recent stuff on universal function approximation: http://proceedings.mlr.press/v125/kidger20a/kidger20a.pdf
+
+% $f$ is constructed from functions of the form
+% \begin{equation}
+% 	\sigma(\mat{W} \cdot \vec{x} + \vec{b})
+% \end{equation}
+
+% \clearpage
+\section{Automatic Differentiation}
+\label{sec:ml-ad}
+
+The efficient training of \nns via gradient descent requires the ability to compute gradients of the loss function with respect to the parameters. The construction of \mlps additionally requires gradients with respect to inputs, obtaining forces and stress.
+
+\Glsfirst{ad} provides this ability. It is a technique to obtain derivatives of functions implemented as computer programmes~\cite{rhw1986m,griewank2008,bprs2017m}, and therefore also called \emph{algorithmic} or \emph{procedural} differentiation.
+It is distinct from numerical differentiation, where finite difference schemes are employed, and symbolic differentiation, where analytical derivatives are obtained manually\footnote{Or via computer algebra systems.} ahead of time and then implemented manually.
+Instead, \ad relies on the observation that complex computations can often be split up into elementary steps, for which derivatives are readily computed and implemented. If one can track those derivatives during the computation of the forward, or \newterm{primal}, function, the chain rule allows one to obtain derivatives.
+
+The result of tracking a given computation is the \newterm{computational graph}. Once the forward computation has concluded, the this graph can be traversed in two directions:\footnote{In general, mixed schemes are possible, but not yet a standard feature in common \ad frameworks. A unified treatment of different schemes is also possible~\cite{rpjm2022m}.} From the inputs \emph{forwards} and from the outputs \emph{backwards}, yielding forward and reverse mode\footnote{Another common name is backpropagation, or simply backprop.} \ad.
+
+For a general differentiable function
+\begin{equation}
+	f: \vec{x} \in \reals^N \rightarrow f(\vec{x}) = \vec{y} \in \reals^M \,,
+\end{equation}
+the Jacobian of $f$ is defined as the $M \times N$ matrix $\mat{\partial f}_{ij} = \partial y_i(\vec{x})/\partial x_j$. 
+\Gls{ad} can be used to compute the \gls{jvp} $\mat{\partial f} \cdot \vec{v}$ (forward mode) and the \gls{vjp} $\vec{v}^\transpose \cdot \mat{\partial f}$ (reverse mode) with the same asymptotic computational cost as the primal function.
+For $M{=}1$, i.e., scalar outputs, this reveals how \mlps can efficiently obtain forces: Differentiating the scalar total potential energy $U$ is a trivial \gls{vjp} with $\vec{v}{=}1$.
+The ability to compute products of this type can also be leveraged to compute products of higher-order differential operators~\cite{smc2022q}.
+
+\newthought{We emphasise two} properties of \ad that are particularly relevant for this work: \emph{(a)} derivatives can only be obtained with respect to quantities that are explicitly used in the forward computation, and \emph{(b)} the general calculation of Jacobians requires repeated ($N$ or $M$) evaluations of \glspl{jvp} or \glspl{vjp}. If $M \propto N$ and the cost of $f$ is $\bigo{N}$, this leads to quadratic cost of calculating $\mat{\partial f}$ explicitly.\footnote[][-3\baselineskip]{In some cases, this scaling can be circumvented by exploiting knowledge of the sparsity of $\mat{J}$. We will use this in \cref{ch:gk-hf}.}

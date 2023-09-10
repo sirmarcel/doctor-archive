@@ -1,0 +1,57 @@
+%!TEX root = ../../da.tex
+
+%  via Automatic Differentiation
+\part{Heat Flux for Semi-Local Machine-Learning Potentials}
+\label{part:hf}
+
+\thispagestyle{plain}
+\begin{center}
+  \begin{minipage}{0.8\textwidth}
+
+    \vspace{4\baselineskip}
+    
+    \hangindent=1cm
+    \hangafter=1
+    I saw the best minds of my generation destroyed by madness, starving hysterical naked, \el
+
+    \hangindent=1cm
+    \hangafter=1
+    who passed through universities with radiant cool eyes hallucinating Arkansas and Blake-light tragedy among the scholars of war, \el
+
+
+    \vspace{\baselineskip}
+    {\hfill\raggedright --Allen Ginsberg, \textit{Howl}\hspace{0.25cm}}
+  \end{minipage}
+\end{center}
+\vspace{2\baselineskip}
+
+\newthought{The \gk method~\cite{g1952t,k1957t,kyn1957t}}, briefly introduced in \cref{ch:gk}, is a framework for the prediction of the thermal conductivity of materials, including strongly anharmonic and complex compounds.
+It is based on observing fluctuations in the distribution of energy, the \newterm{heat flux}, during equilibrium \md simulations.
+It therefore requires access to the \bo \pes as well as a definition of the heat flux.
+
+\ffs have been used for the \gk method since the 1970s~\cite{lvk1973t,lmh1986t,vc1999t,c2006t,ggs2010t,fpdh2015t}, decades prior to the recent development of \aigk approaches~\cite{mub2016t,crs2017t}.
+\mlps continue this tradition, aiming to combine computational efficiency, albeit typically reduced in comparison to \ffs, with the accuracy of \dft.
+While different types of short-ranged \mlps{} have been used to investigate thermal transport via \gk{}~\cite{sdbb2012q,mcld2020q,knys2019q,lqzg2021q,lll2020q,llll2020q,qpwy2019q,vkjk2021q}, more recent semi-local \mlps{}~\cite{gsvd2017q,sktm2017q,sstm2018q,um2019q,kgg2020q,kbg2021q,ucsm2021q,bmsk2022q,bkoc2022q,bbkc2022a,blcd2022q} have not yet been used for this purpose, partially because a heat flux formulation that incorporates message-passing mechanisms was not available.
+
+\newthought{In this chapter, we fill that gap} and explain how to implement the \gk{} approach for such \mlps{} using \ad{}.
+
+Since \ad relies on explicitly tracing the \scare{forward} computation, an understanding of how atomic potential energies are computed in practical implementations of such \mlps is required. \Cref{ch:glps} is dedicated to this task: It introduces the notion of \glps, which take a graph of \mic atom-pair vectors as inputs, encoding atomic neighbourhoods, and compute atomic potential energy contributions either based on neighbourhoods alone (local models) or can iteratively take neighbours-of-neighbours into account (semi-local models). As preparation for the heat flux, the definition and computation of forces and stress is discussed, unifying previous formulations for \ffs and \mlps.
+
+Having established this foundation, we are then in a position to consider the computation of the heat flux in \cref{ch:gk-hf}.
+As starting point, we first re-derive a general form of the heat flux, originally due to Hardy~\cite{h1963t}, to explicitly account for periodicity.
+Then, strategies for efficiently implementing the heat flux with \ad are discussed, and the \scare{unfolded} heat flux is introduced, which is applicable to \glps and scales linearly with system size.
+
+\subsection{Related publications}
+Results of the presented work have been submitted for publication as:
+\\\\
+\PaperHF
+\\\\
+\PaperGLP
+\\\\
+In particular, the heat flux for semi-local \mlps was introduced in \cite{lksr2023a}, results for stress and \glps appear in \cite{lfk2023a}.
+
+\subsection{Data and Code Availability}
+The \glpc package uses \jax to implement the forces and stress from \cref{ch:glps}, and the heat flux formulations presented in \cref{ch:gk-hf}. It is available at \nicelink{https://github.com/sirmarcel/glp}. A \pytorch implementation of different heat flux formulations for \schnetpack is available at \nicelink{https://github.com/sirmarcel/gknet-archive}.
+\\\\
+Data and code related to \cref{tab:glps_lj_stress_error_32,tab:glps_snse_stress_error_32} can be found at\\
+\nicedoi{10.5281/zenodo.7852530}.

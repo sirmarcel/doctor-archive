@@ -1,0 +1,230 @@
+%!TEX root = ../../da.tex
+
+\chapter[Review and Benchmark of Representations\\ of Molecules and Materials]{Review and Benchmark of Representations\\ of Molecules and Materials}
+\label{ch:si-reps}
+
+This appendix collects additions to \cref{part:representations}. Additional information, for instance \hp search spaces and details of the employed methods, can be found in the supplementary information to reference~\cite{lgr2022q}.
+
+Here, only additions, and figures and tables required for discussion, are included.
+
+\section{Extensive and Intensive Properties}
+\label{sec:si-reps-extensive}
+
+A property whose magnitude is independent of the size of an object is called \newterm{intensive}, whereas a property that is additive in size is called \newterm{extensive}~\cite{t1917p,hatsopoulos1965}.
+For example, internal energy is an extensive property, band gap energy an intensive one.
+
+For finite systems such as molecules, a property $p$ is extensive if for any two \emph{non-interacting} systems $A$ and $B$, $p(A+B) = p(A) + p(B)$, \cite{jsrm2020q}
+and intensive if $p(A) = p(A+A)$.
+For periodic systems such as bulk crystals, we take $A$ and $B$ to be supercells of the same unit cell.
+In this minimal sense, total and atomisation energy of atomistic systems are extensive.
+
+However, energies are not additive for general changes in a system, such as changes in atomic position, and addition or removal of atoms. Once interactions are included, extensivity is no longer ensured. Nevertheless, with respect to the requirements in \cref{ch:repsb}, \ml models for energies should be size-extensive in the (minimal) sense above.
+%
+For global representations, this can be achieved via normalisation in conjunction with the linear kernel~\cite{jsrm2020q}, whereas local representations as described in \cref{ch:repsb}, \ffs of the form in \cref{eq:ff-ui}, which includes the \glps in \cref{ch:glps}, automatically satisfy this requirement.
+
+\section{Related Benchmarks}
+\label{sec:si-repsbench_literature}
+
+In addition to the studies in \cref{tab:repsbench-related}, Poelking~\etal{}~\cite{pfc2022q} introduce a benchmarking framework for representations, including automatic \hp optimisation, and report learning curves for a large number of datasets and representations, including \dsgdb and \dsba.
+A number of recent studies on \mlps have also appeared. Fu~\etal~\cite{fwgj2022a} and Stocker~\etal~\cite{sggm2022q} probe the limits of \mlps in practice, finding that stability of simulations is not always correlated with force error.
+
+
+\section{Additional Figures and Tables}
+% \subsection{Unrelaxed Geometries}
+
+\begin{figure}
+  \centering
+  \subfloat{
+    \includegraphics[width=\textwidth]{img/reps/fig_lc_nmd18_rmse}
+    \label{fig:lc_nmd18_rmse}
+  }
+
+  \subfloat{
+    \includegraphics[width=\textwidth]{img/reps/fig_pareto_nmd18_rmse}
+    \label{}
+  }
+
+  \caption{Learning curve (top, see \cref{fig:repsbench-lcs}) and error/runtime plot (bottom, see \cref{fig:repsbench-pareto}) for selected representations on dataset \dstcou.
+  }
+  \label{fig:repsbench-nmd18}
+\end{figure}
+
+\clearpage
+\begin{figure}
+  \centering
+  \subfloat{
+    \includegraphics[width=\textwidth]{img/reps/fig_lc_nmd18_mae}
+    \label{fig:lc_nmd18_mae}
+  }
+
+  \subfloat{
+    \includegraphics[width=\textwidth]{img/reps/fig_pareto_nmd18_mae}
+    \label{}
+  }
+
+  \caption{
+  Equivalent to \cref{fig:repsbench-nmd18}, but using \gls{mae}.
+  }
+  \label{fig:si-repsbench_nmd18_mae}
+\end{figure}
+\vspace*{\fill}
+
+\clearpage
+\begin{figure}
+  \centering
+  \subfloat{
+    \includegraphics[width=\textwidth]{img/reps/fig_lc_qm9_mae}
+    \label{fig:lc_qm9_mae}
+  }
+
+  \subfloat{
+    \includegraphics[width=\textwidth]{img/reps/fig_lc_ba10_mae}
+    \label{fig:lc_ba10_mae}
+  }
+
+  \subfloat{
+    \includegraphics[width=\textwidth]{img/reps/fig_lc_xnmd18_mae}
+    \label{fig:lc_xnmd18_mae}
+  }
+
+  \caption{Learning curves for selected representations on datasets \dsgdb{} (top), \dsba{} (centre), and \dstcor{} (bottom).
+		Shown are \gls{mae} and \gls{rmae} of energy predictions on out-of-sample-data as a function of training set size.
+		Boxes, whiskers, bars, crosses show interquartile range, total range, median, mean, respectively.
+		Lines are fits to theoretical asymptotic \gls{mae}.
+		\\\\
+		See \cref{fig:repsbench-lcs} for \gls{rmse}.
+		% See Glossary for abbreviations.	
+	}
+	\label{fig:si-repsbench_lcs_mae}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \subfloat{
+    \includegraphics[width=\textwidth]{img/reps/fig_pareto_qm9_mae}
+    \label{}
+  }
+
+  \subfloat{
+    \includegraphics[width=\textwidth]{img/reps/fig_pareto_ba10_mae}
+    \label{}
+  }
+
+  \subfloat{
+    \includegraphics[width=\textwidth]{img/reps/fig_pareto_xnmd18_mae}
+    \label{}
+  }
+
+  \caption{Compute times of selected representations for datasets \dsgdb{} (top), \dsba{} (centre), and \dstcor{} (bottom).
+  Shown are \gls{mae} and \gls{rmae} of energy predictions on out-of-sample-data as a function of the time needed to compute all representations in a training set.
+  Lines indicate Pareto frontiers; inset numbers show training set sizes.
+  \\\\
+  See \cref{fig:repsbench-pareto} for \gls{rmse}.
+  % See Glossary for abbreviations.	
+	}
+	\label{fig:si-repsbench_pareto_mae}
+\end{figure}
+
+\clearpage
+\subsection{Literature Values}
+
+\begin{table}
+  % Recent additions
+  % DimeNet++ 6.3meV  -> 0.15 (110k (I *think*))
+  % PaiNN 5.9 meV -> 0.14 (110k)
+  % Allegro 3 layer 4.7 meV -> 0.11 (110k)
+  % pfc22 see notebook
+
+    \caption{
+      Selected performance estimates for \dsgdb from the literature.\\
+      % $^{\text{a}}$ inverse-distance many-body representation\\
+      $^{\text{a}}$ original FCHL18 version~\cite{fchl2018q}\\
+      $^{\text{b}}$ revised FCHL19 version~\cite{cbfl2020q}\\
+      $^{\text{c}}$ radial-scaling modification
+    }
+    \begin{tabular}{lcccl}
+    \toprule
+         & \multicolumn{2}{c}{\ Error in \unit{kcal\per\mol}} \\ \cmidrule(lr){2-3}
+    Reference & \gls{mae} & \gls{rmse} & $N$ & Method \\
+    \midrule
+    \cite{ptm2018q}        & \num{1.5} & \num{2.8}  &  5\,k  & \gls{idmbr}\\
+    \cite{cbfl2020q}       & \num{0.72} & ---  & 10\,k  & \soap   \\ 
+    \cite{sstm2018q}       & \num{1.27} & ---  & 10\,k  & SchNet \\  % Figure 3
+    \cite{fchl2018q}       & \num{0.44} & ---  & 10\,k  & \gls{fchl}\,$^{\text{b}}$   \\  
+    \cite{cbfl2020q}       & \num{0.66} & ---  & 10\,k  & \gls{fchl}\,$^{\text{c}}$ \\  % From Anders directly via Marcel
+    \cite{wmc2018q}         & \num{0.14} & ---  & 100\,k & \soap\,$^{\text{d}}$ \\
+    \cite{sgtm2019q}        & \num{0.35} & \num{0.94} & 100\,k & SchNet \\
+    \cite{fhrl2017q}  & \num{0.58} & ---  & 118\,k & \gls{hdad}   \\
+    \cite{pfc2022q}              & ---        & \num{2.11} & 12\,k & \soap \\
+    \cite{pfc2022q}              & ---        & \num{1.43} & 102\,k & \soap \\
+    \cite{ggmg2020a}  & \num{0.15} & ---  & 110\,k & DimeNet++   \\
+    \cite{sug2021a}  & \num{0.15} & ---  & 110\,k & PaiNN   \\
+    \cite{mbkk2022a} & \num{0.11} & ---  & 110\,k & Allegro   \\
+    \\
+    here & \num{0.49} & \num{0.90} & 10\,k  & \soap   \\
+    \bottomrule
+    % \multicolumn{5}{@{}p{0.8\linewidth}@{}}{%
+    %   \rule{0pt}{3ex}%
+    %   $^{\text{a}}$ inverse-distance many-body representation\newline
+    %   \,$^{\text{b}}$ original FCHL18 version \cite{fchl2018q}\newline
+    %   \,$^{\text{c}}$ revised FCHL19 version \cite{cbfl2020q}\newline
+    %   \,$^{\text{d}}$ radial-scaling modification
+    % }
+  \end{tabular}
+    \label{tab:si-repsbench_lit_qm9}
+\end{table}
+\vspace{3\baselineskip}
+
+\begin{table}
+  % Recent additions
+  % pfc22: 0.0053211365045062 is rmse(total energy)/std(total energy)
+  % obtained via personal request + some manual parsing of .json files
+  
+    \caption{
+      Selected performance estimates for \dsba from the literature.\\
+      $^{\text{a}}$ report \gls{rmse} for total energy, as opposed to formation energy per atom. For \gls{rrmse}, we divide by standard deviation of total energy over entire dataset.\\
+      % $^{\text{a}}$ original FCHL18 version~\cite{fchl2018q}\\
+      % $^{\text{b}}$ revised FCHL19 version~\cite{cbfl2020q}\\
+      % $^{\text{c}}$ radial-scaling modification
+    }
+
+    \begin{tabular}{@{}lccccl@{}}
+        \toprule
+             & \multicolumn{2}{c}{\ Error / \unit{\milli\eV \per atom}} \\ \cmidrule(lr){2-3}
+        Ref. & \gls{mae} & \gls{rmse} & \gls{rrmse} in \unit{\percent} & $N$ & Method \\
+        \midrule
+        \cite{nrwh2019q} & 5.3 & --- & --- & 10\,k & \mbtr \\
+        \cite{nrwh2019q} & 3.4 & --- & --- & 10\,k & \gls{mtp} \\
+        \cite{pfc2022q}       & 80.0$^{\text{a}}$ & --- & 0.53$^{\text{a}}$ & 12\,k & \soap \\
+        \\
+        here                  & 2.8 & 4.6 & 2.60 & 10\,k & \soap \\
+        \bottomrule
+    \end{tabular}
+    \label{tab:si-repsbench_lit_ba10}
+\end{table}
+\vspace{3\baselineskip}
+
+\begin{table}
+  % unchanged
+  
+    \caption{
+      Selected performance estimates for \dstcou from the literature.
+      Here, all representations performed roughly equally.
+      At the time of printing, no published results existed for the relaxed \dstcor{} version.
+      % $^{\text{a}}$ original FCHL18 version~\cite{fchl2018q}\\
+      % $^{\text{b}}$ revised FCHL19 version~\cite{cbfl2020q}\\
+      % $^{\text{c}}$ radial-scaling modification
+    }
+
+    \begin{tabular}{@{}lcccl@{}}
+        \toprule
+             & \multicolumn{2}{c}{\ Error / \unit{\milli\eV\per cation}} \\ \cmidrule(lr){2-3}
+        Ref. & MAE & RMSE & $N$ & Method \\
+        \midrule
+        \cite{sgzs2019q} & 13 & --- & 2\,400 & SOAP \\
+        \\
+        here                        & 14--15 & 24--26 & 1\,600 & all \\
+        \bottomrule
+      \end{tabular}
+    \label{tab:si-repsbench_lit_nmd18}
+\end{table}

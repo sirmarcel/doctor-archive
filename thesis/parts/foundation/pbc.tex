@@ -1,0 +1,148 @@
+%!TEX root = ../../da.tex
+
+\chapter{Periodic Systems}
+\label{ch:pbc}
+
+\begin{chapquote}{Jorge Luis Borges, \textit{The Library of Babel}}
+	I will be bold enough to suggest this solution to the ancient problem: The Library is unlimited but periodic. If an eternal traveler should journey in any direction, he would find after untold centuries that the same volumes are repeated in the same disorder -- which, repeated, becomes order: the Order. My solitude is cheered by that elegant hope.
+\end{chapquote}
+
+
+\noindent
+In the last sections, we have discussed methods to model systems with relatively small numbers of atoms. 
+Despite large-scale benchmarks, for instance with a highly parallel \mlp~\cite{jxvk2022a} or \dft on \glspl{tpu}~\cite{pkps2022a}, routine calculations in the context of dynamics are limited in size: Millions of atoms are achievable with fast \ffs, tens of thousands to thousands of atoms with \mlps, hundreds with \dft, and tens or even fewer atoms in higher-level quantum chemistry methods.
+Objects even on the scale of millimetres, however, contain $\approx 10^{19}$ atoms.\footnote{For illustration, elemental Si contains approximately $\num{0.5e+23}$ atoms per cubic centimetre.}
+ % beyond our current ability to model explicitly.
+
+In order to make predictions about such \scare{bulk} systems regardless, we transition to an alternative description: We now consider the system at hand, which is large relative to the atomistic resolution of the methods we are investigating, as \emph{infinite}. From this infinite bulk, we select a finite region as \emph{simulation cell} and tile it periodically in space. With this step, we have formally reduced the many, or rather infinite, degrees of freedom contained in the bulk to the ones in the simulation cell.\footnote{To be precise, to the positions in the simulation cell, and the definition of the cell boundaries.} Because of this reduction, which entails an approximation of the overall behaviour of the system, the selection of the simulation cell must be carefully checked for convergence in practice. The severity of this approximation depends on the type of system being investigated: Crystalline solids, which exhibit long-range order, and are, barring quantum effects, strictly periodic at \qty{0}{K}, are naturally modeled in a periodic fashion~\cite{ashcroft1976}. Amorphous solids, on the other hand, which are locally ordered but disordered at the larger scale, are challenging to treat in this manner~\cite{dhc2022p}. Bulk liquids and gases can be described periodically in many cases, provided that all relevant interactions can be modeled within the simulation cell~\cite{tuckerman2010}.
+
+\newthought{Having motivated the transition} to a periodic system, we will now discuss the mathematical, as well as the computational, description of such systems in detail. We begin by introducing notation and terminology, then discuss how periodic systems are used and implemented, and conclude with some remarks on uniqueness.
+
+\section{Terminology and Notation}
+\label{sec:pbc-terms}
+
+We define three lattice vectors $\basis_a$ and the positions in the \gls{sc} $\Rsc$. These lattice vectors span a parallelepiped\footnote{In principle, other shapes can also be chosen, as long as they can be seamlessly tiled in three dimensions.} containing the $N$ positions $\Rsc$, which is then periodically tiled to form the infinite bulk system $\Rall$, formed of replicas $\Rrep$ and the simulation cell itself. 
+In summary:
+\marginnote{We will often use the sets defined here to refer to collections of indices instead of positions. For instance $i \in \Rsc$ in a sum should be taken as indicating a sum over all $\R_i \in \Rsc$.}
+\marginnote[\baselineskip]{We introduce the following convention: In addition to enumerating cartesian directions, greek indices will also enumerate (lattice) basis vectors. To distinguish from cartesian directions, indices of basis vectors will be lowered.}
+\begin{alignat}{2}
+	\Basis &= \curlyset{\basis_\alpha}{\alpha = 1, 2, 3} & \text{lattice vectors} \nonumber\\
+	\Rsc &= \curlyset{\R_i}{i = 1 ... N} & \text{positions in \gls{sc}} \nonumber\\
+	\offset &= \curlyset{n_\alpha}{\alpha = 1, 2, 3} \in \wholes^3 & \text{offset vector} \nonumber\\
+	% \R_{i\offset} &= \R_i + \sum_{a=1}^{3}\nolimits n_a \basis_a & \text{(replica) position}\\
+	\R_{i\offset} &= \R_i + \sum_{\alpha=1}^{3}\nolimits n_\alpha \basis_\alpha & \text{(replica) position} \nonumber\\
+	\Rrep &= \curlyset{\R_{i\offset}}{\R_i \in \Rsc, \offset \in \wholes^3, \offset \neq \boldsymbol{0}}\quad & \text{replica positions} \nonumber\\
+	\Rall &= \Rsc \cup \Rrep & \nonumber \nonumber\\
+	&= \curlyset{\R_{i\offset}}{\R_i \in \Rsc, \offset \in \wholes^3} & \text{all positions} \, .\nonumber
+\end{alignat}
+It is often necessary to move between replica positions and those in the simulation cell.
+Latin indices, for instance $j$, can refer to positions in both the simulation cell and replicas, and should be taken as shorthand for $j\offset$, where $j \in \Rsc$ and $\offset$ identifies the replica that $j$ resides in.\footnote{If $j \in \Rsc$, then $\offset = \zerovec$.} If a double index of this form appears, the latin index always refers to a position in the simulation cell.
+
+\newthought{The lattice vectors} in $\Basis$ can be seen as basis vectors for a coordinate system, in which a position $\R$ can be written as $\Rf$ such that
+\begin{equation}
+	\R = \sum_\alpha x_\alpha \basis_\alpha \, .
+\end{equation}
+Positions in $\Rsc$ are, by definition, given by $\Rfc_\alpha \in [0, 1]$. The coordinates in this basis, $\Rf$, are called \emph{fractional coordinates}. They can be obtained by computing the inverse of the column matrix obtained from $\Basis$: Letting $\mat{B} = \defvect{\basis_\alpha}{\alpha=1,2,3}$ then $\Rf = \mat{B}^{-1} \cdot \R$.
+The rows of $\mat{B}^{-1}$ are the \newterm{reciprocal lattice} vectors\footnote{Multiple definitions exist; in a physics context, an additional factor of $2\pi$ is often introduced to aid the discussion of wave vectors.} $\Recip = \curlyset{\recip_\alpha}{\alpha=1,2,3}$. Intuitively, the normalised reciprocal lattice vectors $\recipn_\alpha$ are the surface normals\footnote{We follow the convention that $\Basis$ is chosen such that the resulting coordinate system is right-handed. This ensures that the reciprocal lattice vectors always point into the parallelepiped if they are computed via the standard cross products.} of the parallelepiped spanned by $\Basis$, indexed such that $\recipn_\alpha$ is orthogonal to the surface spanned by the two $\basis_\beta$ for which $\beta \neq \alpha$. Therefore, $\recipn_\alpha \cdot \basis_\alpha$ yields the distance between opposite faces of the parallelepiped.
+% ; we will use this observation later.
+
+Simulation cells where $\Basis$ are orthogonal are called \emph{orthorhombic} cells. If all $\basis$ additionally share the same length, the cell is cubic. The general case, when the orthorhombic cell is distorted into a parallelepiped is called non-orthorhombic or \emph{triclinic}. We note that the coordinate system can always be re-oriented in a standard way that ensures that $\basis_1$ is aligned with the x-axis and $\basis_2$ lies in the x-y plane.\footnote[][-0.5\baselineskip]{In the convention for $\mat{B}$ adopted here, this leads to an upper triangular form. The opposite convention, where the \emph{rows} of $\mat{B}$ are the $\basis$, yields a lower triangular form. Both conventions are routinely employed in software.}
+
+\newthought{The smallest possible choice} of simulation cell that still generates the same bulk structure is the \emph{primitive cell}. Many choices are possible, all with the same volume. At present, we always adopt a form that can be written as described above. An alternative construction is the Wigner-Seitz cell, defined as the set of points closest to the origin of a given cell.\footnote{More precisely, the volume closest to the Bravais lattice point (see below).}
+
+A finite number of periodic repetitions of a primitive cell, i.e. restricting $\offset$ to a finite range, is called a \emph{supercell}. Supercells are often used to initialise \gls{md} simulations for crystalline systems, where the primitive cell is given by the fully relaxed structure at \qty{0}{K}. Once atoms in this \newterm{pristine} supercell have moved independently, for instance during a \gls{md} timestep, the supercell can no longer be reduced to a repetition of primitive cells, becoming the primitive cell of the resulting system. All cells that can be periodically tiled are called unit cells; we choose the alternative term simulation cell to emphasise that only the positions in that cell are treated explicitly.
+
+\newthought{Crystallography is concerned with} the systematic study of periodic systems. It describes periodic structures as consisting of a \emph{Bravais lattice}, formed by taking linear combinations of vectors in $\Basis$ with integer coefficients. Each point on the Bravais lattice $\vec{R} = n_1 \basis_1 + n_2 \basis_2 + n_3 \basis_3$ is then decorated with a \emph{basis}\footnote{We avoid usage of this term as it conflicts with the perspective that $\Basis$ yields basis vectors for a coordinate system.} of atoms, replicas of positions in the unit cell. Bravais lattices can be categorised by the symmetry operations that leave them unchanged,\footnote{More precisely, we consider the \newterm{space group} of the lattice, which contains all operations that leave distances unchanged (\newterm{rigid operations}). This group in turn is composed of translations through lattice vectors and operations that leave one lattice point unchanged (\newterm{point group}). Combining the 7 possible point groups (or \emph{crystal systems}) with translations yields 14 space groups.} yielding 14 different classes of Bravais lattices. Systematic enumeration of possible basis arrangements yields a total number of 230 distinct crystal structures.\footnote{This enumeration proceeds by reducing the symmetry of the basis, starting from the maximally symmetric choice of a single atom. See reference \cite[ch.~7]{ashcroft1976}.}
+
+\section{Usage}
+
+Now that we have introduced the concept of periodicity, we consider how to apply it to solving problems in practice. 
+% In particular, while we clearly have obtained a more compact representation of a bulk structure, we do not yet know how to describe its dynamics or compute its electronic structure.
+
+% done: cite Ashcroft-Mermin
+% done: cite something about Floquet
+% nah: cite maybe some born von karman paper or sth
+\marginnote{For a detailed account of these issues, see \cite[ch.~8]{ashcroft1976}.}
+\paragraph{Schrödinger Equation} In order to apply periodicity to the task of solving the electronic Schrödinger equation -- or the Kohn-Sham equations -- we must augment the periodic description with suitable boundary conditions. Periodicity alone, via the Bloch theorem~\cite{b1929p},\footnote{Similar results can be shown for periodic Hamiltonians, or general differential equations, giving rise to Floquet theory~\cite{f1883p}.} yields the information that solutions must take the form $\phi(\R) = \exp(i \vec{k} \R) u_{\vec{k}}(\R)$ where $u_{\vec{k}}$ is periodic with the lattice,\footnote{$u_{\vec{k}}(\R + \vec{R}) = u_{\vec{k}}(\R)$ for any lattice translation $\vec{R}$.} but does not yet tell us how to select $\vec{k}$. This is achieved by introducing Born-von Karman boundary conditions, demanding that for some \emph{fixed} $\curlyset{n_\alpha}{\alpha=1,2,3}$ the wave function is periodic: $\phi(\R) = \phi(\R + n_\alpha \basis_\alpha)$. This yields\footnote{Note that we choose a different normalisation of $\recip$ in this paragraph to avoid factors of $2 \pi$.} the restriction that $\vec{k} = \sum_{\alpha=1}^3\nolimits \recip_\alpha m_\alpha / n_\alpha$ with $m_\alpha \in \wholes$. 
+
+In other words, $\vec{k}$ is restricted to two cases: \emph{(a)} a \emph{limited} number of modes where the wavelength exceeds the size of the unit cell, $\magnitude{m_\alpha} \leq n_\alpha$, and \emph{(b)} many modes where the wavelength is smaller than the unit cell. The former are contained within the \emph{Brillouin zone}, the primitive cell\footnote{In particular, the Wigner-Seitz cell.} of the reciprocal lattice.\footnote{The lattice spanned by $\Recip$.} The latter $\vec{k}$ can be decomposed into a component in the Brillouin zone, and a component that can be absorbed into $u_{\vec{k}}$.
+
+The implications of this are profound: In order to model a periodic system extending to a supercell of size $n_\alpha$ in each direction, we can solve a finite number of separate eigenvalue problems for the different $u_{\vec{k}}$. 
+If the $n_\alpha$ are increased towards infinity, leading to ever-finer sampling of the Brillouin zone, the bulk limit is recovered. In practice, convergence with respect to this \emph{k-grid} must be checked, but often, moderate numbers of k-points are sufficient. Many different strategies for choosing relevant $\vec{k}$ to sample can be employed, often informed by symmetry~\cite{cc1973p,mp1976p}.
+Another implication is that the only periodicity exceeding the unit cell is contained within the phase of $\phi$. Therefore, the density is strictly periodic with the lattice, and we can expect the forces, and therefore the \bo \pes, to be periodic as well.\footnote{From symmetry considerations alone, it is clear that once we take $n_\alpha \rightarrow \infty$, no physical observable can depend on the choice of \emph{which} replica to choose as simulation cell.}
+% From this, we can conclude that the density is periodic, but do not yet know how to select $\vec{k}$ -> this is wrong, we don't even know yet if k is real. At least it's not obvious from the Bloch theorem. Is the translation operator self-adjoint? Dunno.
+% $U(\R + \vec{R}) = U(\R)$
+
+\paragraph{Molecular Dynamics} Working with a periodic potential $U(\R + \vec{R}) = U(\R)$, we can immediately conclude that the force acting on an atom in the simulation cell is the same as the one acting on each of its replicas. Since the time-evolution is determined by the forces,\footnote{In the case of $NpT$, also the stress, which also does not depend on the choice of which cell is used.} we can restrict \md simulations to the atoms in the simulation cell. We will discuss how this is implemented in practice in \cref{sec:pbc-imp}.
+
+This approach restricts the kinds of dynamics we can observe: Any collective vibrational modes are bounded in wavelength by the simulation cell, as only these $N$ atoms can move independently.
+
+% NICE: cite a bit more on the PGM. starting points:
+% https://www.annualreviews.org/doi/10.1146/annurev-matsci-070511-155040
+% https://journals.aps.org/pr/abstract/10.1103/PhysRev.113.1046
+\marginnote[2\baselineskip]{A detailed introduction to phonons can be found in reference~\cite{k2021t}.}
+\paragraph{Phonons} Collective vibrational modes are called \emph{phonons}. They occur in an alternative approach to modeling lattice dynamics: The \bo \pes is approximated with a Taylor expansion around the minimum energy configuration. The second-order approximation, corresponding to harmonic springs between atoms in the simulation cell, yields an analytical solution of the equations of motion in terms of plane waves, the phonons.\footnote{Phonons also emerge in the quantum case, where they are commonly described in second quantisation terms and interpreted as bosonic quasi-particles. This leads to the \newterm{phonon gas model}, which can be used to describe thermodynamic properties of solids. In \cref{ch:gk}, we will investigate an approach that goes beyond this model, which breaks down in the case of anharmonic \pes, or multiple minima.} Higher-order corrections introduce scattering between these modes. Once again, the choice of simulation cell -- typically a supercell -- restricts the possible $\vec{k}$. Extrapolation schemes to larger supercells have been proposed~\cite{crs2017t,ksc2023t}.
+
+\section{Implementation}
+\label{sec:pbc-imp}
+
+For this thesis, we must consider periodicity in two contexts: Defining potentials in a way that ensures their periodicity, and implementations of \gls{md} for periodic systems.
+
+\newthought{For the former case}, we proceed from the fact that the potentials we are considering must respect global translational invariance in addition to periodicity.\footnote{After all, we are modeling the \bo \pes, which shares this invariance. Additional invariances of this form are discussed in a different context in \cref{ch:repsb}.}
+
+They are therefore constructed from atom-pair vectors
+\begin{equation}
+	\R_{ij} = \R_j - \R_i \,,
+\end{equation}
+rather than atomic positions directly.
+We then observe that for any fixed $i$, the set of atom-pair vectors $\R_{ij}$ is identical regardless which cell is chosen for $i$; the only difference is which replica the $j$ belong to.
+Therefore, the choice of simulation cell does not impact the set of atom-pair vectors $\curlyset{\R_{ij}}{i \in \Rsc, j \in \Rall}$ which are the input for the potential. By construction, any potential of this form is therefore invariant under the choice of simulation cell.
+% by construction
+
+In practice, it is often convenient to rephrase the set of atom-pair vectors in terms of positions in the simulation cell only. This can be achieved by augmenting the definition of atom-pair vectors with the \gls{mic}:
+\begin{align}
+	\magnitude{\Rm_{ij}} &= \min_{\offset \in \wholes^3} \magnitude{\R_{j\offset} - \R_i} \quad i,j \in \Rsc \, . \label{eq:pbc_mic}
+\end{align}
+This convention states that whenever we compute an atom-pair vector pointing from $i$ to $j$, we take the one pointing towards the \emph{nearest} replica (or the \scare{original}) of $j$.
+In essence, this treats atom-pair vectors as being defined modulo lattice vectors.
+This introduces discontinuities: Holding $\R_i$ fixed, $\Rm_{ij}$ changes direction, but not magnitude, when $\R_j$ moves more than half the length of the unit cell away.
+Additionally, the \mic imposes an implicit cutoff on the interactions contained within the set of atom-pair vectors: Apart from degenerate situations, only a single replica can ever be be considered.
+
+To avoid both issues, we introduce the maximum cutoff radius
+\begin{equation}
+	\maxcutoff = \min_\alpha \frac{\magnitude{\recipn_\alpha \cdot \basis_\alpha}}{2} \label{eq:pbc_maxcutoff}
+\end{equation}
+for a given simulation cell. In orthorhombic cells, it reduces simply to being half the length of the smallest lattice vector. If the interaction cutoff of the employed potential is below this value, $\cutoff < \maxcutoff$, every atom in $\Rsc$ can only interact with a single replica of each other position; self-interactions are also impossible.
+
+We finally note that the \mic can be implemented using modular arithmetic\footnote{For non-orthorhombic systems, it is particularly convenient to first transition to fractional coordinates, where the \mic can be achieved by computing distances modulo 1. However, \mic distances obtained with this method are only correct below $\maxcutoff$~\cite{smith1989}.} without explicitly constructing the replicas $\R_{j\offset}$. In some cases, as we will see in \cref{ch:glps,ch:gk-hf}, this can lead to difficulties.
+
+\newthought{In dynamics simulations,} we can either let positions evolve freely, relying on the potential to ensure that forces are computed in a periodic fashion, or return (\emph{wrap}) positions whenever they leave the simulation cell. The latter case corresponds to imbuing the simulation cell with the topology of a circle in each coordinate direction,\footnote{In the general triclinic case, this is more clear in fractional coordinates: The faces of the unit cube are joined to the opposite side.} leading to a \emph{toroidal} system.
+
+% \marginnote[3\baselineskip]{The issue of toroidal boundary conditions and transport coefficients is discussed further in \cref{ch:gk-hf}.}
+This choice can be convenient in practice, as it prevents uncontrolled growth of position vectors, but can also lead to difficulties due to the mismatch between this description and the physical situation of a bulk system composed of a \emph{checkerboard} of replicas. For instance, for the calculation of diffusion constants, which relies on tracking the displacement of each particle from its original position, wrapping positions back leads to unphysical results~\cite{a1993t,e1995t}. 
+Additionally, as atoms close to the boundary can oscillate across it during simulations, wrapping positions at every timestep leads to jumps, which can cause cache misses in neighbourlist computations and therefore incur additional computational cost.
+In the present work, which investigates systems where no diffusion occurs,\footnote[][-5\baselineskip]{In other words, where positions stay bounded over time. In this case, we do not face the difficulty of positions growing over time, which would cause precision issues in long simulations.} we therefore avoid wrapping positions.\footnote[][-1\baselineskip]{See \cref{sec:glp-unf} for a construction where it is necessary to wrap positions into the simulation cell.} 
+
+% page break to preserve my sanity: if we don't break here, the footnotes from the previous sentence will spill over
+\clearpage
+\section{Uniqueness}
+% starting point for more
+% https://journals.aps.org/prl/pdf/10.1103/PhysRevLett.82.370 -- localisation operator for pbc; don't need it here imho
+% https://journals.aps.org/prl/pdf/10.1103/PhysRevLett.59.823 -- Car & co on localisation
+
+
+We conclude by considering some properties of the positions $\Rsc$.
+For a given bulk system $\Rall$, even disregarding rotation and translation of the overall coordinate system, the positions within $\Rsc$ are not unique.
+First of all, a given bulk can be equivalently described by the primitive cell or many choices of supercell.\footnote{This gives rise to the expectation that potentials are extensive in a simple sense: When the simulation cell is doubled in one direction, we expect, modulo convergence, the energy to double as well. Forces, on the other hand, should remain unchanged. See \cref{sec:si-reps-extensive} for a further discussion.}
+Even restricting ourselves to the primitive cell, which fixes the number of atoms $N$, many equivalent choices can be obtained by \emph{(a)} shifting the origin of $\Rsc$, or \emph{(b)} changing the shape of the cell.
+
+In addition to cases covered by translational invariance, both operations can lead to some, but not all, atomic positions changing when the cell definition is changed.
+In other words, they are non-unique, and no physical observable can depend on the arbitrary choices made in defining the simulation cell.
+This leads to many practical difficulties, for instance the inability to define a consistent dipole moment even for two charged particles in a periodic system: Different choices of boundary can arbitrarily change sign and direction.\footnote{The more general case of polarisation is discussed in reference~\cite{rv2007t}.} The quantum-mechanical position operator also becomes ill-defined; its modification for periodic cases is non-trivial~\cite{amsb2019t}. Momenta of distributions in periodic boundary conditions also cannot be uniquely evaluated~\cite{fa2001t,rv2007t,mub2016t}, which will pose an essential difficulty in \cref{part:hf}.
+% for instance: https://www.c2x.org.uk/pbc_dipoles.html
+% NICE: illustrate this point
+% removed for being too smartass
+% This leads to the common statement that \emph{positions in the simulation cell are ill-defined}.
+% It is maybe more accurate to say that they are non-unique, and no physical observable can depend on the arbitrary choices made in defining the simulation cell.
+
+A straightforward approach to ensure \emph{boundary invariance}, i.e., invariance with respect to the arbitrary choice of simulation cell, is to find a formulation of the desired physical quantity in terms not only of $\Rsc$, but the bulk system. In particular, as we have seen above, a formulation in terms of the set of atom-pair vectors originating from every position in $\Rsc$ is independent of the choice of boundary. We will use this in \cref{ch:gk-hf}.

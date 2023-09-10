@@ -1,0 +1,92 @@
+%!TEX root = ../../da.tex
+
+\chapter{Results for Zirconia}
+\label{ch:gk-res}
+
+Having trained a \glp for zirconia, and having established a set of \gk settings, we are now finally in a position to consider the thermal conductivity in zirconia across temperatures. First, however, we must verify heat flux formulation derived in \cref{ch:gk-hf}.
+
+\newthought{Consequently, this section is split} into two parts. First, heat flux formulations are compared. Then, finally, the thermal conductivity is computed across temperatures and phases, and compared with other approaches.
+
+\section{Heat Flux}
+
+% \noindent
+\Cref{fig:gkr_hfs_m_300,fig:gkr_hfs_t_1400} compares the linear-scaling \scare{unfolded} heat flux $\Jgunf$ with the quadratically-scaling baseline $\Jgmic$.
+% , which was derived in \cref{sec:hf_mic} as a form of the general Hardy heat flux that can be implemented without the introduction of an extended system.
+Additionally, the purely local heat flux $\Jgloc$ is shown, which neglects all interactions beyond the neighbourhood cutoff radius $\cutoff$.
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{img/plot/gk/zro_hfs_unf_mic_fan_m_300.pdf}
+  \caption{
+  $\kt$ for selected heat flux formulations for monoclinic zirconia at \qty{300}{K},
+  using a SchNet \glp ($\interactions{=\,}2$, $\cutoff{=}\qty{5}{\angstrom}$).
+  The vertical line indicates the difference in determined $\kappa$ for the respective heat flux formulations, based on the first zero crossing of the associated \hfacf.
+  Results are shown for \scare{light} convergence settings $\zrosc$, with filtering with $\omegaf{=}\qty{1}{THz}$, but no removal of a gauge term.
+  }
+  \label{fig:gkr_hfs_m_300}
+\end{figure}
+
+% \noindent
+The results confirm that the efficient re-formulation of the heat flux, $\Jgunf$, is equivalent to $\Jgmic$, and therefore the full Hardy heat flux.
+The local flux $\Jgloc$ is not, underestimating the thermal conductivity by approximately \qty{40}{\percent} due to missing interactions beyond $\interactions{=}1$.
+These observations are found to be consistent across temperatures and phases, as seen in \cref{fig:gkr_hfs_t_1400}.
+A similar effect has been observed when formulations applicable to pairwise additive potentials are used for many-body \ffs~\cite{bbw2019t,smko2019t}.
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{img/plot/gk/zro_hfs_unf_mic_fan_t_1400.pdf}
+  \caption{
+  $\kt$ for selected heat flux formulations for tetragonal zirconia at \qty{1400}{K}.
+  See \cref{fig:gkr_hfs_m_300} for details.
+  }
+  \label{fig:gkr_hfs_t_1400}
+\end{figure}
+
+In \cref{fig:gkr_hfs_m1_m_300}, a SchNet model with $\interactions{=}1$ was used to recompute the heat flux for the trajectories used for \cref{fig:gkr_hfs_m_300}. The result confirms that in the case of $\interactions{=}1$, the local heat flux $\Jgloc$ is equivalent to $\Jgmic$ and $\Jgunf$. 
+\Cref{fig:si-gkr_hfs_all_m1_m_300} further shows $\Jgedg$ and $\Jgsl$ which are equivalent as well.
+We can conclude that for $\interactions{=}1$, all derived heat flux formulations are equivalent and can be used interchangeably; the most efficient choice, as seen in \cref{fig:hf_hf_timings}, is $\Jgedg$.
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{img/plot/gk/zro_hfs_unf_mic_fan_m1_m_300.pdf}
+  \caption{
+  $\kt$ for selected heat flux formulations for monoclinic zirconia at \qty{300}{K},
+  using a SchNet \glp ($\interactions{=\,}1$, $\cutoff{=}\qty{5}{\angstrom}$).
+  For this figure, the $\interactions{=}1$ model was used to recompute the heat flux for the trajectories used for \cref{fig:gkr_hfs_m_300}.
+  Other settings are identical to that figure.
+  }
+  \label{fig:gkr_hfs_m1_m_300}
+\end{figure}
+
+\newthought{In summary, we} verified the theoretical considerations of \cref{ch:gk-hf}: For $\interactions{>}1$, not all heat flux formulations are equivalent.
+The efficient reformulation $\Jgunf$, however, is equivalent to the general heat flux $\Jgmic$.
+In the case of $\interactions{=}1$, all considered formulations are equivalent.
+
+% \clearpage
+\section{Thermal Conductivity}
+
+
+\begin{figure*}
+  \includegraphics[width=\textwidth]{img/plot/gk/zro_kappa_vs_temperature.pdf}
+  \caption{
+  Thermal conductivity across temperatures computed with a SchNet \glp ($\interactions{=\,}2$, $\cutoff{=}\qty{5}{\angstrom}$) using experimentally determined lattice parameters~\cite{ps1969t,kh1998t}, compared with another \mlp~\cite{vkjk2021q}, size-extrapolated \emph{ab initio} \gk~\cite{crs2017t}, a \ff~\cite{mbm2020t} based on the Buckingham potential, and experimental measurements~\cite{rwpm1998t,bflm2000t,mlld2004t}.
+  
+  Error bars are shown as given in the respective publications, the present work provides the standard error across trajectories. \scare{t} and \scare{m} indicate tetragonal and monoclinic phase.
+  }
+  \label{fig:gkr_kappa_vs_temp}
+\end{figure*}
+
+\noindent
+We can now finally compute the thermal conductivity at a larger scale, investigating multiple temperatures for zirconia.\footnote[][-9\baselineskip]{As discussed in \cref{ch:gk-model}, the SchNet \glp used in this part of the thesis can be used for equilibrium \md simulations up to \qty{1800}{K}, but not for an accurate determination of lattice parameters across the tetragonal to monoclinic phase transition. For this reason, and since the focus of the present work is the heat flux, we use experimentally determined lattice parameters.
+
+Values originate from references~\cite{ps1969t,kh1998t}, as reported in reference~\cite{vkjk2021q}. Lattice parameters are given in \cref{sec:si-gknet_zro_lattice}. At \qty{1400}{K}, we report results for both the tetragonal and monoclinic phases, as both lattice parameters are available and monoclinic simulations are sufficiently stable.}
+
+The result can be seen in \cref{fig:gkr_kappa_vs_temp}.
+\glp predictions are in good agreement with both experimental measurements in the monoclinic phase, and theoretical \mlp{} predictions in the monoclinic and tetragonal phases.
+As this work uses similar lattice parameters and the same exchange-correlation functional as the work by Verdi~\etal{}~\cite{vkjk2021q}, the observed close agreement is to be expected.
+Remaining differences between the \mlp results may be due to larger simulation cells used in the present work, enabled by the favourable scaling of computational cost due to the efficient heat flux implementation, and the semi-local nature of the employed \glp.
+Compared to experiment, both \mlps are found to systematically underestimate $\kappa$ by approximately \SIrange{10}{20}{\percent}, which may be related to the intrinsic approximation of a finite-range \mlp{}, or the underlying density functional approximation.
+
+Larger differences are observed with the size-extrapolated \emph{ab initio} \gk results reported by Carbogno~\etal~\cite{crs2017t}, which, however, were computed for the tetragonal phase at all temperatures. Additionally, due to the high computational cost of first-principles calculations, only three trajectories of \qty{60}{ps} each were used, which is reflected in the larger statistical error. 
+
+The \ff based on the Buckingham potential (see \cref{sec:ffs}) used by Momenzadeh~\etal~\cite{mbm2020t} underestimates thermal conductivity at \qty{300}{K} by approximately \qty{35}{\percent}, where \mlp results are in better agreement with experimental data. At higher temperatures, \ff predictions are in line with experimental and \mlp results.
+
+% \clearpage
+\newthought{Overall, predictions of} the present work are consistent with other \mlps, as well as experimental measurements. We therefore conclude that, for this material, a \glp can be used to compute fully size- and time-converged thermal conductivity across temperatures and phases, provided the potential remains stable.

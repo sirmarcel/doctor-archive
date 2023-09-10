@@ -1,0 +1,177 @@
+%!TEX root = ../../da.tex
+
+\chapter{Green-Kubo Method}
+\label{ch:gk}
+
+\noindent
+This section discusses the \glsfirst{gk} method, and in particular its application to the calculation of thermal transport coefficients. It represents an important application of \md simulations, starting with early experiments with hard sphere~\cite{agw1970t} and Lennard-Jones~\cite{v1967p} \ffs in the 1970s, and is the focus of \cref{part:hf,part:gka} of this thesis.
+
+\marginnote[0.5\baselineskip]{This thesis is concerned with lattice thermal transport. We therefore do not treat electronic or mass transport, and use $\tk$ to indicate lattice thermal conductivity.
+\Cref{eq:gk-fourier} holds in a regime where temperature gradients are small on the atomic (microscopic) scale and a steady state has been achieved~\cite{ac2020t}.}
+The thermal conductivity tensor $\tk$ describes the heat flux $\J$ arising in a system exposed to a stationary temperature gradient $(\grad T)$, in accordance with Fourier's law:
+\begin{equation}
+    \J = - \tk \cdot (\grad T) \, ;\label{eq:gk-fourier}
+\end{equation}
+it quantifies the ability of a material to conduct heat.
+Its computational prediction is of great interest for the design of novel high-performance materials which are needed, for example, as thermal barrier coatings in engines~\cite{ecl2008t}, or thermoelectrics for waste heat recovery~\cite{st2008t}.
+
+
+\newthought{There are three families}  of approaches to this modeling task.
+
+\paragraph{Non-Equilibrium Methods} An immediately intuitive approach is to introduce an explicit temperature gradient into the simulation, and then directly observe the resulting heat flux. However, this approach is challenging to implement: It requires maintaining portions of the simulated systems at different temperatures using thermostats, introducing artificial boundaries. Additionally, long simulations are needed to achieve a steady state configuration, and, due to the small length scales accessible via simulation, unphysical large temperature gradients need to be imposed.~\cite{ssk2010t,m1997t,gkec2011t}
+
+\paragraph{Boltzmann Transport} Approaches based on the phonon gas model lead to early breakthroughs in studying thermal transport in crystalline solids, for instance understanding the $1/T$ dependence of thermal conductivity at elevated temperatures~\cite{d1912t}, which arises from first-order anharmonic corrections to a harmonic approximation to the potential energy surface.\marginnote[-2\baselineskip]{While a purely harmonic model displays infinite thermal conductivity, as no mechanism for energy exchange between modes is possible, anharmonic contributions can be treated as perturbations to such a model, leading to phonon-phonon interactions and finite thermal conductivity~\cite{p1929t}.} With the advent of first-principles methods, such approaches based on the \gls{bte} have become a standard method for computing thermal conductivities~\cite{bmms2007t,fr2016t,ibdb2019t,smm2019t}. However, this class of methods faces severe challenges in anharmonic materials with complex crystal structures: A perturbative treatment requires increasingly higher-order terms to treat strong anharmonicity, and the computational cost of evaluating force constants, as well as the solution of the Boltzmann transport equation, becomes increasingly challenging~\cite{rb2018t}. The harmonic approximation can also break down entirely at elevated, or very low, temperatures, and for strongly anharmonic materials.
+
+\paragraph{Green-Kubo Method} Even though thermal transport occurs in a non-equilibrium situation, thermal conductivity can be computed from energy fluctuations in equilibrium, as initially observed by Onsager~\cite{o1931At,o1931Bt} and later formalised by Green and Kubo~\cite{g1952t,k1957t,kyn1957t}.
+This approach can account for any order of anharmonicity, and is therefore able to treat materials where anharmonic effects play an important role.
+In practice, it is implemented through \md simulations, requiring an accurate model of the \bo \pes. 
+High-accuracy \md simulations can be performed using \dft when the exchange-correlation approximation is reliable~\cite{thxy2022p}. For the \gk method, this \glsfirst{aigk} approach~\cite{mub2016t,crs2017t} suffers from its numerical costs which limits the system sizes and timescales, and therefore requires additional denoising and extrapolation approaches~\cite{crs2017t,meb2020t,ksc2023t}.
+For this reason, \ffs are often used for the \gk method, and there is growing interest in the use of \mlps for this task.
+
+\section{Intuition}
+
+% overkill -- we use it everywhere else you goon
+% \marginnote[2\baselineskip]{$E$ and therefore $e$ depend on the phase-space coordinates $\Gamma$, and therefore implicitly on the time $t$, but we suppress this dependence for now.}
+
+Let us define a local energy density that corresponds to the total energy $E$ of the system in question when integrated over its volume:
+\begin{equation}
+    E = \integral{V}^3r \, e(\R, t) \, .
+\end{equation}
+This energy density cannot be expected to be uniquely defined: Any function that integrates to zero over $V$ can be added to it without changing $E$~\cite{cm1992t}, leading to a \newterm{gauge freedom} that carries through to the heat flux, which is introduced below. The final thermal conductivity, however, can be shown to be invariant to the resulting gauge transformation of the heat flux, as will be discussed further in \cref{sec:gk-gauge}.
+
+For a given, non-unique, energy density, we can then compute its first moment, the energy \emph{barycentre}
+\begin{equation}
+    \Bary = \integral{V}^3r \, \R\, e(\R, t) \, .
+\end{equation}
+The chage of this \scare{centre of mass} of the energy density is the \newterm{heat flux}\footnote[][\baselineskip]{In the systems studied in this thesis, the energy flux and heat flux is identical and will be used interchangeably.}\begin{equation}
+    \J = \totaldiff{t} \Bary \, .
+\end{equation}
+We note that in addition to the non-uniqueness of the energy density, the definition of the barycentre, and consequently the heat flux, faces another difficulty: In a periodic system (see \cref{ch:pbc}), absolute positions $\R$ are not uniquely defined; the barycentre and heat flux as defined here are not boundary invariant. This issue is tackled in \cref{ch:gk-hf} by deriving the microscopic heat flux density in a periodic system.
+
+\clearpage
+\marginnote[\baselineskip]{We essentially recapitulate Onsager's regression hypothesis~\cite{o1931Bt}:
+\begin{quotation}
+    ... the average regression of fluctuations will obey the same laws as the corresponding macroscopic irreversible processes.
+\end{quotation}
+A more general statement, which also applies to quantum systems, is the \newterm{fluctuation-dissipation theorem}~\cite{cw1951t,fo1996t}.
+}
+Setting these issues of uniqueness aside, we are now finally in a position to consider the core intuition behind the Green-Kubo method:
+When the system evolves in thermal equilibrium at finite temperature, slight inhomogeneities in the energy distribution arise at random, causing the barycentre to shift. This inhomogeneity might as well have resulted from an external perturbation; the heat flux that arises to correct it will be the same in both situations. We can therefore draw conclusions about the out-of-equilibrium phenomenon of thermal transport by observing local energy fluctuations \emph{in equilibrium}.
+
+% \clearpage
+\section{Green-Kubo Formula}
+
+
+\marginnote{For a thorough and pedagogical derivation, see~\cite[ch.~3]{k2021t},~\cite[ch.~3]{m2014t}, or~\cite{bbgm2020t}.}
+
+A more rigorous statement can be derived by studying the behaviour of currents associated with the energy density, which, due to energy conservation, obeys a continuity equation
+\marginnote{Note that $\dense(\R)$ is only defined in terms of its volume integral, introducing some ambiguity. The consequences of this gauge freedom will be discussed in the next section.}
+\begin{equation}
+    \dot e(\R, t) + \boldsymbol{\nabla} \cdot \boldsymbol{j}(\R, t) = 0 \, ; \label{eq:gk-ceqn}
+\end{equation}
+every local change $\dot \dense(\R, t)$ in energy causes a corresponding local current density $\densj(\R, t)$.
+The integral over this density yields the heat flux
+\begin{equation}
+    \J(t) = \integral{V}^3r \, \densj(\R, t) \, . \label{eq:gk-Jasint}
+\end{equation}
+The Green-Kubo formula is obtained by studying how such energy currents arise in response to a perturbation of the system through a sufficiently small external temperature gradient, modelled as an additional term in  the Hamiltonian.
+
+\newthought{Linear response theory} can then be used to express the expectation values of the energy currents arising in response in terms of the \emph{unperturbed} time-evolution of the system. Spatially integrating the resulting relations, and keeping in mind the thermodynamic limit,\footnote{$N,V \rightarrow \infty$ while $N/V = \text{const.}$} we arrive at the Green-Kubo formula, relating the thermal conductivity to the integral of the \gls{hfacf} as the system evolves in equilibrium:
+\marginnote[\baselineskip]{In the present case, we are concerned with thermal transport. However, the Green-Kubo formalism can be applied to other transport phenomena, for instance diffusion.}
+\begin{align}
+    \tk (T, p)
+    = \frac{1}{k_{\rm B} T^2 V }
+    \lim_{t \rightarrow \infty}
+    \int_0^t \,
+    \intd \tau\,
+    \left\langle
+    \J (\tau) \otimes \J (0) 
+    \right\rangle_{T,p}
+    ~,
+    \label{eq:gk_greenkubo}
+\end{align}
+with the Boltzmann constant $k_{\rm B}$, system volume $V$, pressure $p$ and temperature $T$.%
+\marginnote[2\baselineskip]{Alternatively, we could write the bracket as: $\sum_s p(\phasp{s}{0}) (\ldots)$ with $p$ denoting the probability of each $\phasp{s}{0}$.}
+The $\braket{\cdot}$ denotes the ensemble average at the thermodynamic conditions of interest. More explicitly (see \cref{ch:md}):
+\begin{align}
+    \tk (T, p)
+    = \frac{1}{k_{\rm B} T^2 V }
+    \lim_{t \rightarrow \infty}
+    \int_0^t \,
+    \intd \tau\,
+    \left\langle
+    \J (\phasp{s}{\tau}) \otimes \J (\phasp{s}{0}) 
+    \right\rangle_{\phasp{s}{0} \sampled \ensemble(T, p)}
+    ~.
+    \label{eq:gk_greenkubo_ensemble}
+\end{align}
+The starting conditions $\phasp{s}{0}$ are sampled from a thermodynamic ensemble\footnote{We take $T, p$ as representing any thermodynamic variable characterising the ensemble of interest.} $\ensemble(T, p)$, and \emph{evolved} in time for $\tau$ in the micro-canonical ensemble to $\phasp{s}{\tau}$; we take the average over all such initial conditions.
+
+\newthought{An alternative, but equivalent,} formulation is given by the \gls{he} relation~\cite{h1960t}, identifying $\kappa$ with the slope of the squared displacement of the energy barycentre\marginnote{Note that in this notation, the scalar equivalent of $\tk$ is obtained.}
+\begin{align}
+    \kappa(T, p) 
+    &= \lim_{t \rightarrow \infty}
+    \frac{1}{t}
+    \frac{1}{6 k_{\rm B} T^2 V }
+    \left\langle
+    \magnitude{\Bary(t) - \Bary(0)}^2
+    \right\rangle_{T,p}
+    \label{eq:gk_he_bary}
+    \\
+    &= \lim_{t \rightarrow \infty}
+    \frac{1}{t}
+    \frac{1}{6 k_{\rm B} T^2 V }
+    \left\langle
+    \magnitude{
+    \int_0^t \,
+    \intd \tau\,
+    \J (\tau)
+    }^2 
+    \right\rangle_{T,p}
+    ~.
+    \label{eq:gk_he_hf}
+\end{align}
+This form lends itself to an intuitive view of observing the barycentre undergo a random walk\footnote[][-3\baselineskip]{A random walk is a path where every step is drawn from a fixed probability distribution, for instance choosing steps $\pm 1$ with equal probability.} through the material, diffusing away from its initial position. The \scare{speed} of its movement yields the transport coefficient. It also shows that the thermodynamic limit is required: In a finite system, the displacement would clearly be bounded as $t \rightarrow \infty$, and $\kappa$ would be zero as a result~\cite{a1993t,vsg2007At,vsg2007Bt}.
+
+\section{Gauge Freedom}
+\label{sec:gk-gauge}
+\marginnote{An extended discussion of this idea can be found in~\cite{mub2016t,emub2016t}.}
+The \gls{he} relation makes it clear that any heat flux that can be written as the time-derivative of a quantity that is bounded in the infinite-time limit will lead to a vanishing thermal conductivity. Such a heat flux is called \newterm{non-diffusive}, since it does not correspond to a diffusion of the corresponding energy barycentre.\marginnote{At this point, we encounter an apparent contradiction: The heat flux was defined as the time-derivative of the barycentre at the beginning. Therefore, one would expect the thermal conductivity to always vanish. The solution to this problem is noting that this section takes place in the thermodynamic limit: $\R$ and hence $\Bary$ is unbounded and therefore this theorem does not apply. In a periodic system, $\R$ is not uniquely defined and therefore $\Bary$ cannot be unambiguously defined. As we will see in \cref{ch:gk-hf}, this conundrum is resolved by considering the heat flux instead, defining the barycentre as its time integral.}
+
+A lemma proved by Marcolongo~\etal{}~\cite{mub2016t} states that
+\begin{equation}
+    |\kappa(\J_1 + \J_2) - \kappa(\J_1) - \kappa(\J_2)| \leq 2 \sqrt{\kappa(\J_1)\kappa(\J_2)} \, , \label{eq:gk_addition_lemma}
+\end{equation}
+which implies that if $\J_2$ is a heat flux that produces a vanishing thermal conductivity, the thermal conductivity obtained from the heat flux $\J_1 + \J_2$ is identical to the one obtained from $\J_1$ alone. Therefore, additive terms in $\J$ that are time-derivatives of a bounded quantity can be neglected without changing the resulting $\kappa$.
+
+\newthought{These two observations} can be used to resolve an ambiguity in the derivation of the \gls{gk} theory encountered above: Since $\dense(\R)$ is only defined in terms of its volume integral, the divergence of a bounded vector field\footnote{The volume integral of the divergence can be written as a surface integral, which can be neglected in the thermodynamic limit.} $\boldsymbol{p}(\R)$ can be added to it without changing $E$~\cite{cm1992t}. This gauge term leads to an additional term in the heat flux,
+\begin{align}
+    e(\R) &\rightarrow e(\R, t) + \nabla \cdot \densgauge(\R, t) \\
+    \Rightarrow \J(t) &\rightarrow \J(t) - \totaldiff{t} \integral{} \R \densgauge(\R, t) \, .
+\end{align}
+Due to the lemma above, this additional term does not have an impact on the thermal conductivity. In \cref{sec:hf_terms,ch:gk-conv}, we will use this gauge freedom of the heat flux to remove non-contributing terms from the heat flux to reduce noise or avoid the computation of unnecessary terms.
+
+% \clearpage
+\section{Finite Simulations}
+
+The Green-Kubo relation was derived in the thermodynamic limit, and additionally contains the infinite-time limit of the integral of the \gls{hfacf}, as well as the thermodynamic ensemble average. We now briefly review the approximations required to implement it in practice, using the tools of \gls{md} simulations.
+\marginnote[-2\baselineskip]{For a more comprehensive overview, see references~\cite{jm2012t,ksc2023t}. The particular approach to implementing the \gk method used in this thesis is based on Knoop~\etal~\cite{ksc2023t} and further described in \cref{sec:gkc_params}.}
+
+\paragraph{Finite Size} Despite the large amount of computing power available at modern \gls{hpc} facilities, a system of infinite size cannot be simulated in practice. We instead approximate it by choosing a sufficiently large portion of the system under consideration, and then transitioning to a periodic system, as discussed in \cref{ch:pbc}.
+This procedure introduces \newterm{finite-size effects} as artefacts, for instance through unphysical scattering at the boundaries.
+
+\paragraph{Finite Time} Similar considerations apply to the runtime of simulations. Only finite simulation durations $t_0$ are feasible.
+
+\newthought{Any value for} $\tk$ obtained for a particular choice of simulation cell size $N$ and simulation duration $\td$ with a practical implementation of the \gls{gk} method will therefore depend on the choice of parameters. In order to report reliable estimates of $\tk$, the convergence with respect to these parameters must be studied carefully, as we will explore in \cref{ch:gk-conv}. Transitioning to finite simulations also introduces noise, which is amplified by finite-precision arithmetic, as well as numerical integration schemes. Additional noise is introduced by non-diffusive terms in the heat flux.
+
+\paragraph{Integration Time} Consequently, quantities like the \gls{hfacf} inevitably accumulate noise over the duration of the simulation. For this reason, and the fact that simulations are only run for finite $\td$, the time integral in \cref{eq:gk_greenkubo} must be truncated to a finite integration time $\tc < t_0$. This is justified by the expectation\footnote{Otherwise, $\tk$ would diverge in the $t \rightarrow \infty$ limit. We expect a thermodynamic system to eventually \scare{forget} previous states and decorrelate.}
+that the \gls{hfacf} decays to zero after some characteristic time $\tau_{\text{c}}$. A suitable cutoff time can be determined in different ways, we follow the one outlined in~\cite{ksc2023t}, which first smoothes the \gls{hfacf} with a lowpass filter and then takes the first time the \gls{hfacf} crosses zero.
+
+\paragraph{Noise Reduction} In addition to choosing an integration cutoff, it is often necessary to de-noise the \gls{hfacf} in order to avoid unphysical oscillations in the estimate for $\tk$. This can be achieved by a combination of physically-motivated removal of non-diffusive terms in the heat flux, and additionally by applying a suitable low-pass filter. This is discussed further in \cref{ch:gk-conv}.
+
+\newthought{Finally, the thermodynamic average} in \cref{eq:gk_greenkubo_ensemble} must be tackled: Only a finite number of initial states can be sampled from $\ensemble(T, p)$. We also cannot directly sample the associated probability distribution, instead, we can access to the time-evolution of a system in a given ensemble through \gls{md}, extracting de-correlated samples from the resulting trajectory.
+% ; see \cref{sec:si-md-use}.
+
+\paragraph{Ensemble Average} Initial configurations $\curlyset{\Gamma^0_s}{s = 1 \ldots n}$ are sampled from the thermodynamic ensemble describing the situation being examined, for instance the canonical ensemble for constant temperature.\footnote{Practical considerations typically lead to using the $NVT$ ensemble to generate initial configurations even for constant-pressure situations.} Then, we can evolve the systems $s$ for some time $t_0$ in the micro-canonical ensemble, allowing us to compute the instantaneous heat flux $\J_s(t)$ for each trajectory.
+
+\newthought{As we have seen,} while there are some practical difficulties in applying the \gls{gk} approach, they are surmountable by a careful analysis of convergence, numerical approaches to noise reduction, and approximations to the ensemble average. While the computational cost of obtaining sufficiently converged results may limit the applicability of the method, no further conceptual difficulties remain -- except one: the definition of the heat flux, which we will tackle in \cref{ch:gk-hf}.

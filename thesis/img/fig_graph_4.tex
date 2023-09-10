@@ -1,0 +1,30 @@
+
+\begin{tikzpicture}[
+    x = 0.8cm,
+    y = 0.8cm,
+    >=stealth,
+    atom/.style = {circle, fill=black, minimum size=4pt,
+    inner sep=0pt, outer sep=0pt},
+    replica/.style = {circle, fill=red, minimum size=4pt,
+    inner sep=0pt, outer sep=0pt, opacity=0.5},
+]
+
+\clip (0.0,0.0) rectangle (6.0,4.199999999999999);
+
+\node[atom] (atom_0) at (2.0,1.4){};
+\node[atom] (atom_1) at (2.5,1.7999999999999998){};
+\node[atom] (atom_2) at (3.2,1.9){};
+\node[atom] (atom_3) at (3.2,2.8){};
+\node[atom] (atom_4) at (3.7,2.4){};
+\draw [solid, thick] (atom_0) to [bend right=70] node [midway, above]{} (atom_4);
+\draw [solid, thick] (atom_0) -- (atom_1);
+\draw [solid, thick] (atom_1) -- (atom_2);
+% \draw [solid, thick] (atom_1) -- (atom_3);
+\draw [solid, thick] (atom_2) -- (atom_4);
+\draw [solid, thick] (atom_2) -- (atom_3);
+\draw [solid, thick] (atom_3) -- (atom_4);
+
+\draw [solid, thick] (0.0,0.0) rectangle (6.0,4.199999999999999);
+
+
+\end{tikzpicture}

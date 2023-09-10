@@ -1,0 +1,398 @@
+%!TEX root = ../../da.tex
+
+\chapter{Review}
+\label{ch:repsr}
+
+% \begin{chapquote}{Percy Bysshe Shelley, \textit{Ozymandias}}
+% 	Look on my Works, ye Mighty, and despair!
+% \end{chapquote}
+
+% TODO: add UFP
+
+Having established the role and requirements of representations, we now turn our attention to the variety of proposed representations, seen in \cref{tab:repsr-refs}, and aim to provide an overview and a general classification of these approaches. This section is structured accordingly. 
+% First, we introduce three selected representations in some detail: \gls{mbtr}, \gls{sf}, and \gls{soap}. Then, we survey many other representations more briefly. Finally, we identify common design choices and principles, and establish the distinction between density-based and body-ordered representations.
+First, general principles for constructing representations are outlined, and then studied in detail for three particular representations: \gls{mbtr}, \glspl{sf}, and \gls{soap}. We then conclude by providing a short review of other representations, and discuss connections between them.
+
+
+\begin{table}[t]
+	\caption{%
+		Overview of representations.\\
+		For each representation (Repr.), year of publication (Year), original reference (Orig.), references for further methodological development (Development), and availability of implementations (Impl.) are shown.
+		See Glossary for abbreviations.
+		\label{tab:repsr-refs}
+	}
+	% \vspace*{\captionskip}
+	
+	\begin{center}
+	\begin{tabular}{@{\hspace{2pt}}llccc@{\hspace{2pt}}}
+		\toprule
+		& & \multicolumn{3}{c}{References} \\ \cmidrule(lr){3-5}
+		Year & Repr. & Orig.                     & Development                                                                                                    & Impl. \\ 
+		\midrule
+		2007 & \acs{sf}    & \cite{bp2007q}         & \cite{b2011Aq,sir2017q,gsbm2018q,rag2018q,auc2018q}                                                 & \cite{availsf,hjrf2020q}   \\
+		2010 & \acs{bs}    & \cite{bpkc2010q}       & \cite{wt2018q,stt2019q,s2020q}                                                                      & \cite{availbs}                 \\
+		2012 & \acs{cm}    & \cite{rtml2012Aq}       & \cite{m2012Aq,rtml2012Bq,rdrl2015q,rrl2015q,bbhm2017q}                                               & \cite{availmbtr,hjrf2020q} \\  
+		2013 & \acs{soap}  & \cite{bkc2013q}        & \cite{bpkc2010q,dbcc2016q,bdcc2017q,cwc2018q,c2019Bq,jkk2019q,kme2019q,stt2019q,s2020q,kme2020q} & \cite{availsoap,hjrf2020q} \\
+		2013 & \acs{omf}   & \cite{sglg2013q}     & \cite{zawg2016q,pdlg2021q}                                                                & ---                               \\
+		2015 & \acs{bob}   & \cite{hbmt2015q}    & \cite{hl2016q}                                                                                       & \cite{availqml}                \\
+		2015 & \acs{wst}   & \cite{hmp2017q}         & \cite{hmp2017q,eehm2017q,bsqh2018q,eemt2018q,hhnh2019q,ssqh2020q}                              & \cite{aace2020q}        \\
+		2016 & \acs{mtp}   & \cite{s2016q}          & \cite{ps2017q,gps2018q,ns2018q,s2019q}                                                               & \cite{ngps2021q}               \\
+		2017 & \acs{mbtr}  & \cite{hr2022q}          & \cite{nrwh2019q}                                                                                & \cite{availmbtr,hjrf2020q} \\
+		2017 & \acs{hdad}  & \cite{fhrl2017q} & ---                                                                                                     & ---                               \\
+		2018 & \acs{decaf} & \cite{tzk2018q}        & ---                                                                                                     & \cite{availdecaf}              \\
+		2018 & \acs{fchl}  & \cite{fchl2018q}       & \cite{cbfl2020q}                                                                                    & \cite{availqml}                \\
+		2018 & \acs{idmbr} & \cite{ptm2018q}        & ---                                                                                                     & \cite{availidmbr}              \\
+		2018 & \acs{mob}   & \cite{wcm2018q}        & \cite{cwcm2019q,hslm2021q,lhdm2021q}                                                                 & ---                               \\ % ckwm2019q has no new contributions to the features
+		2019 & \acs{ace}   & \cite{d2019q}         & \cite{dboo2022q,d2020Aq}                                                                            & \cite{lood2021q,availace}\\
+		2020 & \acs{nice}  & \cite{npc2020q}        & ---                                                                                                     & \cite{availnice}               \\
+		2020 & \acs{gm}    & \cite{zk2020q}         & ---                                                                                                     & ---                               \\
+		2021 & \acs{milad} & \cite{u2021q}           & --- & \cite{availmilad} \\
+		\bottomrule
+	\end{tabular}
+	\end{center}
+\end{table}
+
+
+\section{$k$-Body and Density Expansions}
+
+We identify two main perspectives on the problem of representing atomistic systems, and by extension approximating invariant (or equivariant) functions of the configuration of atomistic systems.
+
+\marginnote[2\baselineskip]{We note in passing that translational invariance can also be treated explicitly with symmetrisation, recovering atom-pair vectors~\cite{mgcc2021q}.}
+The first consideration in designing representations is the approach to symmetry. In particular, the approach to rotational, and to some extent parity, invariance can be used to categorise representations. Translational and permutational symmetry, on the other hand, are typically resolved in a similar fashion for essentially all representations: Translational invariance is ensured by working with atom-pair vectors, rather than absolute coordinates, and permutational invariance is enforced by summing over atomic contributions.
+
+% % TODO: should we mention canonical alignment approaches?
+Broadly speaking, geometric invariance can be tackled in two ways: Constructing representations from invariant functions directly, and explicit symmetrisation. For instance, if a representation is constructed from interatomic distances and angles, rotational invariance is immediately ensured. The alternative to this approach is to first compute an intermediate representation that is not invariant, and then explicitly integrate it over all possible transformations. 
+
+\newthought{While both approaches} are in principle equivalent in the appropriate limits, they nevertheless give rise to two distinct perspectives, and to different scaling of computational cost in practice. We now briefly introduce both, setting up the task at hand as follows: We aim to represent an arrangement of $N+1$ atoms, selecting a central atom, which we index with $i=0$, as origin of the coordinate system.\footnote[][-5\baselineskip]{
+	We make this choice in order to directly describe local representations, restricting the sum to a finite neighbourhood of the central atom. Global approaches are recovered by dropping this restriction and varying the index of the central atom over all $N$. Periodic systems require special treatment, as discussed in \cref{ch:pbc} -- at present, we simply take our positions to be within $\Rsc$, and implicitly assume the \gls{mic}.
+} Atom positions $\R_{j, j>0}$ are therefore identified with atom-pair vectors $\R_{ij} = \R_j - \R_0 = \R_j$. This ensures translational invariance a priori, and allows a concise notation subsequently, but, as we will see, requires a careful definition of body-order. We additionally use $\aprop_i$ to denote atomic properties, such as atomic numbers $Z_i$.
+
+\paragraph{Body-Order Expansion} This approach descends from the idea of expanding the \gls{pes} in a series of functions of increasing body order $k$, i.e., explicitly acting on $k$ atomic positions~\cite{es1994p}:
+ % $\R_i$ and other atomic properties $\aprop_i$, for example the atomic number $Z_i$. The expansion is then:
+% One approach relies on an explicit expansion in terms of geometrically invariant functions of $k$ atoms
+% \marginnote{Recall the $\R_i$ is the position of atom $i$, and $\aprop_i$ summarises all other atomic properties, for instance atomic number $Z_i$. We will drop $\aprop_i$ from now on to keep the notation concise.}
+\marginnote{Note that the $k{=}1$ body function cannot take $\R_i$ into account due to translational invariance. Since $\R_{j>0}$ are atom-pair vectors, $\R_0$ is implicitly included in subsequent terms in the expansion.}
+\begin{align}
+	f(\curlyset{\R_i, \aprop_i}{i=0, 1...N}) &= f_{k=1}(\aprop_0) \\
+	&+  \sum_{j=1}^N f_{k{=}2}(\R_j, \aprop_j, \aprop_0) \\
+	&+  \sum_{i=1}^N \sum_{j=1}^N \sum_{m=1}^N f_{k{=}3}(\R_j, \aprop_j, \R_j, \aprop_m, \aprop_0) \\
+	&+ ... \, .
+\end{align}
+% \begin{align}
+% 	f(\curlyset{\R_i, \aprop_i}{i=0, 1...N}) &= \sum_{i=1}^N f_{k=1}(\R_i, \aprop_i) \\
+% 	&+  \sum_{i=1}^N \sum_{j=1}^N f_{k{=}2}(\R_i, \aprop_i, \R_j, \aprop_j) \\
+% 	&+  \sum_{i=1}^N \sum_{j=1}^N \sum_{m=1}^N f_{k{=}3}(\R_i, \aprop_i, \R_j, \aprop_j, \R_j, \aprop_m) \\
+% 	&+ ... \, .
+% \end{align}
+% \marginnote{For translational invariance, }
+Provided that $f_k$ are constructed to be invariant, this expansion is invariant by design, and no further consideration of symmetry is needed. 
+Typical building blocks of $k$-body functions include 
+atomic number counts ($k{=}1$),
+distances, sometimes inverted or squared ($k{=}2$),
+angles or their cosine ($k{=}3$),
+dihedral or torsional angles ($k{=}4$). % torsional includes direction
+Less common, (al)chemical relationships can be included, for example, based on period and group in the periodic table~\cite{fchl2018q}.
+
+Computational cost of this type of method scales like $\bigo{N^k}$ due to the explicit evaluation of $k$-body functions. Nevertheless, as implementation and parallelisation is straightforward, $k$-body expansions form the basis of many classical \ffs (see \cref{sec:ffs}), and a number of \ml representations, for instance the \mbtr and \gls{sf} approaches, discussed below.
+
+\marginnote[2\baselineskip]{We can only present an abridged version of this topic here. For a more detailed discussion, see reference~\cite{dboo2022q}.}
+\paragraph{Density Expansion} In a first step, the arrangement of atoms is represented as a density in space by placing a set of functions (or distributions) $\localf{\R}$ at each position $\R_i$:
+\begin{equation}
+	\rho(\R, \curlyset{\R_i, \aprop_i}{i=1...N}) = \sum_{i=1}^N \localf{\R_i-\R} \, .
+\end{equation}
+Then, this density is expanded in a basis of functions $\phi_{\boldsymbol{nlm}}(\R)$, yielding an intermediate representation\marginnote{Here, $\braket{}$ simply denotes an inner product; we compute a spatial overlap integral between the two functions. If delta distributions are used for $\localf{\R}$, we simply recover $A_{nlm}=\sum_j \phi_{nlm}(\R_j)$.}
+\begin{equation}
+	A_{nlm} \defas \braket{\phi_{nlm} | \rho} \, ,
+\end{equation}
+which is then symmetrised, formally by integrating over all possible transformations. Clearly, symmetrising a single such representation discards much useful information,\footnote{For instance, consider rotationally symmetrising a single density: All angular information is lost, as retaining it would break rotatonal invariance. Two densities, on the other hand, can retain \emph{relative} rotations. A thorough introduction can be found in~\cite{mgcc2021q}.} and therefore, $\nu$ copies of $A_{nlm}$ are combined and symmetrised \emph{jointly}, retaining $k=(\nu+1)$-body correlations.\footnote{For example, the $\nu=2$ power spectrum used in \soap is equivalent to an angular distribution function~\cite{jkk2019q}.} Note, however, that for finite bases, no \emph{full} $k$-body information is retained, as $k$-tuples are not computed explicitly.
+
+The advantage of this approach is precisely due to the avoidance of explicit evaluation of $k$-body functions: As the sum over neighbourhoods is executed \emph{first}, no immediate polynomial scaling with body-order is introduced. However, symmetrisation incurs computational cost, limiting $\nu$. In practice, $\nu=2$ is often sufficient.
+
+% tensor products of such density representations are constructed and symmetrised, yielding a different approach to body-order expansion. In this view, as the sum over neighbourhoods is executed \emph{first}, no immediate polynomial scaling with body-order is introduced. However, symmetrisation incurs computational cost.
+% TODO: look up exact scaling in dboo20 and/or Christoph's talk
+
+In order to facilitate the symmetrisation, a basis in terms of spherical harmonics $Y_l^m$ is usually employed, which have well-understood transformation properties under rotations. In particular, the theory of the addition of angular momentum, or equivalently, the theory of representations of $\sog(3)$, yields prescriptions for how intermediate representations with given $(l_1, l_2, ..., l_\nu)$ can be combined into a final representation with a particular $l$. 
+Rotational symmetrisation is then equivalent to obtaining final representations with $l=0$, not requiring the evaluation of integrals over the symmetry group. Equivariant models can be constructed by permitting $l>0$.
+% A brief exposé of these issues is presented in TODO. 
+% I wish...
+We also note in passing that these ideas can be used to construct \nns with equivariant intermediate representations~\cite{s2021q,bmsk2022q,sug2021q}.
+% TODO: add all the usual suspects for equivariant NNs
+% TODO: either actual write that supplement or w/e, or just cite dboo20 and maybe the og SOAP paper
+
+\newthought{The notion of} $k$-body representations as introduced here, where we use either explicit $k$-body functions, or $\nu$ copies of density expansions, requires additional considerations once non-linearities are introduced, or terms are combined. For instance, products of distance-based terms are formally three-body, but cannot retain full angular information. Similarly, taking powers $\zeta$ or products of $k,k'$-body terms produces formally many-body terms, which regardless are less expressive than the full $k^\zeta$- and $k\cdot k'$-body terms~\cite{jkak2020q}. Non-linearities can yield formally infinite-body terms~\cite{npfc2022q}.
+% In this work, we therefore explicitly refer to the body-order of terms used to compute representations.
+% \newthought{In this work, we use} the term $k$-body to refer to representations that are explicitly computed as functions of $k$ positions. This does not immediately apply to density-based representations
+
+\section{Selected Representations}
+\label{sec:repr-selected}
+
+We discuss three representations that fulfil the requirements in \cref{ch:repsb} and for which a general implementation, including for periodic systems, and not tied to a specific regression approach, was available when this work was undertaken.
+% Additionally, representations had to support both periodic and non-periodic systems.
+These representations are empirically compared in \cref{ch:repsbench}, and now serve as paradigmatic examples of the approaches outlined in the previous section.
+
+\subsection{Symmetry Functions}
+
+\begin{figure*}
+  \centering
+  \includegraphics[scale=0.07]{img/reps/fig_sf_sketch.pdf}
+  \caption{
+  	Illustration of the \gls{sf} representation.
+    Shown are radial functions $G_i^2(\mu,\eta)$, \cref{eq:repr-sf2}, for increasing values of~$\mu$.
+	The local environment of a central atom is described by summing contributions from neighbouring atoms separately by element.
+  }
+  \label{fig:repr_sf}
+\end{figure*}
+
+
+% TODO; include?
+% Initially, symmetry functions were crafted for individual systems.
+% Of historical interest, but does not fit the format of the article.
+% Examples:
+%  Lorenz, Groß, Scheffler, 2004 checked
+%  Lorenz, Scheffler, Groß, 2006 checked
+%  Behler, Lorenz, Reuter, 2007  checked
+%  Ludwig, Vlachos, 2007         checked
+
+\noindent
+\Glspl{sf}~\cite{bp2007q,b2011Aq} are collections of $k$-body functions that describe relations between a central atom and the atoms in a local environment around it.
+They are typically based on distances (\emph{radial} \sfs, $k{=}2$) and angles (\emph{angular} \sfs, $k{=}3$).
+Each \gls{sf} encodes a local feature of an atomic environment, for example the number of H atoms at a given distance from a central C atom. \Cref{fig:repr_sf} illustrates radial \glspl{sf}.
+
+For each \gls{sf} and $k$-tuple of chemical elements, contributions are summed.
+Sufficient resolution is achieved by varying the \hps of an \gls{sf}.
+For continuity (and differentiability), a cutoff function $\fcutoff$ ensures that \sfs decay to zero at the cutoff radius $\cutoff$.
+
+The five \sfs proposed by Behler in reference~\cite{b2011Aq} are
+%
+\begin{align}
+	G^1_i =& \sum_{j} \fcutoff(r_{ij})  \\
+	%
+	G^2_i =& \sum_{j} \exp \bigl(-\eta (r_{ij}-\mu)^2 \bigr) \, \fcutoff(r_{ij}) \label{eq:repr-sf2}\\
+	%
+	G^3_i =& \sum_{j} \cos ( \kappa \, r_{ij} ) \, \fcutoff(r_{ij}) \\
+	%
+	G^4_i =& \,2^{1-\zeta} \sum_{j,k \neq i} (1 + \lambda \cos \theta_{ijk})^{\zeta}\notag\\
+	       & \cdot \exp{\bigl(-\eta (r_{ij}^2 + r_{ik}^2 + r_{jk}^2)\bigr)} \\
+	       & \cdot \fcutoff(r_{ij}) \, \fcutoff(r_{ik}) \, \fcutoff(r_{jk}) \notag\\
+	%
+	G^5_i =& \,2^{1-\zeta} \sum_{j,k \neq i} (1 + \lambda \cos \theta_{ijk})^{\zeta} \notag\\
+	       & \cdot \exp{\bigl( -\eta (r_{ij}^2 + r_{ik}^2) \bigr)} \, \fcutoff(r_{ij}) \, \fcutoff(r_{ik}) 
+\end{align}
+%
+with the cutoff function
+%
+\begin{equation}
+	\fcutoff(r_{ij}) = \begin{cases}
+		0.5 \cos \bigl(\pi r_{ij} / \cutoff \bigr) & \text{for}\quad r_{ij} \leq \cutoff\\
+			0 & \text{for}\quad r_{ij} > \cutoff \, .\\
+	\end{cases}
+\end{equation}
+In the above equations,
+index $i$ is the central atom; $j, k$ run over all atoms in the local environment around~$i$ with cutoff radius~$\cutoff$.
+$r_{lm}$ indicates pairwise distance\footnote{In solids, the \mic is used.} and $\theta_{lmn}$ the angle between three atoms.
+$\eta$ and $\kappa$ are broadening parameters. $\mu$ a shift parameter, and $\zeta$ determines angular resolution. 
+$\lambda{=}\pm 1$ determines whether the angular part of $G_i^4$ and $G_i^5$ peaks at $\SI{0}{\degree}$ or $\SI{180}{\degree}$. 
+
+The choice of which \sfs to use is a structural \gls{hp}. Grids of parameters are often used, for instance choosing $\mu$ in \cref{eq:repr-sf2} in regular intervals. One such scheme~\cite{gsbm2018q} is employed in \cref{ch:repsbench}.
+
+Variants of \sfs include partial radial distribution functions~\cite{sgmg2014q}, improved angular resolution~\cite{sir2017q}, and reparametrisations to improve scaling with the number of chemical species~\cite{gsbm2018q,rag2018q,auc2018q}.
+
+\subsection{Smooth Overlap of Atomic Positions}
+
+\begin{figure*}
+  \centering
+  \includegraphics[scale=0.07]{img/reps/fig_soap_sketch_with_central_atom.pdf}
+  \caption{
+  	Illustration of the \gls{soap} representation.
+    The local density around a central atom is modeled by atom-centred normal distributions and expanded into radial and spherical harmonics basis functions.
+  }
+  \label{fig:repr-soap}
+\end{figure*}
+
+\noindent
+\soap~\cite{bkc2013q}, illustrated in \cref{fig:repr-soap}, is an early example of the density-based approach. It uses Gaussian functions as $\localf{\R}$ to construct the atomic density, and employs orthogonal radial and spherical harmonics basis functions to expand the density\marginnote[7\baselineskip]{Note that the expansion of the density can be done analytically, as the expansions of Gaussians in spherical harmonics is known.}
+% todo: it is unclear whether the Gaussians are normalised or not
+% todo: SOAP employs a basis of polynomials orthonormalised up to the cut-off radius; how does that work?
+%
+\begin{equation}
+	\rho(\vec r) = \sum_{nlm} A_{nlm} \, g_n(\vec{r}) \, Y_l^m(\vec{r}) ,
+\end{equation}
+%
+where $g_n$ are radial, and $Y_l^m$ are (angular) spherical harmonics basis functions. $A_{nlm}$, the expansion coefficients, are then intermediate representation introduced previously.
+
+From these coefficients, rotationally invariant quantities can be constructed, such as the {power spectrum} 
+%
+\begin{equation}
+	\label{equ:powerspectrum}
+	p_{nn'l} = \sum_m A_{nlm} A^*_{n'lm}\,  ,
+\end{equation}
+which can be understood as combining two copies of $A_{nlm}$ into a joint object with $l=0$.
+% \begin{equation}
+	% A_{nl_1m} \otimes A_{nl_2m} \rightarrow A_{nn'\,l_1=l_2\,l=0} \, .
+% \end{equation}
+% 
+The power spectrum is equivalent to a radial and angular distribution function~\cite{jkk2019q}, and captures up to three-body interactions, as it corresponds to $\nu = 2$. % jkk2019a: see end of section B
+
+Numerical \hps are the maximal number of radial and angular basis functions, the broadening width, and the cut-off radius. Structural \hps are the type of radial basis functions.
+
+\newthought{An alternative to the power spectrum} is the \gls{bs} \cite{bpkc2010q}, a set of invariants that couples multiple angular momentum and radial channels. It corresponds to combining $\nu = 3$ copies of $A_{nlm}$, and is related to three-point correlations of a four-dimensional spherical harmonics expansions.
+\Gls{snap} includes quadratic terms in the \gls{bs} components~\cite{wt2018q}.
+
+Extensions of the \soap framework include recursion relations for faster evaluation~\cite{c2019Bq} and alternative radial basis functions~$g_n$, such as third- and higher-order polynomials~\cite{c2019Bq}, Gaussian functions~\cite{hjrf2020q}, and spherical Bessel functions of the first kind~\cite{kme2019q,kme2020q}. \soap can also be viewed as a special case of the \ace approach~\cite{d2019q,dboo2022q}.
+
+\subsection{Many-Body Tensor Representation}
+
+\begin{figure*}
+  \centering
+  \includegraphics[scale=0.07]{img/reps/fig_mbtr_sketch.pdf}
+  \caption{
+  	Illustration of the \gls{mbtr}.
+    Shown is a broadened histogram of distances (no weighting) arranged by element combination.
+  }
+  \label{fig:repr-mbtr}
+\end{figure*}
+\noindent
+Finally, we consider the \mbtr, illustrated in \cref{fig:repr-mbtr}, a global representation consisting of broadened distributions of $k$-body terms, arranged by element combination. 
+
+For each $k$-body function and $k$-tuple of elements, all corresponding terms (for example, all distances between C and H atoms) are broadened and summed up.
+The resulting distributions describe the geometric features of an atomistic system:
+%
+\begin{equation}
+	\label{equ:mbtr}
+	f_k(x, z_1, \ldots, z_k) = \sum_{i_1\, \ldots\, i_k} w_k \; \mathcal{N}(x|g_k,\sigma) \prod_{j=1}^k \delta_{z_j Z_{i_j}} \,, % \prod_{j=1}^k C_{z_j,Z_{i_j}}
+\end{equation}
+%
+where $w_k$ is a weighting function that reduces the influence of tuples with atoms far from each other, and $g_k$ is a $k$-body function; both $w_k$ and $g_k$ depend on atoms $i_1, \ldots, i_k$.
+$\mathcal{N}(x|\mu,\sigma)$ denotes a normal distribution with mean~$\mu$ and variance $\sigma^2$, evaluated at~$x$.
+The product of Kronecker~$\delta$ restricts to the given element combination $z_1,\ldots,z_k$.
+
+Periodic systems can be treated by using strong weighting functions and constraining one index to the unit cell.
+In practice, \cref{equ:mbtr} can be discretised.
+Structural \hps include the choice of $w_k$ and $g_k$; numerical \hps include variance~$\sigma$ of normal distributions.
+Requiring one atom in each tuple to be the central atom results in a local variant~\cite{localmbtr2019}.
+
+% \clearpage
+\section{Other Representations}
+
+% TODO: rewrite in thesis style! gl
+
+Many other representations were proposed.
+
+The \gls{cm} \cite{rtml2012Aq} describes a system via inverse distances between atoms but does not contain higher-order terms.
+It is fast to compute, easy to implement, and in the commonly used sorted version~\cite{rtml2012Aq}, allows reconstruction of an atomistic system via a least-squares problem.
+However, it suffers either from discontinuities in the sorted version or from information loss in the diagonalised version as its eigenspectrum is not unique~\cite{m2012Aq,rtml2012Bq}.
+A local variant exists~\cite{bbhm2017q}.
+
+% BoB
+\Gls{bob} \cite{hbmt2015q} uses the same inverse distance terms as the \gls{cm} but arranges them by element pair instead of by atom pair.
+The \scare{BA-rep\-res\-ent\-a\-tion}~\cite{hl2016q} extends this to higher-order interactions using bags of dressed atoms, distances, angles, and torsions.
+The \gls{idmbr}~\cite{ptm2018q} employs higher powers of inverse distances and separation by element combinations.
+
+% HDAD/FCHL
+\Gls{hdad}~\cite{fhrl2017q} are histograms of geometric features organized by element combination.
+This global representation is similar to \gls{mbtr} but typically uses fewer bins, without broadening or explicit weighting. % 15--25 bins
+
+The \gls{fchl} representation \cite{fchl2018q,cbfl2020q} describes atomic environments with normal distributions over  row and column in the periodic table ($k{=}1$), interatomic distances ($k{=}2$), and angles ($k{=}3$), scaled by power laws.
+
+In the FCHL18 variant~\cite{fchl2018q} the full continuous distributions are used, requiring an integral kernel for regression.
+Among other optimisations, FCHL19~\cite{cbfl2020q} discretises these distributions, 
+similar to the approach taken by \sfs, and can be used with standard vector kernels.
+
+% % WST
+\Gls{wst} \cite{hmp2017q,hmp2017q,eehm2017q,bsqh2018q,eemt2018q,hhnh2019q,ssqh2020q} use a convolutional wavelet frame representation to describe variations of (local) atomic density at different scales and orientations.
+Integrating non-linear functions of the wavelet coefficients yields invariant features, where second- and higher-order features couple two or more length scales.
+Variations use different wavelets~\cite{hmp2017q,hmp2017q,eehm2017q,eemt2018q,bsqh2018q,ssqh2020q} and radial basis functions~\cite{eehm2017q,bsqh2018q,ssqh2020q}.
+
+% % MTP + GM, NICE, ACE
+\Glspl{mtp} \cite{s2016q} describe atomic environments using a spanning set of efficiently computable, rotationally and permutationally invariant polynomials derived from tensor contractions.
+Related representations include \gls{gm}~\cite{zk2020q}, based on contractions of tensors from linear combinations of Gaussian-type atomic orbitals;
+the \gls{nice} framework, \cite{npc2020q} which uses recursion relations to compute higher-order terms efficiently;
+\gls{ace}~\cite{d2019q,dboo2022q,d2020Aq}, which employs a basis of isometry- and permutation-invariant polynomials from trigonometric functions and spherical harmonics; and, \gls{milad}, which are non-redundant invariants constructed from Zernike polynomials.
+Extensions of density-based approaches to multiple central atoms~\cite{nwc2022q}, as well as architectures similar to \mpnns{} have been proposed~\cite{npfc2022q,bkoc2022q,bbkc2022a}.
+
+% % Fingerprints
+\Gls{omf} \cite{sglg2013q,zawg2016q,pdlg2021q} and related approaches \cite{zhj2019q,qwmm2020q} employ the sorted eigenvalues (and derived quantities) of overlap matrices based on Gaussian-type orbitals as representation.
+Eigenvalue crossings can cause derivative discontinuities, requiring post-processing \cite{pdlg2021q} to ensure continuity.
+Using a \gls{mob}~\cite{wcm2018q,cwcm2019q}, and related approaches~\cite{czwe2020Aq}, adds the cost of computing the basis, for example, localised molecular orbitals via a \gls{hf} \gls{scf} calculations.
+Other matrices can be used, such as Fock, Coulomb, and exchange matrices, or even the Hessian, for example, from a computationally cheaper reference method.
+
+% % DECAF
+\Gls{decaf}~\cite{tzk2018q}\\represent the local density in a canonical, invariant coordinate frame found by solving an optimisation problem related to kernel principal component analysis, representing an alternative approach to constructing invariant representations.
+
+% % Equivariance
+Tensor properties require equivariance.
+Proposed solutions include local coordinates from eigendecompositions~\cite{rrl2015q}, which exhibit discontinuities when eigenvalues cross, related local coordinate systems \cite{tzk2018q},
+and \gls{iv} \cite{lkd2015q}, which are based on inner products of summed neighbour vectors at different scales, as well as covariant extensions of \gls{soap} \cite{gwcc2018q,cwc2018q} and \gls{ace} \cite{d2020Aq}.
+
+\section{Connections}
+
+We now discuss relationships between representations, to which degree they satisfy the requirements in \cref{ch:repsb}, trade-offs between local and global representations, and relationships to other methods.
+
+\newthought{The approach to invariance} can be used to categorise representations. \Gls{bob}, \gls{cm}, \gls{fchl}, \gls{hdad}, \gls{idmbr}, \gls{mbtr}, and \gls{sf} rely on invariant $k$-body functions. \Gls{ace}, \gls{bs}, \gls{gm}, \gls{milad}, \gls{mob}, \gls{mtp}, \gls{nice}, \gls{omf}, \gls{soap}, and \gls{wst}, on the other hand, rely on explicit symmetrisation.
+A similar distinction can be made for kernels~\cite{gzv2018q}.
+
+Within a given family of approaches, further connections can be identified. For suitable \hps, \sfs can be identified with terms in the distance-based \mbtr, fixing one index to the central atom. If a grid of parameters is used for \sfs, both representations correspond to histograms of geometric features, similar to the \gls{hdad} representation.
+This suggests a local \gls{mbtr} or \gls{hdad} variant by restricting summation to atomic environments~\cite{localmbtr2019}, and a global variant of \sfs by summing over the whole system.
+
+\Gls{ace}, \gls{bs}, \gls{gm}, \gls{milad}, \gls{mtp}, \gls{nice}, and \gls{soap} share the idea of generating tensors that are then systematically contracted to obtain rotationally invariant features.
+These tensors should form an orthonormal basis, or at least a spanning set, for atomic environments.
+Within a representation, recursive relationships can exist between many-body terms of different orders~\cite{c2019Bq,npc2020q,dboo2022q}.
+\Erefs{d2019q,d2020Aq,dboo2022q} discuss technical details of the relationships between density-based representations.
+
+% Trade-offs between local and global representations
+
+% TODO: this is an iffy paragraph. rewrite!
+\newthought{Local representations can} be used to model global properties by assuming that these decompose into atomic contributions.
+In terms of prediction errors, this tends to work well for energies, see \cref{sec:si-reps-extensive}.
+% todo: it is still unclear whether global representations work better for band gaps than for energies
+Learning with atomic contributions adds technical complexity to the regression model and is equivalent to pairwise-sum kernels on whole systems.
+% with favourable computational scaling for large systems (see TODO (table of computational cost)).
+% not really true
+Other approaches to creating global kernels from local ones exist~\cite{dbcc2016q}.
+
+Conversely, using global representations for local properties can require modifying the representation to incorporate locality and directionality of the property~\cite{rrl2015q,hjrf2020q}.
+%
+A general recipe for constructing local representations from global ones is to require interactions to include the central atom, starting from $k{=}2$~\cite{localmbtr2019}. 
+
+% Relationships to other models + techniques
+
+\newthought{Two modeling aspects} directly related to representations are which subset of the features to use and the construction of derived features.
+Both modulate feature space dimensionality and structure.
+
+Adding products of 2-body and 3-body terms as features, for example, can improve performance~\cite{jkak2020q}, as these features formally relate to higher-order terms, but can also degrade performance if the features are unrelated to the predicted property, or if there is insufficient data to infer the relationship.
+Feature selection tailors a representation to a dataset by selecting a small subset of features that still predict the target property accurately enough.
+Optimal choices of features depend on dataset size and distribution.
+
+In this work, we focus exclusively on representations.
+In kernel regression, however, kernels can be defined directly between two systems, without an explicit intermediate representation.
+For example, $n$-body kernels between atomic environments can be systematically constructed from a non-invariant Gaussian kernel using Haar integration, or using invariant $k$-body functions, yielding kernels of varying body-order and degrees of freedom~\cite{gzv2018q,gzfd2020q}. The \gls{soap} representation was initially developed as such a kernel.
+
+Similarly, while neural networks can use representations as inputs, their architecture can also be designed to learn implicit representations from the raw data (end-to-end learning). However, some featurisation is typically employed as pre-processing, for instance the transformation of structures into a graph representation. This is discussed in further detail in \cref{ch:glps}.
+
+In all cases, the requirements in \cref{ch:repsb} apply.
+
+\newthought{Some representations, in particular early} ones such as the \gls{cm}, do not fulfil these requirements.
+Most representations fulfil some requirements only in the limit,
+that is, absent practical constraints such as truncation of infinite sums, short cutoff radii, and restriction to low-order interaction terms.
+%
+The degree of fulfilment therefore often depends on \hps.
+% such as truncation order, the length of a cut-off radius, or the highest interaction order~$k$ used.
+Effects can be antagonistic;
+for example, in \gls{soap}, both uniqueness and computational effort increase with $nlm$~\cite{bkc2013q}.
+%
+In addition, not all invariances of a property might be known or require additional effort to model, for example, symmetries \cite{gsd2017q}.
+
+Mathematical proof or systematic empirical verification that a representation satisfies a requirement or related property are sometimes provided:
+%
+The symmetrised invariant moment polynomials of \glspl{mtp} form a spanning set for all permutationally and rotationally invariant polynomials~\cite{s2016q}; the \gls{ace} framework encompasses these polynomials and allows their systematic construction~\cite{dboo2022q}.
+For \gls{soap}, systematic reconstruction experiments demonstrate the dependence of uniqueness on parametrisation~\cite{bkc2013q}.
+
+While uniqueness guarantees that reconstruction of a system up to invariances is possible in principle, accuracy and complexity of this task vary with representation and parametrisation.
+For example, reconstruction is a simple least-squares problem for the global \gls{cm} as it comprises the whole distance matrix, whereas for local representations, (global) reconstruction is more involved.
+
+If a local representation comprises only up to 4-body terms then there are degenerate environments that it cannot distinguish~\cite{pwcc2020q}, but that can differ in property.
+Combining representations of different environments in a system, which is typically done to predict global properties like total energies, can break the degeneracy.
+
+However, by distorting feature space, these degeneracies degrade learning efficiency and limit achievable accuracy, even if the training set contains no degenerate systems~\cite{pwcc2020q}. 
+It is currently unknown whether degenerate environments exist for representations with terms of order $k{>}4$.
+The degree to which a representation is unique can be numerically investigated through the eigendecomposition of a sensitivity matrix based on its derivatives with respect to atom coordinates~\cite{pdlg2021q}.

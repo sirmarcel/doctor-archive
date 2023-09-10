@@ -1,0 +1,644 @@
+%!TEX root = ../../da.tex
+
+\chapter[Thermal Conductivity with\\ Message-Passing Neural Networks]{Thermal Conductivity with Message-Passing Neural Networks}
+\label{ch:si-gka}
+
+\section{Anharmonicity Scores}
+\label{sec:si-gka_anha}
+
+To inform the selection of materials in \cref{part:gka}, the anharmonicity score by Knoop~\etal~\cite{kpsc2020t} has been employed. While the value for \ch{SnSe} at \qty{300}{K} has been obtained from reference~\cite{k2021t}, values for \ch{Si} at \qty{400}{K} and \ch{ZrO2}at \qty{300}{K} and \qty{1400}{K} were computed.
+
+For \ch{ZrO2}, anharmonicity scores were obtained based on the harmonic sampling technique from reference~\cite{kpsc2020t}, using \aims and \num{30} samples in the \num{324}-atom supercell used for phonon band structure calculations in \cref{fig:gkm_phonons}. 
+
+For \ch{Si}, $\anha$ was computed based on an \aimd trajectory of \qty{4}{ps} duration, using the same settings as the training data used for \ch{Si} in \cref{ch:gk-out}. Force constants were obtained from the phonon band structure calculation reported in \cref{fig:gko_si_phonons}.
+
+\clearpage
+\section{Model for Zirconia}
+
+\subsection{Training Data}
+\begin{figure}
+  \includegraphics[width=0.92\textwidth]{img/plot/gk/si-zro_training_data_cells.pdf}
+  \caption{
+  Magnitude of lattice vectors for the zirconia $NpT$ dataset. The vertical line separates the samples used for training from those used for validation.
+	}
+	\label{fig:si-gkm_training_cells}
+\end{figure}
+
+\clearpage
+\subsection{Vibrational Density of States}
+\begin{figure}
+  \centering
+  \caption[][-1\baselineskip]{
+  Comparison of \gls{vdos} for \mpnns{} ($\interactions{=}1$) with different cutoff radii compared to a baseline computed with \aims. The chosen production cutoff radius is highlighted in red.
+  Vertical lines indicate peaks in the \aims result. Constant vertical offsets are applied to distinguish curves. Results are averaged over three trajectories of \si{60}{ps} ($\Delta t{=}\SI{4}{fs}$), in the tetragonal phase at \SI{300}{K}, with matching initial configurations. Shaded areas indicate the minimum and maximum.
+  \\\\
+  The corresponding figure with $\interactions{=}2$ can be found in \cref{fig:gkm_vdos}.
+  }
+  \label{fig:si-gkm_vdos_t1}
+  \includegraphics[width=\textwidth]{img/plot/gk/zro_vdos_t1.pdf}
+\end{figure}
+
+\clearpage
+\subsection{Phonon Band Structures}
+
+\begin{figure}
+  \centering
+  \subfloat[Monoclinic]{
+    \includegraphics[width=\textwidth]{img/plot/gk/si-zro_phonons_mono_m1.pdf}
+    \label{}
+  }
+
+  \subfloat[Tetragonal]{
+    \includegraphics[width=\textwidth]{img/plot/gk/si-zro_phonons_tetra_m1.pdf}
+    \label{}
+  }
+
+  \caption{
+  Phonon band structure and density of states in the monoclinic (top) and tetragonal (bottom) phases, using alternate \schnet \mlps with $\interactions{=}1$ and different cutoff radii, compared to a \aims reference calculation.
+  Results are shown for a 324-atom supercell. Convergence with respect to supercell size was checked.
+  \\\\
+  Production settings, $\interactions{=}2$ and $\cutoff{=}\qty{5.0}{\angstrom}$ are shown in \cref{fig:gkm_phonons}.  
+  }
+  \label{fig:si-gkm_phonons_m1}
+\end{figure}
+
+\clearpage
+\begin{figure}
+  \centering
+  \subfloat[Monoclinic]{
+    \includegraphics[width=\textwidth]{img/plot/gk/si-zro_phonons_mono_m2.pdf}
+    \label{}
+  }
+
+  \subfloat[Tetragonal]{
+    \includegraphics[width=\textwidth]{img/plot/gk/si-zro_phonons_tetra_m2.pdf}
+    \label{}
+  }
+
+  \caption{
+  Phonon band structure and density of states in the monoclinic (top) and tetragonal (bottom) phases, using alternate \schnet \mlps with $\interactions{=}2$ and different cutoff radii, compared to a \aims reference calculation.
+  Results are shown for a 324-atom supercell. Convergence with respect to supercell size was checked.
+  \\\\
+  Production settings, $\interactions{=}2$ and $\cutoff{=}\qty{5.0}{\angstrom}$ are shown in \cref{fig:gkm_phonons}.  
+  }
+  \label{fig:si-gkm_phonons_m2}
+\end{figure}
+
+\vspace*{\fill}
+
+\clearpage
+\subsection{Displacements}
+
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{img/plot/gk/zro_displacements_schnet_mono.pdf}
+  \caption{
+  Maximum displacement across oxygen atoms with respect to average positions over the course of a single trajectory at different temperatures in the monoclinic phase, computed with the $\interactions{=}2$ and $\cutoff{=}\qty{5.0}{\angstrom}$ production SchNet \mlp.
+  The top plot shows the full range of data, while the lower displays details.
+  }
+  \label{fig:si-gkm_disp_schnet_mono}
+\end{figure}
+
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{img/plot/gk/si-zro_displacements_schnet_tetra_hi.pdf}
+  \caption{
+  Maximum displacement across oxygen atoms with respect to average positions over the course of a single trajectory at different temperatures in the tetragonal phase, computed with the $\interactions{=}2$ and $\cutoff{=}\qty{5.0}{\angstrom}$ production SchNet \mlp.
+  
+  This figure includes a trajectory at \qty{2000}{K} where an instability is encountered: After significant oxygen diffusion, the potential becomes unstable and displacements, along with energy and temperature, diverge.
+  }
+  \label{fig:si-gkm_disp_schnet_tetra_hi}
+\end{figure}
+
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{img/plot/gk/zro_displacements_schnet_tetra.pdf}
+  \caption{
+  Maximum displacement across oxygen atoms with respect to average positions over the course of a single trajectory at different temperatures in the tetragonal phase, computed with the $\interactions{=}2$ and $\cutoff{=}\qty{5.0}{\angstrom}$ production SchNet \mlp.
+  The top plot shows the full range of data, while the lower displays details.
+  }
+  \label{fig:si-gkm_disp_schnet_tetra}
+\end{figure}
+
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{img/plot/gk/zro_displacements_aims.pdf}
+  \caption{
+  Maximum displacement across oxygen atoms with respect to average positions for the trajectories in the training data, computed with \aims.
+  The top plot shows the full range of data, while the lower displays details.
+  }
+  \label{fig:si-gkm_disp_aims}
+\end{figure}
+
+
+\clearpage
+\section{Green-Kubo Convergence}
+
+% \begin{figure}
+%   \includegraphics[width=\textwidth]{img/plot/gk/zro_kc_ens_t_1400.pdf}
+%   \caption{
+%   $\kt$ for tetragonal zirconia at \qty{1400}{K}, comparing ensemble average and single trajectories.
+%   Opaque lines indicate $\kt$ with applied noise reduction, translucent ones without.
+%   \\\\
+%   Figure for \qty{300}{K} in \cref{fig:gkc_ens_m_300}.
+%   }
+%   \label{fig:si-gkc_ens_t_1400}
+% \end{figure}
+% \clearpage
+
+
+\subsection{Noise Removal}
+
+\begin{figure*}
+  \includegraphics[width=\textwidth]{img/plot/gk/zro_kc_noise_parts_m_300_unconverged.pdf}
+  \caption{
+  $\kt$ (top) and $\ehfacf(\tau)$ (bottom) for monoclinic zirconia at \qty{300}{K} for \scare{unconverged} parameter choices $\coco{96}{0.1}$, comparing different components of the noise reduction approach.
+  The vertical lines in the bottom plot indicate the cutoff time.
+  \\\\
+  Figure for \scare{production} settings in \cref{fig:gkc_hfacf_noise_comparison}.
+  }
+  \label{fig:si-gkc_hfacf_noise_comparison_unconverged}
+\end{figure*}
+
+\clearpage
+
+\begin{figure*}
+  \includegraphics[width=\textwidth]{img/plot/gk/zro_kc_noise_parts_m_1400_converged.pdf}
+  \caption{
+  $\kt$ (top) and $\ehfacf(\tau)$ (bottom) for monoclinic zirconia at \qty{1400}{K} for \scare{production} parameter choices $\zrocc$, comparing different components of the noise reduction approach.
+  The vertical lines in the bottom plot indicate the cutoff time.
+  }
+  \label{fig:si-gkc_hfacf_noise_comparison_converged_m_1400}
+\end{figure*}
+
+\clearpage
+\subsection{Filter Frequency}
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{img/plot/gk/zro_kc_freq_m_300_converged.pdf}
+  \caption{
+  $\kt$ and $\kappa$ as determined from the \hfacf for different choies of $\omegaf$ 
+  for monoclinic zirconia at \qty{300}{K}
+  with \scare{production} settings $\zrocc$.
+  Shaded areas indicate standard error over trajectories, lines the mean.
+  }
+  \label{fig:si-gkc_freq_m_300_converged}
+\end{figure}
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{img/plot/gk/zro_kc_freq_t_1400_converged.pdf}
+  \caption{
+  $\kt$ and $\kappa$ as determined from the \hfacf for different choies of $\omegaf$ 
+  for tetragonal zirconia at \qty{1400}{K}
+  with \scare{production} settings $\zrocc$.
+  Shaded areas indicate standard error over trajectories, lines the mean.
+  }
+  \label{fig:si-gkc_freq_t_1400_converged}
+\end{figure}
+
+% more logical grouping imho
+\clearpage
+\begin{figure}
+  \includegraphics[width=\textwidth]{img/plot/gk/zro_kc_freq_m_300_semi.pdf}
+  \caption{
+  $\kt$ and $\kappa$ as determined from the \hfacf for different choies of $\omegaf$ 
+  for monoclinic zirconia at \qty{300}{K}
+  with \scare{light} settings $\zrosc$.
+  Shaded areas indicate standard error over trajectories, lines the mean.
+  }
+  \label{fig:si-gkc_freq_m_300_semi}
+\end{figure}
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{img/plot/gk/zro_kc_freq_t_1400_semi.pdf}
+  \caption{
+  $\kt$ and $\kappa$ as determined from the \hfacf for different choies of $\omegaf$ 
+  for tetragonal zirconia at \qty{1400}{K}
+  with \scare{light} settings $\zrosc$.
+  Shaded areas indicate standard error over trajectories, lines the mean.
+  }
+  \label{fig:si-gkc_freq_t_1400_semi}
+\end{figure}
+
+\clearpage
+\subsection{Spacing}
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{img/plot/gk/zro_kc_spacing_m_300_semi.pdf}
+  \caption{
+  $\kt$ and final $\kappa$ for different choies of $\nhf$ 
+  for monoclinic zirconia at \qty{300}{K}
+  with \scare{light} settings $\zrosc$.
+  The upper edges of the labels indicating $\nhf$ are aligned with horizontal lines indicating the value for $\kappa$ chosen by the first dip of the corresponding \hfacf.
+  }
+  \label{fig:si-gkc_spacing_m_300_semi}
+\end{figure}
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{img/plot/gk/zro_kc_spacing_m_1400_semi.pdf}
+  \caption{
+  $\kt$ and final $\kappa$ for different choies of $\nhf$ 
+  for monoclinic zirconia at \qty{1400}{K}
+  with \scare{light} settings $\zrosc$.
+  The upper edges of the labels indicating $\nhf$ are aligned with horizontal lines indicating the value for $\kappa$ chosen by the first dip of the corresponding \hfacf.
+  }
+  \label{fig:si-gkc_spacing_m_1400_semi}
+\end{figure}
+
+\clearpage
+\subsection{Number of Trajectories}
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{img/plot/gk/zro_kc_ens_conv_m_300_converged.pdf}
+  \caption{
+  $\kt$ and final $\kappa$ for different number of trajectories $n$
+  for monoclinic zirconia at \qty{300}{K}
+  with \scare{production} settings $\zrocc$.
+  Horizontal lines indicate the value for $\kappa$ chosen by the first dip of the corresponding \hfacf.
+  }
+  \label{fig:si-gkc_ens_conv_m_300_converged}
+\end{figure}
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{img/plot/gk/zro_kc_ens_conv_t_1400_converged.pdf}
+  \caption{
+  $\kt$ and final $\kappa$ for different number of trajectories $n$
+  for tetragonal zirconia at \qty{1400}{K}
+  with \scare{production} settings $\zrocc$.
+  Horizontal lines indicate the value for $\kappa$ chosen by the first dip of the corresponding \hfacf.
+  }
+  \label{fig:si-gkc_ens_conv_t_1400_converged}
+\end{figure}
+
+
+\clearpage
+\subsection{Size and Time}
+
+\begin{figure*}
+  \includegraphics[width=\textwidth]{img/plot/gk/zro_kc_nt_m_1400.pdf}
+  \caption{
+  $\kappa$ for monoclinic zirconia at \qty{1400}{K} for different choices of $N$ and $\td$.
+  Error bars indicate the standard error across trajectories.
+  $N$ is shown as $N^{1/3}$, which is proportional to the length scale of the simulation cell.
+  For each choice of $N$, $\td$ from \qtyrange{0.1}{2.0}{ns} are shown with a horizontal offset.
+  \scare{Production}, \scare{light}, \scare{unconverged} and \scare{tight} choices are indicated; for the \scare{production} setting, the associated standard error is also shown as a shaded band.
+  \\\\
+  \Cref{fig:gkc_nt} shows \qty{300}{K}.
+  }
+  \label{fig:si-gkc_nt_m_1400}
+\end{figure*}
+
+
+\clearpage
+\begin{figure*}
+  \includegraphics[width=\textwidth]{img/plot/gk/zro_kc_nt_t_1400.pdf}
+  \caption{
+  $\kappa$ for tetragonal zirconia at \qty{1400}{K} for different choices of $N$ and $\td$.
+  Error bars indicate the standard error across trajectories.
+  $N$ is shown as $N^{1/3}$, which is proportional to the length scale of the simulation cell.
+  For each choice of $N$, $\td$ from \qtyrange{0.1}{2.0}{ns} are shown with a horizontal offset.
+  \scare{Production}, \scare{light}, \scare{unconverged} and \scare{tight} choices are indicated; for the \scare{production} setting, the associated standard error is also shown as a shaded band.
+  }
+  \label{fig:si-gkc_nt_t_1400}
+\end{figure*}
+
+\noindent
+The outliers at low $\td$ for $N{=}4116$ in \cref{fig:si-gkc_nt_t_1400} are due to the \hfacf narrowly avoiding a zero crossing that emerges at higher $\td$.
+It highlights that results for singular choices of $N$ and $\td$ must be carefully investigated, as they may emerge from such an artefact.
+The impact of such events can be reduced by choosing $\tc$ not as the first zero crossing, $\ehfacf(\tc) = 0$, but rather at a small positive number, $\keps$, such that $\ehfacf(\tc){=}\keps$. In this thesis, this is not done to avoid an additional parameter in the \gk method.
+
+Alternatively, more sophicistaced methods for the determination of $\tc$ can be employed, for instance by fitting a functional form~\cite{mk2004t,ccdg2000t}.
+$\kappa$ can also be determined by averaging over $\kt$ after $\tc$~\cite{fpdh2015t}, or via spectral methods~\cite{emb2017t}.
+
+
+\clearpage
+\section{Gauge Term}
+\label{sec:si-gkc_gauge_term}
+
+As shown by Knoop~\etal~\cite{ksc2023t}, it is advantageous to subtract a non-diffusive \scare{gauge term} from the instantaneous heat flux $\J(t)$ to reduce noise.
+This term takes the form
+\begin{equation}
+	\J^{\text{gauge}} = \sum_{i \in \Rsc} \virial_i \cdot \V_i
+\end{equation}
+with a constant $3 \times 3$ matrix $\virial_i$ for each atom, which is computed from the terms preceding the velocities in $\Jpot$ in \cref{eq:hf_general}. 
+As $\virial_i$ is constant, $\J^{\text{gauge}}$ is a total time derivative, and by the gauge principle, does not contribute to the final thermal conductivity.
+However, as seen in \cref{sec:gkc_noise}, removing this term from $\J$ can reduce noise.
+
+In the original formulation, the \scare{virials}\footnote{We note in passing that in this definition, the terms $\virial_i$ do not add up to the total stress in all cases.
+% TODO: add reference here to where we discuss this
+} are computed as time averages over the trajectory, 
+\begin{equation}
+	\virial_i^{\text{original}} = \braket{\R_{ji} \otimes \dur{i}{j}{}} \, .
+\end{equation}
+As has been discussed in \cref{ch:gk-hf}, an efficient heat flux formulation for \glps does not necessarily yield $\indur{i}{j}{}$ at every timestep, as the heat flux is directly computed with \ad.
+% It is therefore advantageous to avoid computing $\virial_i$ at each timestep. 
+Instead, we compute $\virial_i$ once for a reference structure, and in particular the supercell for a given temperature and phase as obtained in \cref{sec:si-gknet_zro_lattice}. In this formulation, $\Jpot$ and $\Jint$ can be treated interchangeably, assuming that the reference structure used for $\Rr$ is the one used for $\virial_i$.
+
+These two approaches are compared in \cref{fig:si-gkc_virial_m_300,fig:si-gkc_virial_m_1400}. No significant differences between both methods are observed. Indeed, if filtering is applied (not shown), any remaining differences vanish entirely.
+
+\clearpage
+\begin{figure}
+  \includegraphics[width=\textwidth]{img/plot/gk/si-zro_gkc_virial_m_300.pdf}
+  \caption{
+  $\kt$ for differently computed gauge terms
+  for monoclinic zirconia at \qty{300}{K}
+  with \scare{light} settings $\zrosc$.
+  No filtering is applied. Heat flux is computed every $\nhf{=}2$ simulation steps.
+  }
+  \label{fig:si-gkc_virial_m_300}
+\end{figure}
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{img/plot/gk/si-zro_gkc_virial_m_1400.pdf}
+  \caption{
+  $\kt$ for differently computed gauge terms
+  for monoclinic zirconia at \qty{1400}{K}
+  with \scare{light} settings $\zrosc$.
+  No filtering is applied. Heat flux is computed every $\nhf{=}2$ simulation steps.
+  }
+  \label{fig:si-gkc_virial_m_1400}
+\end{figure}
+
+
+\clearpage
+\clearpage
+\section{Potential and Convective Flux}
+\label{sec:si-gkc_conv}
+
+In \cref{sec:hf_terms}, we discussed the distinction between the decomposition of the total heat flux into
+\begin{equation}
+	\J = \Jpot + \Jconv
+\end{equation}
+and
+\begin{equation}
+	\J = \Jint + \Jdiff \, ,
+\end{equation}
+finding that $\J$ and $\Jint$ should be equivalent if atomic positions are bounded over the course of the simulation.
+This is verified for zirconia in \cref{fig:si-gkc_convective_converged}; $\Jint$ and $\J$ are found to be equivalent, while $\Jpot$ is not. $\Jconv$ is non-vanishing, but yields a significantly smaller thermal conductivity on its own.
+At increased temperature, where atoms become more mobile, the magnitude of $\Jconv$ and hence the difference between $\J$ and $\Jpot$ becomes more pronounced.
+
+We can therefore conclude that $\Jint$ can be used in place of $\J$ for zirconia at the investigated range of temperatures and phases.
+
+\clearpage
+\begin{figure}
+  \centering
+  \subfloat[Monoclinic, \qty{300}{K}]{
+    \includegraphics[width=\textwidth]{img/plot/gk/zro_kc_convective_m_300_converged.pdf}
+    \label{}
+  }
+
+  \subfloat[Tetragonal, \qty{1400}{K}]{
+    \includegraphics[width=\textwidth]{img/plot/gk/zro_kc_convective_t_1400_converged.pdf}
+    \label{}
+  }
+
+  \subfloat[Tetragonal, \qty{1800}{K}]{
+    \includegraphics[width=\textwidth]{img/plot/gk/zro_kc_convective_t_1800_converged.pdf}
+    \label{}
+  }
+
+  \caption{
+  $\kt$ for different terms in the heat flux
+  for zirconia at different temperatures and in different phases,
+  using \scare{production} settings $\zrocc$.
+  Filtering with $\omegaf{=}\qty{1}{THz}$ is applied; no gauge term is removed.
+  }
+  \label{fig:si-gkc_convective_converged}
+\end{figure}
+
+
+\clearpage
+\section{Lattice Vectors and Supercells}
+\label{sec:si-gknet_zro_lattice}
+
+As discussed in \cref{ch:gk-model}, the employed \mlp displays limited accuracy when predicting lattice constants and treating the monoclinic to tetragonal phase transition.
+Since the focus of the present work is the heat flux, and since results are compared to experimental measurements, experimental lattice parameters are therefore used.
+The used lattice parameters, as presented by Verdi~\etal{}~\cite{vkjk2021q}, based on references~\cite{ps1969t,kh1998t}, can be found in \cref{tab:si-zro_cells_mono,tab:si-zro_cells_tetra}.
+
+The workflow to obtain supercells at a given temperature $T$ and number of atoms $N$ is as follows: The starting point is always a 12-atom unit cell. Lattice parameters are applied to this original cell, leaving atomic positions in fractional coordinates unchanged. From the resulting cell, simple $k \times k \times k$ supercells are constructed such that $N = 12 k^3$.
+
+\vspace{2\baselineskip}
+
+\begin{table}
+    \caption{Lattice parameters for monoclinic zirconia based on references~\cite{ps1969t,kh1998t,vkjk2021q}.}
+	\input{table/gk/zro_cells_mono}
+    \label{tab:si-zro_cells_mono}
+\end{table}
+
+\vspace{2\baselineskip}
+
+\begin{table}
+    \caption{Lattice parameters for tetragonal zirconia based on references~\cite{ps1969t,kh1998t,vkjk2021q}.}
+	\input{table/gk/zro_cells_tetra}
+    \label{tab:si-zro_cells_tetra}
+\end{table}
+
+\clearpage
+
+\section{Additional Results for Zirconia}
+
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{img/plot/gk/zro_hfs_all_m_300.pdf}
+  \caption{
+  $\kt$ for all heat flux formulations for monoclinic zirconia at \qty{300}{K},
+  using a SchNet \glp ($\interactions{=\,}2$, $\cutoff{=}\qty{5}{\angstrom}$).
+  See \cref{fig:gkr_hfs_m_300} for details.
+  }
+  \label{fig:si-gkr_hfs_all_m_300}
+\end{figure}
+\vspace{4\baselineskip}
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{img/plot/gk/zro_hfs_all_m1_m_300.pdf}
+  \caption{
+  $\kt$ for all heat flux formulations for monoclinic zirconia at \qty{300}{K},
+  using a SchNet \glp ($\interactions{=\,}1$, $\cutoff{=}\qty{5}{\angstrom}$).
+  See \cref{fig:gkr_hfs_m1_m_300} for details.
+  % \\\\
+  % The corresponding result for the monoclinic phase can be found in \cref{fig:gkr_hfs_all}.
+  }
+  \label{fig:si-gkr_hfs_all_m1_m_300}
+\end{figure}
+
+\clearpage
+\section{Measurements of Thermal Conductivities of Zirconia}
+\label{sec:si-gknet_zro_exp}
+
+\noindent
+A number of experimental measurements of the thermal conductivity of \zro{} have been undertaken.~\cite{hjls1987t,rwpm1998t,bflm2000t,mlld2004t} 
+In all cases, $\kappa$ is determined indirectly, based on measurements of the thermal diffusivity $\alpha$, the specific heat capacity $c$, and the density $\rho$, as $\kappa = \alpha \rho c$.
+\marginnote[\baselineskip]{The standard method for measuring thermal diffusivity, used in references~\cite{hjls1987t,rwpm1998t,mlld2004t}, is the \scare{laser flash technique}, where one end of a sample is briefly heated, and the temperature change at the opposite end is observed. However, the method probes a large area of the sample, which may include imperfections that can hinder thermal transport, prompting the development of alternative techniques, such as the \scare{spatially resolved infrared thermography} method used in~\cite{bflm2000t}.}
+
+Hasselman~\etal{}~\cite{hjls1987t} investigate polycrystalline samples with varying \ch{MgO} (magnesia) and \ch{Y2O3} (yttria) content at room temperature, estimating results for pure samples in different phases with an ansatz based on composite theory. For the tetragonal phase, $\kappa = \SI{4.82}{W\per m K}$, and for the monoclinic phase $\kappa = \SI{5.2}{W\per m K}$, indicating that different phases, at least at room temperature, display comparable thermal conductivities. As this study does not use pure samples, it has not been included in \cref{fig:gkr_kappa_vs_temp}.
+
+Raghavan~\etal{}~\cite{rwpm1998t} measure pure and yttria-stabilised \zro{} nanoparticles in the monoclinic phase from \SI{100}{\celsius} to \SI{1000}{\celsius}. They observe a strong, approximately $\nicefrac{1}{T}$, temperature dependence of $\kappa$ for the pure sample, but not for samples with significant yttria content.
+
+Bisson~\etal{}~\cite{bflm2000t} study pure and yttria-stabilised single crystals at room temperature, measuring $\kappa = \SI{8.2}{W\per m K}$ for pure monoclinic zirconia.\footnote[][-1\baselineskip]{An uncertainty of \scare{the order of \SI{10}{\percent}} is mentioned.} The higher value for $\kappa$ obtained here may be attributed to a different methodology for determining $\alpha$, which is less sensitive to grain boundaries. No significant anisotropy is found for $\kappa$.
+
+Finally,\footnote[][-2\baselineskip]{Youngblood~\etal{}~\cite{yri1988t} is not included in the summary, as the work does not consider undoped zirconia. We also exclude studies of porous samples.} Mévrel~\etal{}~\cite{mlld2004t} determine $\kappa$ for pure (monoclinic) and yttria-stabilised (tetragonal, cubic) single crystals from room temperature to \SI{1100}{\celsius}. An amended model\footnote{The model, based on the assumption that the phonon mean free path is bounded from below by the minimum neighbour distance, gives $\kappa(T) = \nicefrac{A}{T} \left[\nicefrac{2 \sqrt{T_1}}{{3\sqrt{T}}} + \nicefrac{T}{3 T_1} \right]$ with fit parameters $A$ and $T_1$.}
+ for the temperature dependence of $\kappa$ is also given.
+
+\begin{margintable}
+    \centering
+    \begin{tabular}{r r r r r}
+    \toprule
+     & Phase & Single & Pure & $\kappa(T)$\\
+    \midrule
+    \cite{hjls1987t}  & t,m & \no  & \no  &  \no \\
+    \cite{rwpm1998t}   & m   & \no  & \yes &  \yes\\
+    \cite{bflm2000t}   & m   & \yes & \yes &  \no \\
+    \cite{mlld2004t} & m   & \yes & \yes &  \yes\\
+    \bottomrule
+    \end{tabular}
+    
+    \caption{Experiments measuring $\kappa$ for pure \zro{}. \emph{Single} = single crystal samples used, \emph{pure} = undoped sample directly measured, $\kappa(T)$ = measured temperature dependence.}
+    \label{tab:zirconia-experiments}
+\end{margintable}
+
+
+\newthought{Measurement results for} the thermal conductivity of \zro{} are included in \cref{fig:gkr_kappa_vs_temp}, experimental setups are tabulated in \cref{tab:zirconia-experiments}. At low temperatures, references~\cite{rwpm1998t,bflm2000t,mlld2004t} report similar values. Hasselman~\etal{} provide a lower estimate, which is, however, not based on direct measurement, and therefore not included. As temperature increases, Mévrel~\etal{} measure a more rapid decrease in $\kappa$ compared to Raghavan~\etal{}, despite performing measurements on single crystals. The reason for this behaviour is unclear, as polycrystalline samples are expected to display reduced thermal conductivity due to phonon scattering at grain boundaries.
+ % The overall temperature-dependence of $\kappa$ is consistent with dominant phonon-phonon scattering.
+
+\clearpage
+
+\section{Tin Selenide}
+\label{sec:si-snse}
+
+\subsection{Testing}
+
+\begin{table}
+\label{tab:si-snse_errors_m1}
+\caption{Test set errors for \sok for \ch{SnSe}, with $\interactions{=}1$.}
+\begin{tabular}{l | r r r r}
+\toprule
+Property & \acs{rmse} & \acs{mae} & \acs{maxae} & $R^2$ in \unit{\percent} \\
+\midrule
+Energy in \unit{meV}  & \num{94.5029} & \num{73.6968} & \num{307.2220}  & \num{95.8476} \\
+Forces in \unit{meV/\angstrom} & \num{52.1557} & \num{41.3036} & \num{321.0409} & \num{97.4306} \\
+\bottomrule
+% Stress in \unit{kbar}  & 13166.1118 / MAE: 8592.0826 / maxAE: 60126.4910 / R$^2$: -2.3029
+\end{tabular}
+\end{table}
+
+\begin{table}
+\label{tab:si-snse_errors_m2}
+\caption{Test set errors for \sok for \ch{SnSe}, with $\interactions{=}2$.}
+\begin{tabular}{l | r r r r}
+\toprule
+Property & \acs{rmse} & \acs{mae} & \acs{maxae} & $R^2$ in \unit{\percent} \\
+\midrule
+Energy in \unit{meV} & \num{28.2936} & \num{22.4426} & \num{78.1010} & \num{99.6278} \\
+Forces in \unit{meV/\angstrom} & \num{19.7130} & \num{15.5923} & \num{148.4874} & \num{99.6329} \\
+\bottomrule
+% Stress in \unit{kbar} & 13167.5711 / MAE: 8592.9597 / maxAE: 60128.7621 / R$^2$: -2.3255
+\end{tabular}
+\end{table}
+
+\begin{table}
+\label{tab:si-snse_errors_m3}
+\caption{Test set errors for \sok for \ch{SnSe}, with $\interactions{=}3$.}
+\begin{tabular}{l | r r r r}
+\toprule
+Property & \acs{rmse} & \acs{mae} & \acs{maxae} & $R^2$ in \unit{\percent} \\
+\midrule
+Energy in \unit{meV} & \num{17.0437} & \num{13.4452} & \num{47.9379} & \num{99.8649} \\
+Forces in \unit{meV/\angstrom} & \num{13.5658} & \num{10.7136} & \num{85.0041 } & \num{99.8262} \\
+\bottomrule
+% Stress in \unit{kbar} & 13166.8269 / MAE: 8592.5370 / maxAE: 60130.7086 / R$^2$: -2.3140
+\end{tabular}
+\end{table}
+
+\vspace{\baselineskip}
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{img/plot/gk/snse_vdos.pdf}
+  \caption{
+  Comparison of \gls{vdos} in \ch{SnSe} for \sok with varying values of $\interactions$ compared to a baseline computed with \aims.
+  Vertical lines indicate peaks in the \aims result.
+  Results are shown for one trajectory of \si{30}{ps} ($\Delta t{=}\SI{4}{fs}$) at \SI{300}{K} in a supercell containing \num{256} atoms, with matching initial configurations.
+  }
+  \label{fig:gko_snse_vdos}
+\end{figure}
+
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{img/plot/gk/snse_phonons.pdf}
+  \caption{
+  Comparison of phonon band structure and density of states in \ch{SnSe} for \sok with varying values of $\interactions$ compared to a baseline computed with \aims.
+  Results are showsn for a supercell containing \num{256} atoms, with matching lattice and positions relaxed to the \qty{0}{K} configuration.
+  }
+  \label{fig:gko_snse_phonons}
+\end{figure}
+
+\clearpage
+\subsection{Green-Kubo Convergence}
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{img/plot/gk/snse_kappa_convergence_N_t.pdf}
+  \caption{
+  $\kappa$ for tin selenide at \qty{300}{K} for different choices of $N$ and $\td$ using a \sok model with $\interactions{=}2$.
+  Error bars indicate the standard error across trajectories.
+  $N$ is shown as $N^{1/3}$, which is proportional to the length scale of the simulation cell.
+  For each choice of $N$, $\td$ from \qtyrange{0.1}{4.0}{ns} are shown with a horizontal offset.
+  \scare{Production} settings are indicated, the associated standard error is also shown as a shaded band.
+  }
+  \label{fig:gko_snse_kappa_convergence_N_t}
+\end{figure}
+
+\clearpage
+\section{Silicon}
+\label{sec:si-si}
+
+\begin{table}
+\label{tab:si-si_errors_m1}
+\caption{Test set errors for \sok for \ch{Si}, with $\interactions{=}1$.}
+\begin{tabular}{l | r r r r}
+\toprule
+Property & \acs{rmse} & \acs{mae} & \acs{maxae} & $R^2$ in \unit{\percent} \\
+\midrule
+Energy in \unit{meV} & \num{92.4688} & \num{71.8210} & \num{295.3312} & \num{99.9784} \\
+Forces in \unit{meV/\angstrom} & \num{45.5592} & \num{35.1807} & \num{330.7921} & \num{99.7029} \\
+Stress in \unit{kbar} & \num{0.8973} & \num{0.6349} & \num{2.5944} & \num{99.8320} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}
+\label{tab:si-si_errors_m2}
+\caption{Test set errors for \sok for \ch{Si}, with $\interactions{=}2$.}
+\begin{tabular}{l | r r r r}
+\toprule
+Property & \acs{rmse} & \acs{mae} & \acs{maxae} & $R^2$ in \unit{\percent} \\
+\midrule
+Energy in \unit{meV} & \num{42.3110} & \num{33.1063} & \num{153.6074} & \num{99.9955} \\
+Forces in \unit{meV/\angstrom} & \num{23.6281} & \num{18.0433} & \num{274.2255} & \num{99.9201} \\
+Stress in \unit{kbar} & \num{0.9403} & \num{0.6905} & \num{2.2113} & \num{99.8155} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}
+\label{tab:si-si_errors_m3}
+\caption{Test set errors for \sok for \ch{Si}, with $\interactions{=}3$.}
+\begin{tabular}{l | r r r r}
+\toprule
+Property & \acs{rmse} & \acs{mae} & \acs{maxae} & $R^2$ in \unit{\percent} \\
+\midrule
+Energy in \unit{meV} & \num{34.6730} & \num{25.9488} & \num{150.2103} & \num{99.9970} \\
+Forces in \unit{meV/\angstrom} & \num{16.7011} & \num{12.6485} & \num{142.6790} & \num{99.9601} \\
+Stress in \unit{kbar} & \num{0.9720} & \num{0.6784} & \num{2.9101} & \num{99.8029} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\vspace{2\baselineskip}
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{img/plot/gk/si_phonons.pdf}
+  \caption{
+  Comparison of phonon band structure and density of states in \ch{Si} for \sok with varying values of $\interactions$ compared to a baseline computed with \aims.
+  Results are showsn for a supercell containing \num{216} atoms, with matching lattice and positions relaxed to the \qty{0}{K} configuration.
+  }
+  \label{fig:gko_si_phonons}
+\end{figure}

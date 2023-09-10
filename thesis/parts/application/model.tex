@@ -1,0 +1,154 @@
+%!TEX root = ../../da.tex
+
+\chapter{Potential for Zirconia}
+\label{ch:gk-model}
+
+\begin{chapquote}{Hannu Rajaniemi, \textit{The Quantum Thief}}
+  Deep learning still comes from approximately ten thousand hours of work on any given subject.
+\end{chapquote}
+
+\noindent
+In this section, we construct a \mlp for zirconia, based on the \schnet \cite{sktm2017q,sktm2019q} \mpnn architecture implemented in \schnetpack~\cite{sktm2019q}. We discuss the generation of training data, based on \gls{aimd} trajectories in the $NpT$ ensemble, as well as the training scheme, and then investigate convergence with respect to two main parameters, the cutoff radius $\cutoff$ and the number of interaction steps $\interactions$, on the basis of auxiliary physical quantities and test set error. The section concludes with an investigation of the limits of the resulting potential and its suitability for the task at hand.
+
+\section{Training Data}
+
+\begin{marginfigure}
+  \centering
+  \includegraphics[width=\marginparwidth]{img/plot/gk/zro_training_data.pdf}
+  \caption{
+  Temperature versus runtime for the four $NpT$ trajectories used for training. Train and test sets are marked by colour; the solid lines indicate the rolling mean over \qty{0.1}{ps}, shading the unfiltered data.
+  }
+  \label{fig:gkm_NpTs}
+\end{marginfigure}
+We generate training data using \gls{aimd} for a set of trajectories in the $NpT$ ensemble, heating a 96-atom supercell constructed from a tetragonal primitive cell to a set of target temperatures, \qty{750}{K}, \qty{1500}{K}, \qty{2250}{K}, and \qty{3000}{K}, covering the range of temperatures up to the melting point. A tetragonal primitive cell was chosen to match previous work by Carbogno~\etal{}~\cite{crs2017t}; we will later find that the model generalises reasonably well to the monoclinic phase.
+% , which is dominant at temperatures below \qty{1400}{K}. 
+
+For this work, we did not implement an on-the-fly learning scheme \cite{lkd2015q}, which can be used to refine the model during simulations, and can reduce the amount of training data, but inevitably couples the generation of data and model parameters. We aim to investigate the convergence with respect to model parameters, and therefore prioritise the simplicity of a fixed training set. In practice, we find this approach sufficient for the present application; see \cref{sec:gkm_limit}.
+
+Each trajectory was started from the same 96-atom simulation cell, velocities initialised at \qty{10}{K} based on the Boltzmann distribution, and then ran for \num{2500} timesteps with $\Delta t{=}\qty{4}{fs}$.
+We use the Berendsen\footnote{In particular, its implementation in \ase, which varies the length, but not the angle of lattice vectors. \Cref{fig:si-gkm_training_cells} shows the magnitude of the lattice vectors for the training and validation data.} barostat~\cite{bpdh1984p}, with the pressure and temperature time constants $\tau_p$ and $\tau_T$ set to \qty{10}{ps}, ensuring that the temperature range is traversed slowly, maximising coverage. This can be seen in \cref{fig:gkm_NpTs}.
+
+Over these trajectories, \num{10000} total single-point calculations were performed, using \aims~\cite{FHI-aims}, with the PBEsol~\cite{przb2008t} functional, $2\times2\times2$ $k$-points, and light basis sets, with an additional basis function for \ch{O}, following the computational approach of reference~\cite{crs2017t}. The calculations were set up and run using \vibes~\cite{FHI-vibes} and \ase~\cite{ase}. We use the first \num{2000} steps of each trajectory for training, and the remaining \num{500} steps for validation.
+
+Before training, the mean of the potential energy over that entire dataset, \qty{-3290119.25}{eV}, is subtracted from all energies.\footnote{In principle, this offset can also be learned or added within the model. However, given the limited available precision, it is prudent to eliminate it from the beginning.} Predictions of the \mpnn are scaled with a factor of \qty{20}{eV} to ensure that they can cover the full range of training data, where the standard deviation of energies is \qty{12.84}{eV}.
+
+As test data,\footnote{The dataset consists of three trajectories of about \num{15000} steps per temperature (\si{300}{K} to \si{2400}{K} in intervals of \si{300}{K}) with potential energy and force labels for each step. We use every tenth step of all trajectories to create the test set.} we obtained the calculations by Carbogno~\etal{}~\cite{crs2017t-data} from the NOMAD repository~\cite{NOMAD}. This data was not used during training.
+
+\section{Training and Hyperparameters}
+
+As labels, we use the potential energy, the forces on each atom, and the stress in a joint squared error loss function, with weights \num{0.001}, \num{0.999} and \num{100.0} respectively, and the \gls{adam} optimiser~\cite{kb2014m}. Whenever a plateau of the loss on the validation set is encountered (with a patience of $20$ epochs), the learning rate is reduced by a factor of $1/4$ from a start of \num{e-4} to a minimum of \num{e-6}. If the loss has not improved for \num{200} epochs, the training is terminated.
+Training was performed on two Tesla Volta V100 32GB GPUs using a batch size of \num{100}. 
+
+\begin{table}
+    \input{table/gk/zro_training_variations}
+    \label{tab:gk-model_hp}
+\end{table}
+
+
+In this work, we consider the cutoff radius $\cutoff$ and the interaction depth $\interactions$ as main \hps of the model and investigate convergence in detail. Other parameters were chosen empirically, based on the final validation loss after training, and not optimised explicitly. We find that the default settings of \schnet, \num{128} atom features, \num{128} filter width, and a two-layer ($128 \rightarrow 64 \rightarrow 1$) output network, provide satisfactory performance, with no significant improvement observed when increasing the size of the network. Training settings were chosen such that maximum training times do not exceed approximately seven days.
+Nevertheless, we probe the robustness of the chosen parameters in \cref{tab:gk-model_hp}, finding that the test set error does not strongly depend on variations in the choice of \hps.
+
+\section[Convergence]{Convergence with Cutoff Radius and Number of Interactions}
+
+
+We now focus on the cut-off radius $\cutoff$, which determines the amount of local information available, and the number of message passing steps $\interactions$, which controls the range of interactions on the graph.
+
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{img/plot/gk/zro_test_set_errors.pdf}
+  \caption[][-\baselineskip]{\Gls{ae} (see \cref{sec:si-ml_lossf}) for the forces on the test set, for models with different cutoff radii $\cutoff$ and numbers of message passing steps $\interactions$. Horizontal offsets have been added to distinguish $\interactions$.
+  Boxes, whiskers, bars, markers show interquartile range, total range, median, and mean, respectively.
+  The relative AE is scaled by the standard deviation \qty{1.37}{eV\per\angstrom}.
+  Samples in the upper quartile are predominantly from trajectories above \qty{2000}{K}, where limited training data is available.
+  % $\cutoff = \SI{2.5}{\angstrom}$ is the radius of the first-neighbour shell for all element combinations. 
+  }
+  \label{fig:gkm_test_set_errors}
+\end{figure}
+
+\noindent
+First, test set errors were evaluated, shown in \cref{fig:gkm_test_set_errors}. Going from $\interactions{=}1$, i.e., no message passing, to $\interactions{=}2$ yields an approximately constant decrease in error across $\cutoff$. An additional message passing step yields only marginal improvements.
+
+Predictive accuracy increases with cutoff radius, but saturates as the diameter of local environments exceeds the diameter of approximately \SI{10}{\angstrom} of the simulation cells used in training, approaching an all-to-all model. In this regime, all degrees of freedom are seen in the simulation cell, and message-passing cannot propagate additional information. However, $\interactions{=}1$ is equivalent to a non-linear pair potential, while $\interactions{>}1$ can model higher-order interactions, leading to lower errors. We therefore proceed with $\interactions{=}2$ in the following, which is sufficient to demonstrate the effect of message passing for heat flux predictions and minimises additional computational cost.
+
+
+Since predictive accuracy on a fixed test set cannot fully predict model performance for practical applications~\cite{fwgj2022a}, where larger regions of the potential energy surface are explored, we evaluate \emph{dynamical} properties as well. \Cref{fig:gkm_vdos} shows the \gls{vdos} for different choices of $\cutoff$, evaluated for trajectories at \si{300}{K}, started from identical initial configurations. For $\cutoff{=}\SI{5}{\angstrom}$ and higher, the reference \gls{vdos} from \gls{aimd} is adequately reproduced. Further increasing the cutoff only leads to marginal improvements or deviations at higher frequencies.
+
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{img/plot/gk/zro_vdos_t2.pdf}
+  \caption{
+  Comparison of \gls{vdos} for \mpnns{} ($\interactions{=}2$) with different cutoff radii compared to a baseline computed with \aims. The chosen production setting is highlighted in red.
+  Vertical lines indicate peaks in the \aims result. Constant vertical offsets are applied to distinguish curves. Results are averaged over three trajectories of \si{60}{ps} ($\Delta t{=}\SI{4}{fs}$), in the tetragonal phase at \SI{300}{K}, with matching initial configurations. Shaded areas indicate the minimum and maximum.
+  \\\\
+  The corresponding figure with $\interactions{=}1$ can be found in \cref{fig:si-gkm_vdos_t1}.
+  }
+  \label{fig:gkm_vdos}
+\end{figure}
+
+
+\newthought{We therefore choose} $\cutoff{=}\SI{5}{\angstrom}$ and $\interactions{=}2$ as \scare{production} settings for the following.
+
+
+\section{Testing the Potential}
+\label{sec:gkm_limit}
+
+Having chosen a set of \hps, we now further test the resulting \mlp.
+In order to assess its ability to model the dynamics of zirconia, we first consider the phonon band structure and density of states. The result is displayed in \cref{fig:gkm_phonons}; the final model captures major features of the band structure, reproducing reference results adequately.
+
+As a test of model stability and applicability, we investigate the temperature dependence of the unit cell volume, probing the monoclinic to tetragonal phase transition of zirconia, which occurs at around \qty{1480}{K} and is accompanied by a discontinuous change in volume~\cite{kh1998t}.
+To this end, we perform an $NpT$ simulation,\footnote{We use the Martyna-Tobias-Klein barostat \cite{mtk1994p} with time constant $\tau{=}\qty{5}{ps}$ and stochastic velocity rescaling thermostats~\cite{bdp2007p} with $\tau{=}\qty{5}{ps}$ for the positions and $\tau{=}\qty{3}{ps}$ for the lattice, with a simulation timestep of $\qty{1}{fs}$, and a simulation cell of $324$ atoms using \ipi~\cite{ipi}.} increasing the temperature with a heating rate of $\qty{1}{K\per ps}$.
+We compare with a similar simulation by Verdi~\etal{}~\cite{vkjk2021q}, which uses a heating rate of $\qty{0.5}{K\per ps}$.
+We note that this simple approach cannot be expected to produce a quantitative estimate of the transition temperature, which requires thermodynamic integration~\cite{vkjk2021q}. It can, however, indicate whether the transition is captured at all.
+
+\Cref{fig:gkm_vol_vs_temp} shows the result: Despite not being explicitly trained for this task, the model qualitatively captures the phase transition, at a similar temperature to another \mlp{}. However, it over-estimates unit cell volume by approximately $\qty{1}{\percent}$, and becomes unstable above \qty{2000}{K}.
+
+Further tests reveal that, starting with approximately \qty{1900}{K}, stable $NVE$ simulations are no longer guaranteed: Out of eleven trajectories with \qty{1}{ns} duration each, one encounters an instability. Attempting the same at \qty{2000}{K} leads to failure in every trajectory.
+
+Below \qty{1800}{K}, we observe no instabilities in the potential in tetragonal and monoclinic cells, despite running hundreds of nanoseconds of \md{} at varying supercell sizes over the course of this work. In this temperature range, the \mlp is therefore considered stable.
+% at 1900K, 1 out of 11 trajectories fails. at 2000K, all fail.
+
+\newthought{To better understand the cause} of the \mlp breakdown at elevated temperatures, we now investigate atomic displacements over time. The results for the monoclinic and tetragonal phases can be seen in \cref{fig:si-gkm_disp_schnet_mono,fig:si-gkm_disp_schnet_tetra}.
+With increasing temperature, oxygen atoms become more mobile, displaying increasing displacements from their average positions.
+As the temperature of the monoclinic to tetragonal phase transition, \qty{1400}{K}, is approached, different types of dynamical events are observed: Oxygen atoms become temporarily displaced into other local minima, or even participate in exchange-type oxygen diffusion.
+This latter effect becomes more pronounced with increasing temperature.
+While the \mlp remains stable for isolated events, increased diffusion above \qty{1900}{K} leads to the breakdown of the potential, as shown, for instance, in \cref{fig:si-gkm_disp_schnet_tetra_hi}.
+
+This might be due to the limited amount of training data for these processes, especially for the thermodynamic conditions close to the tetragonal to cubic phase transition.\footnote{In \cref{fig:si-gkm_training_cells}, magnitudes of lattice vectors in the training data are shown. Only two of the four total trajectories contain data in the cubic phase.}
+Displacements for the training data are shown in \cref{fig:si-gkm_disp_aims}, revealing that this behaviour is also present in the training data, in line with recent literature~\cite{tw2023t}, albeit in the form of slightly different diffusion events due to the smaller simulation cell and shorter trajectory lengths.
+However, we note that the portion of the data used for training contains limited samples for such events, as they occur towards the latter parts of the trajectories, which were reserved for validation.
+
+\newthought{These observations suggest} that our approach has yielded an \mlp capable of describing the dynamics of monoclinic and tetragonal zirconia up to temperatures of approximately \qty{1800}{K} with sufficient accuracy for equilibrium \md and the \gk method.
+At higher temperatures, an accurate description of defect formation is required, the development and validation of which is beyond the scope of the present work.
+For now, with its limitations in mind, we proceed with the \schnet \mlp to \gk calculations.
+
+\begin{figure}
+  \centering
+  \subfloat[Monoclinic]{
+    \includegraphics[width=\textwidth]{img/plot/gk/zro_phonons_mono.pdf}
+    \label{}
+  }
+
+  \subfloat[Tetragonal]{
+    \includegraphics[width=\textwidth]{img/plot/gk/zro_phonons_tetra.pdf}
+    \label{}
+  }
+
+  \caption{
+  Phonon band structure and density of states in the monoclinic (top) and tetragonal (bottom) phases, using the final \schnet \mlp with $\interactions{=}2$ and $\cutoff{=}\qty{5}{\angstrom}$, compared to a \aims reference calculation.
+  Results are shown for a 324-atom supercell. Convergence with respect to supercell size was checked.
+  \\\\
+  Other values for $\interactions$ and $\cutoff$ are shown in \cref{fig:si-gkm_phonons_m1,fig:si-gkm_phonons_m2}; higher $\cutoff$ yields no significant improvements, while $\interactions{=}1$ degrades accuracy.
+  }
+  \label{fig:gkm_phonons}
+\end{figure}
+
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{img/plot/gk/zro_vol_vs_temp.pdf}
+  \caption{
+  Unit cell volume, shown as rolling average over \qty{10}{ps}, versus externally imposed temperature, compared to a similar \mlp{} simulation~\cite{vkjk2021q} and experimental reference values~\cite{kh1998t}.
+  Vertical lines indicate the estimated transition temperatures.
+  }
+  \label{fig:gkm_vol_vs_temp}
+\end{figure}
+

@@ -1,0 +1,140 @@
+%!TEX root = ../../da.tex
+
+\chapter{Conventions and Notation}
+\label{ch:si-nerd}
+
+\section{Conventions}
+
+\begin{itemize}
+	\item Latin indices $i,j,k,l,...$: Such indices are used for atoms.
+	\item Latin indices $p,q,r,s,...$: Used for electrons.
+	\item Greek indices $\alpha, \beta, ...$: Used for cartesian directions and to enumerate lattice vectors.
+\end{itemize}
+
+% \section{Terminology}
+
+% \begin{itemize}
+% 	\item \newterm{system}: A collection of atoms. Used largely synonymously with \newterm{configuration} or \newterm{structure}.
+% \end{itemize}
+
+\section{Notation}
+
+\subsection{General Notation}
+
+\begin{itemize}
+	\item Calligraphic symbols like $\symset{A}$ are used for sets and other collections of objects. Occasionally, also used to denote abstract objects, as opposed to fixed-size array-like representations.
+	\item $\vec{x}$ indicates a column vector, uppercase $\mat{M}$ a matrix. In most cases, these objects are restricted to $\reals^n$ and $\reals^{n \times m}$ respectively, but may occasionally be used for more general vector- and matrix-like objects, such as elements of and operators acting in a Hilbert space.
+	\item $\mat{M}_{ij}$: Entry in row $i$ and column $j$ of matrix. Can be used to define a matrix via its matrix elements.
+	% \item $\overline \vec{x}$: Normalised vector.
+	\item $\cdot$ used for bold symbols indicates a matrix-matrix, vector-matrix, or matrix-vector product; otherwise, it is used to emphasise multiplication, for instance in multi-line expressions. We also use it to signify a placeholder in another expression.
+	\item $\times$ used to indicate the cross product between vectors, or multiples in the context of supercells and $k$-point grids.
+	\item $\defvec{a}{b}$ defines a column vector with entries given by $a$ evaluated over $b$. If the $a$ are column vectors, the result is a matrix where the $a$ define the \emph{rows}.
+	\item $\defvect{a}{b}$ same as above, but the result is a row vector, or a matrix where $a$ define the columns.
+	\item $\bigo{f(n)}$ indicates that the computational cost $c(n)$ (or other quantity) scales with $n$ such that $\exists n_0, k > 0 : c(n) < k f(n) \, \forall n>n_0$. If $f(n)=n$, for instance, the cost $c(n)$ is said to be asymptotically linear.~\cite{sipser2013} In the case of the number of atoms $N$, the limit is taken at \emph{constant density}, and assuming homogeniety, such that the size of atomic neighbourhoods remains approximately constant with increasing $N$.
+	\item $\magnitude{\cdot}$ denotes the absolute value for scalars, the vector norm $\sqrt{\vec{x} \cdot \vec{x}}$ for vectors, and the cardinality for sets. Used in other contexts, it denotes a general norm, with the particular type of norm indicated by a subscript.
+\end{itemize}
+
+\begin{itemize}
+	\item $\reals$: The real numbers.
+	\item $\wholes$: Integers, including negatives and zero.
+	\item $\matone$: Matrix with diagonal $1$.
+\end{itemize}
+
+\subsection{Symbols Related to Green-Kubo Method}
+
+\begin{itemize}
+	\item $\tk$: Thermal conductivity tensor. (Scalar: $\kappa=\trace{\tk}/3$).
+	% \item $\kappa$: Scalar thermal conductivity $\kappa=\trace{\tk}/3$.
+	\item $\ehfacft(t)$: \hfacf at $t$. (Scalar: $\ehfacf$.)
+	\item $\tk(\tau)$: Integral of \hfacf at upper integration limit $\tau$. (Scalar: $\kt$.)
+	\item $\td$: \md simulation duration.
+	\item $\nens$: Number of trajectories.
+	\item $\Td$: Total simulation time $n \td$.
+	\item $\anha$: Anharmonicity score defined in reference~\cite{kpsc2020t}.
+\end{itemize}
+
+\subsection{Atomistic Systems}
+
+\begin{itemize}
+	\item $N$: Number of atoms in a given system.
+	\item $\atom$: Abstract notation for an atom.
+	\item $\system = \curlyset{\atom_i}{i=1...N}$: Abstract notation for a system.
+	\item $\aprop_i$: General property of atom $i$.
+	\item $Z_i$: Atomic number, i.e. the charge of the given nucleus. An example for an atomic property, and the only one explicitly featured in this thesis.
+	\item $\Charges$: All $N$ charges for the atoms in a system.
+	\item $\Basis$: See below; the lattice vectors for a periodic system.
+	\item $\Rgen$: All $N$ positions of the system. In a periodic system, in most cases taken to be $\Rsc$.
+	\item $(\Rgen, \Charges, \Basis)$: The main properties of a system relevant to this thesis, as these define the input for electronic structure methods and representations.
+	\item $\Momenta=\curlyset{\momentum_i}{i=1...N}$: All $N$ momenta in a system.
+	\item $\phasp{}{t}$: Phase-space point $(\Rgen(t), \Momenta(t))$ at time $t$. In the context of \md, this is taken to indicate that the system has evolved from some starting time $t=0$ to the given $t$. Used as alternative to the 3-tuple defined above in cases where different position/momentum configurations of an otherwise identical system occur.
+	\item $\R_{ij} = \R_j - \R_i$: Atom-pair vector. Also called \scare{displacement} vector. In this definition $\R_{ij}$ points from $i$ to $j$. $r_{ij}$ is defined as $\magnitude{\R_{ij}}$. $r$ is used as a general distance if no particular atoms are specified.
+	\item $\magnitude{\Rm_{ij}} = \min_{\offset \in \wholes^3} \magnitude{\R_{j\offset} - \R_i} \quad i,j \in \Rsc$: Minimum image convention. Note that $\Rm_{ij}$ indicates $\R_{j\offset} - \R_i$ with $\offset$ chosen such that $\magnitude{\Rm_{ij}}$ is the \mic distance. In this thesis, the \mic is assumed to be implemented such that derivatives match this definition; this does not hold, for instance, if it is implemented via fractional coordinates.
+\end{itemize}
+
+\subsection{Periodic Systems}
+
+Notation for periodic systems is defined in detail in \cref{ch:pbc}. Selected symbols:
+\begin{itemize}
+	\item $\Rsc$: Positions in simulation cell.
+	\item $\Rall$: Positions in bulk.
+	\item $\Basis$: Collection of lattice vectors $\basis$.
+	\item $\Recip$: Collection of reciprocal lattice vectors $\recip$.
+	\item $\maxcutoff$: Maximum cutoff radius for a given simulation cell that avoids double interactions. In orthorhombic systems, half the smallest lattice constant. For an implementation of the \mic that uses fractional coodinates, neighbours beyond this distance may be miscounted.
+\end{itemize}
+
+
+\section{Loss Functions and Error Metrics}
+\label{sec:si-ml_lossf}
+
+\marginnote{An overview of error metrics can be found in \cite{cwj2021m}, which also supplies the definitions collected here.}
+In this section, $y_i$ denote labels and $f_i$ the corresponding model prediction. $e_i{=}f_i-y_i$ are the \newterm{residuals} from which most loss functions are constructed. We take $n$ to be the number of labels and predictions.
+
+\paragraph{Absolute Error}
+The \glsfirst{ae} is simply
+\begin{equation}
+	\text{AE} = \magnitude{e_i} \,;
+\end{equation}
+it is used as the basis for aggregate losses.
+The \glsfirst{mae} is
+\begin{equation}
+	\text{MAE} = \frac{1}{n} \sum_{i=1}^n \magnitude{e_i} \, .
+\end{equation}
+The \glsfirst{maxae} is
+\begin{equation}
+	\text{maxMAE} = \max_{i=1...n} \magnitude{e_i} \, .
+\end{equation}
+
+\paragraph{Root Mean Squared Error}
+The \glsfirst{rmse} is
+\begin{equation}
+	\text{RMSE} = \sqrt{\frac{1}{n} \sum_{i=1}^n e_i^2}
+\end{equation}
+The \glsfirst{rrmse} is then
+\begin{equation}
+	\text{rRMSE} = \frac{\text{RMSE}}{\sqrt{ \frac{1}{n} \sum_{i=1}^n (y_i - \bar{y})^2 }}
+	= \frac{\text{RMSE}}{\sigma_y}
+	= \frac{\text{RMSE}}{\text{RMSE}^{\ast}} ,
+\end{equation}
+%
+where $\bar{y} = \frac{1}{n} \sum_{i=1}^n y_i$ is the mean of the ground truth labels and $\sigma_y$ is their standard deviation.
+The \gls{rrmse} can be seen as \gls{rmse} relative to the \gls{rmse} of a baseline model RMSE$^{\ast}$ that always predicts the mean of the labels.\footnote{Note, however, that the baseline model would more naturally predict the mean of the \emph{training} data. As long as the assumption of \gls{iid} data holds, either should yield similar results.}
+
+We note that the \gls{rmse} is an upper bound to the \gls{mae}; it is more sensitive to outliers, and a large difference between the two metrics can be used to detect the present of predictions with large error.
+
+\paragraph{Percentage Errors}
+In some situations, it is useful to use error metrics that can be compared across datasets, where the overall scale of labels can differ significantly. One approach to this is to use percentage errors. The absolute percentage error (APE) is defined as
+\begin{equation}
+	\text{APE} = \magnitude{\frac{y_i-f_i}{f_i}} \, .
+\end{equation}
+The \glsfirst{mape} and \glsfirst{maxape} are the mean and maximum over the dataset, respectively. Note that the division by predictions $f_i$ implies that percentage errors suffer from numerical issues for small values, and diverge at $0$.
+
+\paragraph{Coefficient of Determination}
+Another scale-independent metric is the coefficient of determination. Denoting $\bar{y}$ as the mean of labels,
+\begin{equation}
+	R^2 = \left(1 - \frac{\sum_{i=1}^n (y_i - f_i)^2}{\sum_{i=1}^n (y_i - \bar{y})^2} \right) \, .
+\end{equation}
+In this thesis $R^2$ is always implemented in this form, and usually given in \unit{\percent}.
+
+% https://pubs.acs.org/doi/10.1021/acs.chemrev.0c01111 3.5.1 as starting point. or rw
+
+

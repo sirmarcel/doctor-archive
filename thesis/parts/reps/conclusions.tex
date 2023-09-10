@@ -1,0 +1,25 @@
+%!TEX root = ../../da.tex
+
+\chapter{Summary}
+\label{ch:repsdisc}
+
+In this chapter, we reviewed and benchmarked representations of atomistic systems for the construction of \ml models of energies obtained with first-principles calculations. 
+
+We distinguished local and global representations and between using invariant $k$-body functions and explicit symmetrisation of a density representation to deal with invariances, and found that many previously suggested representations can be described in these frameworks. An overview of existing approaches was given.
+
+Empirically, we observed that when controlling for other factors, for instance distribution of training and validation data, regression method, and \hp optimisation, both prediction accuracy and compute time of \sfs, \mbtr and \soap increase with interaction order, and for local representations over global ones.
+
+
+\subsection{Limitations}
+
+The benchmark in \cref{ch:repsbench} was restricted to a particular regression model, \krr, and to only one property: Energy. We therefore do not consider \mlps, where forces are required, or the prediction of other properties, for instance bandgaps. We also do not study end-to-end models like \nns, where representations are learned, rather than fixed, and the regressor is optimised jointly with the representation.
+
+In particular, this excludes equivariant \nns, and the larger context of geometric deep learning~\cite{bbcv2021a}.
+In a nutshell, these networks~\cite{tskr2018q,s2021q} rely on the ideas discussed in \cref{ch:repsr}:
+Architectures such as NequIP~\cite{bmsk2022q} or \sok~\cite{fum2022q} are inspired by density-based representations, constructing intermediate layers with $l{>}0$ and ensure that all operations within the network preserve equivariance by using appropriate tensor products.
+Other approaches, for instance DimeNet~\cite{kgg2020q}, rely more explicitly on $k$-body information, constructing messages from angles in addition to distances.
+Other methods, such as PaiNN~\cite{sug2021q}, employ an intermediate approach: To avoid the computational overhead of transitioning to a spherical harmonics basis, vectorial features are generated from atom-pair vectors and non-linearities in \scare{real space} are employed.
+In such equivariant \nns, similar relationships between body-order and degree of equivariance have been observed~\cite{bkoc2022q}. An understanding of the relationship between equivariance, body-order, and dataset and property dependence so far remains elusive, and represents an intriguing direction for future work.
+
+
+

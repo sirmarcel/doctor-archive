@@ -1,0 +1,145 @@
+%!TEX root = ../../da.tex
+
+\chapter{Role, Types, and Requirements}
+\label{ch:repsb}
+
+% \section{Role and Types}
+
+This section introduces the concept of representations and their role in atomistic \ml. The distinction between local and global representations and the requirements they should fulfil are discussed.
+
+% TODO: transition to using \aprop more generally
+\newthought{The role of representations} is to map atomistic systems, described as a set of $N$ atomic positions $\Rgen$, atomic charges $\Charges$, and, if applicable, a periodic basis $\Basis$, to a feature space suitable to regression.
+% \footnote{For instance, features should correlate with the target property.} stupid
+% These spaces, together with data distribution, determine the efficiency of learning. what does this mean 
+
+In practical terms, we therefore map the triple $(\Rgen, \Charges, \Basis)$ to a set of real numbers with a fixed dimension $n$. We distinguish two elementary approaches: Those producing a set of features \emph{per atom}, which we term \newterm{local} representations
+\begin{equation}
+	\R^{\text{local}}: (\Rgen, \Charges, \Basis) \longrightarrow \vec{x} \in \reals^{N \times n} \, ,
+\end{equation}
+and those that yield one representation per structure, which we call \newterm{global} representations,
+\begin{equation}
+	\R^{\text{global}}: (\Rgen, \Charges, \Basis) \longrightarrow \vec{x} \in \reals^n \, .
+\end{equation}
+
+Local representations can immediately be applied to predict quantities that are intrinsically related to single atoms, for instance nuclear chemical shifts or core level excitations~\cite{rrl2015q}. Extensive global properties, such as energies, can be modelled by additionally assuming additivity, decomposing a global property into atomic contributions.
+% \footnote{For instance using the method discussed in \cref{sec:si-ml_krr_contributions}.}
+
+In contrast, global representations are well-suited for properties of entire systems, such as the band gap or polarisability. However, they do not include extensivity\footnote{See \cref{sec:si-reps-extensive}.} by design, and therefore may be ill-suited for global, but extensive, quantities.
+
+\newthought{With the introduction of deep learning,} much effort has been put into including insights from representation development into end-to-end learning systems. Recent work has focused on unifying the approaches even further~\cite{npfc2022q,bbkc2022a}.
+At present, however, we focus on fixed representations, which are not trained beyond \hp optimisation.
+
+
+
+\section{Requirements}
+
+Representations are used to assist machine learning models with the task of inferring a structure-property mapping from reference data, improving sample efficiency, predictive accuracy, and, ideally, computational efficiency. In order to achieve this task, representations should fulfil a number of requirements, some of which depend on the property to be predicted.
+
+\begin{romanenum}
+	\item \emph{Invariance} or \emph{equivariance} to transformations acting on the input structure, including \label{req:Invariance}%
+		\begin{romanenum*}
+			\item \label{req:InvIndexing} changes in atom indexing,
+		\end{romanenum*}
+		and often 
+		\begin{romanenum*}[resume]
+			\item \label{req:InvTranslation} translations
+			\item \label{req:InvRotation} rotations 
+			\item \label{req:InvReflection} reflections. % todo: add SI example
+		\end{romanenum*} 
+		
+	\item \emph{Uniqueness,} \label{req:Uniqueness}
+		that is, \emph{variance} against all transformations that change the predicted property:
+		Two systems that differ in property should be mapped to different representations.
+
+	\item%
+		\begin{romanenum*} \item \label{req:Continuity} \emph{Continuity,} \end{romanenum*} 
+		and ideally \begin{romanenum*}[resume] \item \ \emph{differentiability}, \end{romanenum*}
+		with respect to $\Rgen$.
+		
+	\item \emph{Computational efficiency} relative to the reference calculations. \label{req:Runtime}
+	
+	\item \emph{Generality}; being able to encode any atomistic system.
+
+	\item \emph{Structure}\label{req:Structure}
+		of representation feature space and the resulting data distribution should be suitable for regression.
+\end{romanenum}
+
+\noindent
+We now discuss these requirements in more detail.
+
+
+\subsection{Invariance and Equivariance}
+\label{ssec:repsb_invariance}
+
+\marginnote[2\baselineskip]{We will use the term \newterm{geometric invariance} to refer to invariance with respect to rotations and, if required, reflections.}
+In many cases, the structure-property mapping to be approximated with \ml is known to change in a well-defined way under transformations of the structure. For instance, in the absence of external fields, energy is invariant to re-indexing (or permutation) of atoms of the same element, translation in space, as well as global rotations and reflections. Incorporating such knowledge into the \ml model as an inductive bias can simplify the learning problem and reduce the amount of required training data~\cite{gsd2017q,gwcc2018q,cwc2018q,d2020Aq,ahk2019q,klt2018q,tskr2018q,htak2019q}.
+
+In this context, one can distinguish between \emph{invariance} and \emph{equivariance}. 
+In the former case, the property to be predicted is unchanged under a given transformation. In the latter case, the transformation can equivalently be applied to the input or the output. As an example, while the energy, a scalar quantity, is unchanged when a molecular is rotated, the forces acting on each atom, which are vectors, rotate \emph{with} the molecule.
+
+Allowing the model to reflect these properties eliminates redundancy: Structures considered distinct can be treated as identical, and the model can naturally generalise to unseen, transformed, structures.
+Recently, the introduction of equivariant deep neural networks has revealed that the inclusion of equivariance can improve even the prediction of scalar quantities, as equivariant features can efficiently represent higher-order geometric information~\cite{bmsk2022q}.
+In this chapter, we focus on invariant models. Equivariant \nns are briefly discussed in \cref{ch:repsdisc}.
+% TODO: cite some stuff here lol
+% in particular, point to Tess' paper and maybe the Bronstein book
+
+\subsection{Uniqueness}
+
+The invariance requirement naturally complements the requirement of \emph{variance} with respect to any other transformation that changes the target property; two systems that differ in property should be mapped to different representations.
+Systems with equal representation that differ in property introduce errors~\cite{m2012Aq,lrrk2015q,pwcc2020q}: Because the \ml model cannot distinguish them, it predicts the same value for both, yielding at least one erroneous prediction.
+Uniqueness is necessary and sufficient for reconstruction, up to invariant transformations, of an atomistic system from its representation~\cite{bkc2013q,kme2020q}.
+
+\subsection{Continuity and Differentiability}
+
+Discontinuities work against the regularity assumptions in \ml models, which try to find the least complex function compatible with the training data.
+Intuitively, continuous functions require less training data than functions with jumps. 
+% A simple example is shown in \cref{fig:repsb-continuity}: A jump discontinuities requires training samples on both endpoints, for the continuous function one is enough. Since the chosen Gaussian kernel assumes smoothness, the overall approximation is rather poor.
+
+Beyond mere continuity, differentiable representations enable the construction of differentiable \ml models. Gradients can then be used for training with gradient descent methods, or used to further constrain the interpolation function (\scare{force matching}), improving sample efficiency~\cite{lhr2009q,bc2015q,csmt2018q}.
+If the \ml model is intended to be used as a \mlp, continuous differentiability ensures that the forces obtained by differentiating the energy model are energy-conserving.
+% the ability to compute gradients ensures that the resulting \gls{ff} is energy-conserving.
+
+\subsection{Computational Efficiency}
+
+\marginnote{We note in passing that the results of sufficiently cheaper simulations, compared to the method to be approximated, can be used to construct representations~\cite{sglg2013q,wcm2018q} or to predict properties at a higher level of theory (\scare{$\Delta$-learning})~\cite{rdrl2015q,wcm2018q,sgc2019q}.}
+In many cases, the introduction of \ml-based approaches to quantum simulations aims to reduce computational cost. Therefore, the \ml model must be faster to compute than the underlying reference data, leading to the requirement of computational efficiency.
+
+\subsection{Generality}
+
+Representations should be able to encode any atomistic system.
+While current representations handle finite and periodic systems, less work has been done on charged systems~\cite{ghsg2015q,nlbt2018q,rag2018q,ns2018q,um2019q,d2020Aq,kfgb2021Bq,pdfg2021q}, excited states~\cite{wm2020Aq,wm2020Bq,wgm2020q,bdrs2005q,wflm2020q}, continuous spin systems, isotopes, and systems subjected to external fields~\cite{gsm2021q,cfl2019q}.
+
+\subsection{Structure}
+
+
+The role of the representation is to map atomistic systems into a space amenable to regression.
+Strictly speaking, for kernel regression this is the kernel feature space, that is, representation space transformed by the kernel.
+We limit our discussion to the representation itself.
+
+% For the linear kernel this is exact; the transformation is the identity.
+% Many non-linear kernels like the Gaussian kernel act on the representation space, relying on its structure and implied metric.
+
+Representations often have a Hilbert space structure, featuring an inner product, completeness, projections, and other advantages.
+Besides the formal space defined by the representation, the structure of the subspace spanned by the data is critical~\cite{pwcc2020q,gfic2021q}.
+
+This requirement is currently less well understood than the ones discussed previously, and largely evaluated empirically, which we will undertake in \cref{ch:repsbench}.
+
+\newthought{In addition, simplicity,} both conceptually and in terms of implementation, is a desirable quality of representations, albeit difficult to quantify. For practical application, the availability of an efficient and usable open source implementation is also desirable.
+
+\section{Representations, Descriptors, and Fingerprints}
+
+ % (\ref{req:Invariance})  (\ref{req:Continuity})  (\ref{req:Runtime})   (\ref{req:Uniqueness})
+
+In this work, the term \scare{representation} is used to refer to features that fulfil invariance, continuity, and efficiency requirements, as well as uniqueness.
+
+By this definition, $(\Rgen, \Charges, \Basis)$ is not a representation, as it violates the invariance properties. Internal coordinates fulfil geometric invariance requirements, but are specific to any given system, and retain choice of freedom in the ordering of coordinates, violating \ref{req:InvIndexing}.
+
+Descriptors and fingerprints from cheminformatics~\cite{todeschini2009} and materials informatics violate \ref{req:Uniqueness} and \ref{req:Continuity}.
+
+Simple representations such as the Coulomb matrix (\cref{ch:repsr}) either suffer from coarse-graining, violating~\ref{req:Uniqueness}, or from discontinuities, violating \ref{req:Continuity}.
+%
+In practice, representations do not satisfy all requirements exactly (\cref{ch:repsr}) but can achieve high predictive accuracy regardless (\cref{ch:repsbench});
+for example, for some datasets, modeling a fraction of higher-order terms can be sufficiently unique already~\cite{jkak2020q}.
+The optimal interaction orders to utilise in a representation also depend on the type and amount of data available~\cite{gzfd2020q}.
+
+% \newthought{Having established these requirements,} we now turn our attention to the variety of proposed representations, identifying common design choices and features.

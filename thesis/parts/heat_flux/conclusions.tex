@@ -1,0 +1,21 @@
+%!TEX root = ../../da.tex
+
+\chapter{Summary}
+\label{ch:hf-end}
+
+
+This chapter discussed the implementation of the \gk method for the calculation of thermal conductivities with \mlps based on \mpnns. Such simulations require access to the heat flux, a quantity computed from derivatives of atomic contributions to the potential energy.
+
+In order to efficiently compute the required derivatives for such models with \ad, a general understanding of the \scare{forward} computation is required.
+To this end, in \cref{ch:glps}, the concept of graph potentials, or \glps, was introduced. An account of their construction and the calculation of forces and stress with \ad was provided. We verified that a number of previous formulations of the stress are equivalent and can be implemented directly with \ad.
+This section also introduced the notion of local and semi-local potentials: While in the former, interactions take place entirely within atomic neighbourhoods with cutoff radius $\cutoff$, the latter admits repeated interactions between such neighbourhoods, leading to correlations up to $\effcutoff \geq \cutoff$.
+
+% Then, the heat flux was considered.
+Finding that prior formulations of the heat flux are not suitable for semi-local \glps and \ad, adapted forms of the heat flux were derived in \cref{ch:gk-hf}: The \scare{unfolded} heat flux in \cref{eq:hf_junf_ad} applies to semi-local potentials, and the \scare{edges} heat flux in \cref{eq:hf_jvir} applies to local potentials. Using \ad, the computational cost for both scales asymptotically linearly with the number of atoms $N$ in the simulation cell,\footnote{Provided the density is held constant as $N$ is increased.} enabling the practical use of \mlps based on \mpnns for the \gk method.
+
+\subsection*{Limitations}
+
+The framework developed in this chapter explicitly excludes non-local interactions, which are present, for instance, in \mlps that feature attention mechanisms,\footnote{Such as SpookyNet~\cite{ucsm2021q}\\ or \sok~\cite{fum2022q}.} or those that model all-to-all interactions,\footnote{Such as (s)GDML~\cite{ctsm2017q,csmt2018q,csmt2019q}.} as well as in long-range electrostatics.
+None of the provided heat flux formulations apply to such models, for which \cref{eq:hf_explicit_general} must be evaluated explicitly.\footnote{In the case of the forces, \cref{eq:glp_f_basic} applies, and for the stress, it is preferable to rely on end-to-end \ad, for instance \cref{eq:glp_stress_strain_direct}. Care must be taken to construct replica positions explicitly in that case.}
+
+Beyond this fundamental restriction, the \scare{unfolded} heat flux is limited in practice by the need to explicitly construct an extended non-periodic system: As the effective cutoff radius $\effcutoff$ increases,\footnote{For instance through higher numbers of message-passing steps $\interactions$.} the number of additional positions grows cubically. In the experiments reported in the following chapter, $N$ is therefore limited to $\approx\num{5000}$ atoms, and $\interactions$ to $\leq3$. However, for the studied systems, little advantage is found for $\interactions > 2$.

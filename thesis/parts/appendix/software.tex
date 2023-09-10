@@ -1,0 +1,48 @@
+%!TEX root = ../../da.tex
+
+\chapter{Software}
+\label{ch:software}
+% 
+
+\begin{chapquote}{Ursula K. LeGuin, \textit{The Dispossessed}}
+	Nothing is yours. It is to use. It is to share.\\
+	If you will not share it, you cannot use it.
+\end{chapquote}
+
+\noindent
+The work presented in this thesis required the development of a number of different software libraries, which are presented briefly in this appendix. All software has been made publicly available under permissive open source licences.
+
+\section{cmlkit}
+\label{sec:si-cmlkit}
+
+\cmlkit~\cite{cmlkit} is a framework developed for the benchmark presented in \cref{ch:repsbench}. It implements a general architecture for constructing \ml models for atomistic problems that are composed of a representation and a regressor. Components of such models are represented as stateless objects, which can be descibes as \texttt{dicts}. An interface to the \software{hyperopt} package, which implements \gls{tpe}-based \hp optimisation, was implemented, as well as interfaces to \software{RuNNer}~\cite{arunner} (for \sfs), \software{quippy}~\cite{aquippy} (for \soap), \software{qmmlpack}~\cite{qmmlpack} (for \mbtr), as well as \software{dscribe}~\cite{hjrf2020q}.
+
+\section{Green-Kubo Pytorch Infrastructure}
+\label{sec:si-gkinfra}
+
+As we have seen in \cref{ch:gk-conv}, studying convergence in the \gk method requires large-scale simulations, beyond the ability of \vibes. In order to enable the simulations performed in this thesis, I consequently adapted \vibes and its underlying infrastructure.
+
+In \vibes, \md simulations are logged into the \texttt{.son} file format, which consists of a series of \texttt{json} dictionaries separated by a particular delimiter. For post-processing, this format is then converted into \software{xarray} datasets backed by \software{netcdf}. This post-processing backend, originally developed for \gls{aimd}, was unable to process the files produced by \mlp \md, which generated hundreds of \unit{TiB} of data.
+In order to process datasets of this size, some changes were made:
+\begin{itemize}
+	\item \software{son}, the implementation of the \texttt{.son} format, was re-written entirely to allow for stream-based processing, rather than loading full trajectories into memory. This rewrite is used by \vibes.
+	\item I developed an alternative post-processing backend for \vibes, code-named \software{stepson}, which relies on \software{dask} to perform parallel chunked post-processing of \software{son} trajectories. This allows the processing of datasets far exceeding the available memory. \software{stepson} is planned be included in a future release of \vibes.
+\end{itemize}
+Additionally, I developed extensions for \schnetpack~\cite{sktm2019q} to implement the heat flux formulations from \cref{ch:gk-hf}, and to enable efficient \md with \vibes, available at\\
+\nicelink{https://github.com/sirmarcel/gknet-archive}.
+
+\section{Green-Kubo JAX Infrastructure}
+\label{sec:si-glp}
+
+In order to use \sok models, which are implemented in \mlff~\cite{mlff}, which in turn relies on \jax~\cite{jax}, new infrastructure was required. I therefore developed \glpc~\cite{glp}, which implements the heat flux formulations from \cref{ch:gk-hf}, as well as the stress formulas from \cref{ch:glps}, for any potential of the \glp type, i.e., mapping a graph of atom-pair vectors to a set of atomic potential energy contributions. To efficiently run \md with \glp, I also wrote \gkx~\cite{gkx}, which runs $NVE$ \md entirely on the \gls{gpu}, or potentially other accelerator devices, and directly emits \software{netcdf} datasets, rather than requiring \texttt{.son} files.
+
+\vspace*{\fill}
+
+\begin{chapquote}{Burial, \textit{Etched Headplate}}
+\noindent
+He actually, I think, wants to do the right thing\el\\ so it's more a question of willpower, self-discipline, and circumstances\el
+\end{chapquote}
+
+\vspace*{\fill}
+
+\marginnote{Thank you for reading. Have a nice day!}

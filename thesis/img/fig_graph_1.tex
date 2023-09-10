@@ -1,0 +1,83 @@
+
+\begin{tikzpicture}[
+    x = 0.8cm,
+    y = 0.8cm,
+    >=stealth,
+    atom/.style = {circle, fill=black, minimum size=4pt,
+    inner sep=0pt, outer sep=0pt},
+    replica/.style = {circle, fill=red, minimum size=4pt,
+    inner sep=0pt, outer sep=0pt, opacity=0.5},
+]
+
+\node[replica] (rep_0_00) at (0.0,0.0){};
+    \node[replica] (rep_1_00) at (0.5,0.4){};
+    \node[replica] (rep_2_00) at (1.2,0.5){};
+    \node[replica] (rep_3_00) at (1.2,1.4){};
+    \node[replica] (rep_4_00) at (1.7,1.0){};
+    \draw [dashed] (0.0,0.0) -- (2.0,0.0);
+    \draw [dashed] (0.0,0.0) -- (0.0,1.4);
+    \node[replica] (rep_0_01) at (0.0,1.4){};
+    \node[replica] (rep_1_01) at (0.5,1.7999999999999998){};
+    \node[replica] (rep_2_01) at (1.2,1.9){};
+    \node[replica] (rep_3_01) at (1.2,2.8){};
+    \node[replica] (rep_4_01) at (1.7,2.4){};
+    \draw [dashed] (0.0,1.4) -- (2.0,1.4);
+    \draw [dashed] (0.0,1.4) -- (0.0,2.8);
+    \node[replica] (rep_0_02) at (0.0,2.8){};
+    \node[replica] (rep_1_02) at (0.5,3.1999999999999997){};
+    \node[replica] (rep_2_02) at (1.2,3.3){};
+    \node[replica] (rep_3_02) at (1.2,4.199999999999999){};
+    \node[replica] (rep_4_02) at (1.7,3.8){};
+    \draw [dashed] (0.0,2.8) -- (2.0,2.8);
+    \draw [dashed] (0.0,2.8) -- (0.0,4.199999999999999);
+    \node[replica] (rep_0_10) at (2.0,0.0){};
+    \node[replica] (rep_1_10) at (2.5,0.4){};
+    \node[replica] (rep_2_10) at (3.2,0.5){};
+    \node[replica] (rep_3_10) at (3.2,1.4){};
+    \node[replica] (rep_4_10) at (3.7,1.0){};
+    \draw [dashed] (2.0,0.0) -- (4.0,0.0);
+    \draw [dashed] (2.0,0.0) -- (2.0,1.4);
+    \node[atom] (atom_0) at (2.0,1.4){};
+    \node[atom] (atom_1) at (2.5,1.7999999999999998){};
+    \node[atom] (atom_2) at (3.2,1.9){};
+    \node[atom] (atom_3) at (3.2,2.8){};
+    \node[atom] (atom_4) at (3.7,2.4){};
+    \draw [dashed] (2.0,1.4) -- (4.0,1.4);
+    \draw [dashed] (2.0,1.4) -- (2.0,2.8);
+    \node[replica] (rep_0_12) at (2.0,2.8){};
+    \node[replica] (rep_1_12) at (2.5,3.1999999999999997){};
+    \node[replica] (rep_2_12) at (3.2,3.3){};
+    \node[replica] (rep_3_12) at (3.2,4.199999999999999){};
+    \node[replica] (rep_4_12) at (3.7,3.8){};
+    \draw [dashed] (2.0,2.8) -- (4.0,2.8);
+    \draw [dashed] (2.0,2.8) -- (2.0,4.199999999999999);
+    \node[replica] (rep_0_20) at (4.0,0.0){};
+    \node[replica] (rep_1_20) at (4.5,0.4){};
+    \node[replica] (rep_2_20) at (5.2,0.5){};
+    \node[replica] (rep_3_20) at (5.2,1.4){};
+    \node[replica] (rep_4_20) at (5.7,1.0){};
+    \draw [dashed] (4.0,0.0) -- (6.0,0.0);
+    \draw [dashed] (4.0,0.0) -- (4.0,1.4);
+    \node[replica] (rep_0_21) at (4.0,1.4){};
+    \node[replica] (rep_1_21) at (4.5,1.7999999999999998){};
+    \node[replica] (rep_2_21) at (5.2,1.9){};
+    \node[replica] (rep_3_21) at (5.2,2.8){};
+    \node[replica] (rep_4_21) at (5.7,2.4){};
+    \draw [dashed] (4.0,1.4) -- (6.0,1.4);
+    \draw [dashed] (4.0,1.4) -- (4.0,2.8);
+    \node[replica] (rep_0_22) at (4.0,2.8){};
+    \node[replica] (rep_1_22) at (4.5,3.1999999999999997){};
+    \node[replica] (rep_2_22) at (5.2,3.3){};
+    \node[replica] (rep_3_22) at (5.2,4.199999999999999){};
+    \node[replica] (rep_4_22) at (5.7,3.8){};
+    \draw [dashed] (4.0,2.8) -- (6.0,2.8);
+    \draw [dashed] (4.0,2.8) -- (4.0,4.199999999999999);
+    \draw [solid, very thick] (2.0,1.4) -- (4.0,1.4);
+\draw [solid, very thick] (4.0,1.4) -- (4.0,2.8);
+\draw [solid, very thick] (4.0,2.8) -- (2.0,2.8);
+\draw [solid, very thick] (2.0,2.8) -- (2.0,1.4);
+\draw [dashed] (6.0,0.0) -- (6.0,4.199999999999999);
+\draw [dashed] (6.0,4.199999999999999) -- (0.0,4.199999999999999);
+
+
+\end{tikzpicture}

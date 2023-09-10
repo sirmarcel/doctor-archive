@@ -1,0 +1,162 @@
+%!TEX root = ../da.tex
+
+\usepackage[a-2b]{pdfx}
+
+\usepackage[utf8]{inputenc}
+% \usepackage[german,english]{babel}
+\usepackage[british]{babel}
+\usepackage[T1]{fontenc}
+
+% Fonts
+\usepackage{amsfonts}
+\usepackage[fleqn]{amsmath}
+\usepackage{bm}
+\usepackage{bbold}
+
+% Grafix
+\usepackage{graphicx}
+
+% Color definitions for drawings etc.
+% The main accent color is just red,
+% extra_i should be easily distinguishable
+% other colors
+\usepackage{xcolor}
+
+\definecolor{extra_0}{HTML}{66c2a5}
+\definecolor{extra_1}{HTML}{ffd92f}
+\definecolor{extra_2}{HTML}{8da0cb}
+\definecolor{extra_3}{HTML}{e78ac3}
+\definecolor{extra_4}{HTML}{a6d854}
+\definecolor{extra_5}{HTML}{fc8d62}
+
+\definecolor{accent}{HTML}{AA0022}
+\definecolor{dark_accent}{HTML}{500310}
+\definecolor{accent_2}{HTML}{006C66}
+
+\definecolor{teal}{HTML}{007766}
+\definecolor{orange}{HTML}{EE7733}
+
+% Figures
+\usepackage[lofdepth,lotdepth]{subfig}
+\usepackage{float}
+%\usepackage{caption} % disabled for tufte
+\usepackage{epstopdf}
+
+
+% Tables
+% \usepackage{longtable}
+% \usepackage{arydshln}
+\usepackage{booktabs}
+\usepackage{multirow}
+
+% The fancyvrb package lets us customize the formatting of verbatim
+% environments.  We use a slightly smaller font.
+\usepackage{fancyvrb}
+\fvset{fontsize=\normalsize}
+
+% Pretty physics things
+\usepackage{braket}
+\usepackage[separate-uncertainty=true]{siunitx}
+\usepackage{mathtools}
+\usepackage{chemformula}    % chemical formulas
+\usepackage[makeroom]{cancel}
+
+% Pretty code things
+% \usepackage{minted}
+%TC:group minted 0 0
+
+% Referencing
+\usepackage{url}
+% package is already loaded by pdftex
+\hypersetup{
+  colorlinks=true,
+  linkcolor=dark_accent,
+  anchorcolor=black,
+  citecolor=dark_accent,
+  urlcolor=black,
+  bookmarksopenlevel=chapter,
+  % ignored, because pdftex pretends to set it, but doesn't
+  % pdfkeywords={machine learning, quantum mechanics, materials science, automatic differentiation, thermal transport},
+  % required by TUB
+  pdflang={en-GB},
+  pdfdisplaydoctitle=true,
+  pdfpagelayout=OneColumn,
+}
+\usepackage[noabbrev]{cleveref}
+\usepackage{csquotes}
+\usepackage[backend=biber,style=phys,biblabel=brackets,backref=true,eprint=true,articletitle=true,pageranges=false]{biblatex}
+
+\usepackage[toc]{appendix}
+
+\usepackage{enumitem}
+\setlist[description]{%
+  font={\upshape\bfseries\ttfamily} % set the label font
+%  font={\bfseries\sffamily\color{red}}, % if colour is needed
+}
+
+% Drawing
+\usepackage{tikz}
+\usetikzlibrary[arrows.meta,bending]
+\usetikzlibrary{positioning}
+
+% Pretty type
+% \usepackage{underscore} % we do not need to escape _ in text mode
+\usepackage[super]{nth}
+\usepackage{nicefrac}
+\usepackage{scalefnt}
+\usepackage[normalem]{ulem}  % strikeout but no underlined emphasis
+\usepackage{lettrine}
+% \usepackage[babel,final]{microtype} % disabled for tufte
+% Prints a trailing space in a smart way.
+\usepackage{xspace}
+\usepackage{relsize}
+\usepackage{hyphenat}
+\hyphenation{Schrö-ding-er}
+\hyphenation{well-doc-u-men-ted}
+\hyphenation{app-roach-es}
+\hyphenation{da-ta-set}
+\hyphenation{da-ta-sets}
+\hyphenation{struc-tu-re-pro-per-ty}
+\hyphenation{equi-var-iant}
+\hyphenation{quan-ti-fy}
+\hyphenation{atom-ic}
+\hyphenation{Gauss-ian}
+\hyphenation{e-qui-li-bri-um}
+\hyphenation{first-prin-cip-les}
+\hyphenation{an-har-mo-ni-ci-ty}
+\hyphenation{prin-cip-les}
+\hyphenation{ther-mal}
+% \renewcommand*\ttdefault{cmvtt} % use Computer Modern Typewriter Proportional for tt, which is Latin Modern Mono Proportional irl
+% fancy fixes for the fake palatino we're using -- the order matters
+\usepackage[tighter,largesc]{newpxtext}
+\usepackage[smallerops]{newpxmath}
+
+
+\input{header/snippets}
+\input{header/acronyms}
+
+\def\mathnote#1{%
+  \tag*{\rlap{\hspace\marginparsep\smash{\parbox[t]{\marginparwidth}{%
+  \footnotesize#1}}}}
+}
+
+\makeatletter
+\renewcommand{\@chapapp}{}% Not necessary...
+\newenvironment{chapquote}[2][2em]
+  {\setlength{\@tempdima}{#1}%
+   \def\chapquote@author{#2}%
+   \parshape 1 \@tempdima \dimexpr\textwidth-1\@tempdima\relax%
+   \itshape}
+  {\par\bigskip\normalfont\hfill\raggedright--\ \chapquote@author\par \bigskip\bigskip}
+\makeatother
+
+\newlist{romanenum}{enumerate}{2}
+\setlist[romanenum,1]{label=\textsc{\roman*},align=left,leftmargin=0pt,itemindent=!,labelwidth=0pt,itemsep=0pt,parsep=0.5\baselineskip,widest*=8}
+\setlist[romanenum,2]{label=\textsc{\roman{romanenumi}}.\alph*,align=left,leftmargin=3.5ex,labelwidth=*,labelsep*=0pt,itemindent=0pt,itemsep=0pt}
+\newlist{romanenum*}{enumerate*}{1}
+\setlist[romanenum*,1]{label=(\alph*),afterlabel={{}},ref={\textsc{\roman{romanenumi}}.\alph*},itemjoin={{, }},itemjoin*={{, and }}}
+
+
+\newcommand{\eref}[1]{reference~\cite{#1}} % explicit reference (singular)
+\newcommand{\erefs}[1]{references~\cite{#1}} % explicit reference (plural)
+\newcommand{\Erefs}[1]{References~\cite{#1}} % as eref, but always capitalized; use at beginning of sentences

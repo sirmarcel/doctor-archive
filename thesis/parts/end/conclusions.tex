@@ -1,0 +1,147 @@
+%!TEX root = ../../da.tex
+
+\part{Conclusion}
+\label{part:end}
+
+\thispagestyle{plain}
+\begin{center}
+  \begin{minipage}{0.8\textwidth}
+
+    \vspace{4\baselineskip}
+
+    Science is failing and taking notes.
+
+    \vspace{\baselineskip}
+    {\hfill\raggedright --Cory Doctorow, \textit{Walkaway}\hspace{0.25cm}}
+  \end{minipage}
+\end{center}
+\vspace{2\baselineskip}
+
+\newthought{In this final chapter}, a summary of the thesis is presented, followed by an outlook of extensions of the presented work. To conclude, a general perspective on potential future developments is given.
+
+\subsection{Summary}
+
+\Cref{part:representations} focused on the problem of representing atomistic systems for \ml.
+An overview of common techniques for constructing such representations, a classification in terms of approaches to symmetry, and a literature review of methods, was provided.
+Selected representations (\sfs, \mbtr, \soap) were then compared empirically on benchmark datasets related to computational screening, controlling for other factors such as regression method, \hp optimisation, and data distribution. 
+The results showed that increased interaction order leads to higher predictive accuracy across datasets, but also leads to higher computational cost.
+
+\vspace{\baselineskip}
+\noindent
+\Cref{part:hf} discussed the application of semi-local \mlps to the simulation of thermal transport in solids. While such \mlps are constructed from local atomic environments, they admit interactions beyond them through iterative message passing schemes, increasing their receptive field while maintaining the efficiency of fully local models.
+A unified framework for describing such models, which we termed \glps, was developed and first applied to the calculation of forces and stress, resolving previous ambiguities related to periodic boundary conditions, and providing a straightforward way to implement these quantities with \ad.
+
+Building on this framework, we then considered the definition of the heat flux, the central quantity required for the calculation of thermal conductivities with the \gk method.
+Finding that previous formulations of the heat flux cannot be efficiently applied to \glps, or are defined ambiguously for the periodic case, we re-derived the Hardy formulation of the heat flux from the continuity equation, obtaining a form that explicitly considers periodicity.
+In order to apply the result in practice, reformulations of the heat flux suitable to efficient implementation with \ad were discussed, and a linear-scaling \scare{unfolded} form that applies to semi-local potentials was developed.
+
+\Cref{part:gka} verified and applied these theoretical contributions in practice. To this end, we investigated the thermal conductivity of zirconia with a \glp based on the SchNet~\cite{sktm2017q,sstm2018q} \mpnn architecture. We found that a simple training scheme based on $NpT$ \md simulations yields an \mlp describing the dynamics of zirconia up to \qty{1800}{K}, but leads to instabilities once non-trivial dynamics related to oxygen diffusion occurs.
+Nevertheless, the \mlp was found to be sufficient to predict thermal conductivities with the \gk method, with good agreement with experimental measurements and other \mlp results.
+
+Having verified our approach to the \gk method, we then applied a more recently developed equivariant \glp, \sok~\cite{fum2022q}, to the prediction of the thermal conductivity of \ch{SnSe} and \ch{Si}. For \ch{SnSe}, which is highly anharmonic and exhibits consequently low thermal conductivity, \sok results are in excellent agreement with other \mlps and extrapolated \dft results, as well as experimental values. In the case of high thermal conductivity and low anharmonicity, \ch{Si}, size convergence proved to be challenging, and thermal conductivity was underestimated by approximately \qty{45}{\percent}. With these experiments, the construction of suitable training datasets, model stability in unseen situations, and convergence in settings of high thermal conductivity, were identified as key challenges for future applications of \glps to thermal transport simulations.
+
+\subsection{Outlook}
+
+\noindent
+We discuss open questions and extensions of the presented work.
+
+\paragraph{Doped and High-Temperature Zirconia}
+In \cref{ch:gk-model,ch:gk-conv,ch:gk-res}, pure zirconia in the monoclinic and tetragonal phases up to temperatures of \qty{1800}{K} was investigated.
+While this system has served as a good benchmark case for the developed methods, it is of limited practical interest: Industrial applications of zirconia typically focus on elevated temperatures and the tetragonal and cubic phases, stabilised through doping~\cite{ecl2008t,clws2014t}.
+
+Investigating the full space of dopants, dopant concentrations, and temperatures of zirconia, in particular with the addition of active learning, would be a promising direction for future inquiry.
+In this context, the role of oxygen diffusion and spontaneous defect formation~\cite{tw2023t}, observed in passing in \cref{ch:gk-model}, could be investigated further.
+While the typical dopant concentrations for thermal barrier coatings based on zirconia, on the order of \qty{9}{mol\percent}, are accessible with \dft, the general case of lower dopant concentrations requires additional consideration, discussed below.
+We also note that charged oxygen defects, which emerge, for instance, from doping with yttria (\ch{Y2O3})~\cite{sd2011t,sbnp1999t,f2002t}, may serve as a challenging test case for \mlps, in particular those which aim to model electrostatics and charge transfer.
+\glps, which aim to implicitly model such behaviour, could also be benchmarked further.
+
+
+\paragraph{Active Learning and Reliability}
+The instability encountered at elevated temperatures in \cref{ch:gk-model}, and potential biased sampling discussed in \cref{sec:gk-si}, highlight the difficulty of using \mlps for practical investigations: \mlps are inherently limited by the available training data, and hence cannot be expected to accurately model unseen behaviour.
+Yet, such behaviour is often the object of scientific inquiry, and the training data required for good performance is therefore not always known in advance.
+While this problem is intractable in principle, practical approaches based on uncertainty quantification and active learning exist and are a rapidly evolving field of research (see \cref{sec:ml-mlps}).
+However, closely related to the considerations in the previous paragraph, workflows based on active learning and on-the-fly refinement of a \mlp are typically available only for specific models, \md simulation environments, or electronic structure codes.\footnote{For instance, the \gls{vasp}~\cite{jlkb2019q,jkk2019q}, used for zirconia by Verdi~\etal~\cite{vkjk2021q}.}
+This complicates the evaluation of novel \mlps; more modular and generic approaches are required. Their development is another promising route for subsequent work.
+
+\paragraph{Large-Scale Validation of GLPs for Thermal Transport}
+% GAAS: Restore previous phrasing here
+This thesis presented results for three out of approximately \num{100} materials previously investigated with the \gls{aigk} approach.
+While the results are encouraging, further investigation of more materials is needed to determine whether this approach scales across the full dataset.
+Additionally, the generalisation of \mlps across temperatures could also be tested.
+Any failure cases encountered in this large-scale validation could be used to guide the development of more advanced approaches.
+
+\paragraph{Heat Flux for Non-Local Models}
+While the general heat flux in \cref{eq:hf_general} is applicable to any potential decomposed into atomic energy contributions, the linear-scaling formulations ready for implementation with \ad are restricted to potentials with a finite interaction cutoff radius $\effcutoff$.
+This represents a challenge for the recently developed models, discussed briefly below, that include long-range and non-local interactions. Furthermore, this restriction even excludes simple pairwise electrostatics or dispersion corrections.
+In the latter case, assuming that charges and other parameters are held fixed, the evaluation of the heat flux can in principle proceed through Ewald summation~\cite{gce2004t}.
+If charges are modeled with semi-local or local models, the approach of \cref{ch:gk-hf} may still be applied to evaluate inner derivatives.
+In the case of charge equilibration, \ad-based implicit differentiation~\cite{bbpv2021m} could be used to obtain inner derivatives.
+The development of an efficient heat flux formulation for such cases represents another direction for future work.
+
+\paragraph{Explicit Jacobians for GLPs}
+The \scare{unfolded} heat flux from \cref{ch:gk-hf} aimed to avoid explicitly computing the Jacobian $\indur{i}{j}{}$, as its direct evaluation scales\footnote[][-2\baselineskip]{The overhead of computing the Jacobian in the worst case is $\min{(N, 3N)}{=}N$ as the input dimension is $3N$ and the output dimension is $N$; see \cite[ch.~7]{griewank2008}. We assume linear scaling of the computation of the set of $U_i$.} as $\bigo{N^2}$.
+However, this computational scaling represents the fully general case, where no internal structure of the target Jacobian is known. In \glps its sparsity pattern is known ahead of time, as it is determined by the effective interaction cutoff radius $\effcutoff$; only a linear-scaling number of entries are nonzero. Therefore, techniques for the calculation of sparse Jacobians~\cite[ch.~7]{griewank2008} are readily applied to this case. \ad systems commonly used for \mlps do not yet generally support such techniques, but a sparse Jacobian functionality for \texttt{jax}~\cite{jax} is being developed\footnote{\url{https://github.com/mfschubert/sparsejac}.} at the time of writing.
+The ability to compute full Jacobians, and potentially higher-order derivatives~\cite{smc2022q}, may be useful in the context of calculating force constants, or for higher-order optimisation techniques.
+It would also provide an alternative to the \scare{unfolded} heat flux, avoiding the modification of the computation of the potential energy.
+
+% \clearpage
+\paragraph{Dynamics Benchmarks and Infrastructure}
+% Many different \mlps have been introduced in recent years.
+While energy or force errors are often reported for newly proposed \mlps, it has been shown that such errors can only provide a rough estimate of model performance in practice~\cite{fwgj2022a}; this has also been observed in \cref{ch:gk-model} of this thesis.
+While more comprehensive benchmarks based on \md simulations are available~\cite{zcwo2020q,fwgj2022a}, they are not yet widely adopted in the \mlp community.\footnote[][-7\baselineskip]{A recent review by Isayev and Anstine provides a concise summary~\cite{ai2023q}:
+\begin{quotation}
+  \el the number of different [\gls{mlp}] models greatly exceeds the cases in which they have been uniquely successful for understanding a chemical or materials science challenge. Most [\glspl{mlp}] have only been tested on a handful of systems in simple trial studies, and as a consequence, the area of applied [\gls{mlp}] modeling lags behind model development.
+\end{quotation}
+} In addition to other factors, such as the expertise required to run \md simulations, we would like to suggest that this situation is also a consequence of a lack of appropriate tools: While interfaces between \md packages and \mlps exist,\footnote{The \nequip code~\cite{nequip}, for instance, features \gls{lammps} integration.} they are typically tightly coupled to a particular \mlp.
+
+As we have argued in \cref{ch:glps}, this tight integration is not always required: Any potential that follows the overall architecture of a \glp can be treated on equal footing when computing forces and stress, the core quantities required for \md simulations.\footnote{Indeed, from the perspective of \md, any potential can be treated on an equal footing, since only derivatives of $U$ are required, which can in principle be computed with \ad. However, in practice, management of implementation details such as neighbourlists or the particular implementation of the \mic is required, and is conveniently handled at the abstraction of a \glp.}
+The \texttt{glp}~\cite{glp} framework developed for this thesis aims to contribute to making such application-oriented benchmarks more accessible for \ml researchers.
+
+\paragraph{Importance and Meaning of Semi-Local Interactions}
+In this thesis, much work has been devoted to implementing the heat flux for semi-local \glps, enabling \gk calculations with this class of models.
+However, the importance of such interactions in practice remains an open question.
+In this work, we have observed lower errors for models with $\interactions{>}1$, for instance in \cref{fig:gkm_test_set_errors,tab:si-snse_errors_m1,tab:si-snse_errors_m2,tab:si-si_errors_m1,tab:si-si_errors_m2}, as well as improvements in \vdos and phonon band structures (\cref{fig:gko_snse_vdos,fig:gko_snse_phonons,fig:gko_si_phonons}) and predictions of $\tk$ (\cref{tab:gko_snse_kappa}), but improvements beyond $\interactions{=}2$ are often marginal.
+
+The relative importance of the larger receptive field afforded by semi-local interactions, as opposed to the construction of interactions with increasingly high body-order through message-passing iterations, also remains uncertain at present.
+Recent work aimed at decoupling the two mechanisms~\cite{bkoc2022q} indicates that the impact of body-order dominates.
+However, at the time of writing, no such results are available for solids.
+An additional complication arises through the restricted size of simulation cells. For instance, the simulation cells used for training in this thesis admit two to three interaction steps before symmetrically equivalent atoms are reached.
+
+Beyond such empirical considerations, the question of what kinds of physical interactions can be expressed with message-passing mechanisms must also be considered.
+The information bottleneck induced by such mechanisms, where information about atomic environments must be compressed into a feature vector on each atom, restricts the types of interaction that can be modeled.\footnote{In the \ml literature, these problems are discussed as \newterm{oversquashing}~\cite{tddb2021a} of long-distance messages, and \newterm{oversmoothing}~\cite{lhw2018a,cw2020a}, where node states become indistinct as $\interactions$ increases.}
+Further restrictions are imposed by symmetry.
+To further improve such models, a systematic investigation of relevant physical mechanisms and the ability of \mpnns to capture them is required.
+% \\\\
+
+\subsection{Perspective}
+
+% \noindent
+We conclude this thesis by outlining general challenges and developments related to modeling periodic systems with long-range effects.
+
+\paragraph{Training with Extended Systems}
+\marginnote{An early mathematical perspective on the question of generalisation to large simulation cells is given in reference~\cite{ow2022a}.}
+The training of \mlps for solids with defects and dopants, or more general disruptions of periodicity, at low concentrations presents a number of challenges.
+Even assuming that first-principles calculations are feasible for the phenomenon of interest, large simulations calls may be required, limiting the amount of available training data.
+It may therefore be required, in the spirit of the GEMS approach recently developed to model large bio-molecules~\cite{ustm2022a} with a \mlp based on SpookyNet~\cite{ucsm2021q}, to train jointly on few large-scale \scare{top-down} calculations to capture long-range behaviour, and \scare{bottom-up} calculations in smaller simulation cells to obtain sufficient data for local interactions.
+
+However, consistent training in such settings requires models with awareness of long-range structure: Local and semi-local models are unaware of structure changes outside of the effective interaction radius $\effcutoff$, and can therefore not be expected to effectively learn in such a setting. This motivates the use of \newterm{global} models, discussed below.
+
+An additional consideration is the treatment of different energy scales arising from short- and long-range contributions. Effective training, especially if models with separate components for different ranges are employed, may require range-separated energy and force labels, which are not generally available in electronic structure codes.
+
+\paragraph{Global Models in Solids}
+\marginnote[1\baselineskip]{See reference~\cite{bc2021q} for a recent review of models for extended systems.} Local and semi-local models retain a locality assumption through the cutoff radius $\cutoff$.
+Beyond this assumption, global, or long-range, models have been proposed. Here, it is instructive to distinguish between long-range (pairwise) energy contributions, for instance through electrostatics or pairwise approximations to van der Waals interactions, and non-local or global models~\cite{ctsm2017q,ucsm2021q,fum2022q} that can consider all atoms in the system at once.
+
+While methods are available to evaluate the former, for instance through Ewald summation~\cite{e1921p,dyp1993p} or fast multipole methods~\cite{gr1987p,wh1994p}, which are routinely employed in many \ffs, the latter presents a challenge in solids.
+In that case, a formally infinite number of positions must be considered.
+One way to approach this task may be taking inspiration from Ewald summation and evaluate the required expressions in reciprocal space. Such approaches have been used to compute descriptors for periodic systems~\cite{zksg2018q,gc2019q,yhgx2022a}, and have recently been proposed for \mpnns~\cite{kggg2023a}.
+An alternative is to retain physical interactions, where approaches for periodic systems have been developed already.
+Two routes present themselves at this point: The first approach is predicting parameters for physically-known energy expressions, for instance charges for electrostatics~\cite{msb2012q}, in which case the parameters do not depend on such interactions, and some of the limits of locality are retained. The second approach is to allow iterative optimisation of parameters based on long-range energy, for instance in \nns that incorporate charge equilibration~\cite{b2021q}.
+
+\paragraph{Solvers in Models}
+Beyond the direct modeling of physical interactions, the combination of numerical solvers, differential equations~\cite{crbd2018m}, and \nns presents intriguing possibilities.
+In essence, it enables the use of physical mechanisms as general interactions in \nns.
+For instance, the use of physics-inspired interactions for \mpnns has recently been proposed.
+In one example, interactions steps then play the rule of successive iterations of solving a problem of coupled harmonic oscillators~\cite{rcmb2022a}. Such systems also emerge in recent treatments of many-body dispersion~\cite{tdcs2012p,gkt2022a}; techniques could potentially be shared.
+
+In this context, \ad-based implicit differentiation~\cite{bbpv2021m} can also play an important role to obtain derivatives. The ability to include differential equations and dynamics into \nns may also open the road to a tighter coupling between quantum chemistry and machine learning methods, allowing learned functional forms to replace hand-tuned approximations, and conversely, using well-understood physical mechanisms as building blocks for novel \nn architectures.

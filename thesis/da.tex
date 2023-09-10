@@ -1,0 +1,267 @@
+\documentclass[nobib,a4paper,notoc,nohyper,justified,twoside]{tufte-book}  
+
+\input{header/header}
+
+\addbibresource{babel.bib}
+\addbibresource{custom.bib}
+\DeclareFieldFormat{titlecase}{#1}  % turns off the auto-lowercasing of titles
+
+\author{Marcel F. Langer}  
+\date{\today}
+\title{Machine Learning for Atomistic Modeling}
+
+\titleclass{\part}{top}
+\titleformat{\part}%
+  [display]% shape
+  {\relax\ifthenelse{\NOT\boolean{@tufte@symmetric}}{\begin{fullwidth}}{}}% format applied to label+text
+  {\textsc{\Large Chapter \thepart}}% label
+  {0pt}% horizontal separation between label and title body
+  {\LARGE\bfseries}% before the title body
+  [\ifthenelse{\NOT\boolean{@tufte@symmetric}}{\end{fullwidth}}{}]% after the title body
+\titlespacing*{\part}{2\baselineskip}{0pt}{20pt}
+
+
+\titleformat{\chapter}%
+  [display]% shape
+  {\relax\ifthenelse{\NOT\boolean{@tufte@symmetric}}{\begin{fullwidth}}{}}% format applied to label+text
+  {\textsc{\Large Section \textosf{\thechapter}}}% label
+  {0pt}% horizontal separation between label and title body
+  {\LARGE}% before the title body
+  [\ifthenelse{\NOT\boolean{@tufte@symmetric}}{\end{fullwidth}}{}]% after the title body
+
+
+\titleformat{\section}%
+  [hang]% shape
+  {\normalfont\Large}% format applied to label+text
+  {\thesection}% label
+  {1em}% horizontal separation between label and title body
+  {}% before the title body
+  []% after the title body
+
+
+\titleformat{\subsection}%
+  [hang]% shape
+  {\normalfont\large}% format applied to label+text
+  {\thesubsection}% label
+  {1em}% horizontal separation between label and title body
+  {}% before the title body
+  []% after the title body
+
+
+\titleformat{\paragraph}%
+  [runin]% shape
+  {\normalfont\itshape}% format applied to label+text
+  {\theparagraph}% label
+  {1em}% horizontal separation between label and title body
+  {}% before the title body
+  []% after the title body
+
+% try to fix missing distance between number and label in toc
+\usepackage[subfigure]{tocloft}
+\setlength{\cftchapnumwidth}{2.0em}
+\setlength{\cftsecnumwidth}{3.25em}
+\renewcommand\cftpartfont{\normalsize\bfseries}
+\renewcommand\cftchapfont{\normalsize}
+\renewcommand\cftsecfont{\normalsize}
+
+\makeglossaries
+
+
+% hacks to use part/chapter/section internally,
+% but print them as chapter/section/subsection
+
+\makeatletter
+\@addtoreset{section}{part} % parts are part of numbers now
+\@addtoreset{chapter}{part} % chapters are re-counted by part
+\makeatother
+
+\renewcommand\thepart{\arabic{part}}
+\renewcommand\thechapter{\thepart.\arabic{chapter}}
+% \renewcommand\thesubsection{\thesection.\arabic{subsection}}
+\renewcommand{\theHsection}{\thepart.\thechapter.\thesection}
+
+\begin{document}
+\setcounter{secnumdepth}{1}
+\setcounter{tocdepth}{1}
+
+% comply with regulations
+\crefalias{part}{chapter}
+\crefalias{chapter}{section}
+
+\renewcommand{\partname}{chapter}
+\renewcommand{\chaptername}{section}
+
+\frontmatter
+\include{parts/frontmatter/title}
+\include{parts/frontmatter/abstract}
+\include{parts/frontmatter/acknowledgements}
+
+{\hypersetup{hidelinks}
+\tableofcontents}
+
+\include{parts/frontmatter/dedication}
+
+\mainmatter
+
+% we need to store the part title somewhere
+% to use in the header. apparently this is non-standard
+\newcommand*\parttitle{}
+\let\origpart\part
+\renewcommand*{\part}[2][]{%
+   \ifx\\#1\\% optional argument not present?
+      \origpart{#2}%
+      \renewcommand*\parttitle{#2}%
+   \else
+      \origpart[#1]{#2}%
+      \renewcommand*\parttitle{#1}%
+   \fi
+}
+
+% digital version: enable this to no longer bother starting chapters on the right side, etc
+% \let\origcleardoublepage\cleardoublepage
+% \let\cleardoublepage\clearpage
+
+% Introduction: Don't need section name in right top
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE]{\thepage\quad\smallcaps{\newlinetospace{chapter \textosf{\thepart}: \parttitle}}}
+\fancyhead[RO]{\smallcaps{\newlinetospace{chapter \textosf{\thepart}: \parttitle}}\quad\thepage}
+
+% Part I: Introduction
+
+\include{parts/frontmatter/introduction}
+
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE]{\thepage\quad\smallcaps{\newlinetospace{chapter \textosf{\thepart}: \parttitle}}}
+\fancyhead[RO]{\smallcaps{\newlinetospace{section \textosf{\thechapter}: \leftmark}}\quad\thepage}
+
+% Part II: Foundation
+
+\include{parts/foundation/introduction}
+\include{parts/foundation/qm}
+\include{parts/foundation/md}
+\include{parts/foundation/pbc}
+\include{parts/foundation/ml}
+\include{parts/foundation/gk}
+
+
+% Part III: Reps
+
+\include{parts/reps/introduction}
+\include{parts/reps/background}
+\include{parts/reps/review}
+\include{parts/reps/benchmark}
+\include{parts/reps/conclusions}
+
+% Part IV: Heat Flux for GLPs
+
+\include{parts/heat_flux/introduction}
+\include{parts/heat_flux/glp}
+\include{parts/heat_flux/hf}
+\include{parts/heat_flux/conclusions}
+
+% Part V: Applications of previous part
+
+\include{parts/application/introduction}
+\include{parts/application/model}
+\include{parts/application/gk_convergence}
+\include{parts/application/results}
+\include{parts/application/outlook}
+\include{parts/application/conclusions}
+
+% Part VI: The End
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE]{\thepage\quad\smallcaps{\newlinetospace{chapter \textosf{\thepart}: \parttitle}}}
+\fancyhead[RO]{\smallcaps{\newlinetospace{chapter \textosf{\thepart}: \parttitle}}\quad\thepage}
+
+\include{parts/end/conclusions}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE]{\thepage\quad\smallcaps{Bibliography}}
+\fancyhead[RO]{\smallcaps{\newlinetospace{Bibliography}}\quad\thepage}
+
+% bibliography doesn't need a margin for notes
+\newgeometry{a4paper,left=24.8mm,top=27.4mm,headsep=2\baselineskip,textwidth=156.2mm,marginparsep=0mm,marginparwidth=0mm,textheight=49\baselineskip,headheight=\baselineskip,twoside=false}
+\fancyhfoffset[RE,RO]{8.5mm}
+
+{\sloppy
+\printbibliography[heading=bibintoc]
+}
+\restoregeometry
+\fancyhfoffset[RE,RO]{57.6mm} % 49.4+8.2
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE]{\thepage\quad\smallcaps{Glossary}}
+\fancyhead[RO]{\smallcaps{\newlinetospace{Glossary}}\quad\thepage}
+\printglossaries
+
+
+\let\part\origpart
+
+% don't want to see anything except chapters in appendix
+\addtocontents{toc}{\protect\setcounter{tocdepth}{0}}
+
+\begin{appendices}
+\part*{Appendices}
+\thispagestyle{plain}
+\begin{center}
+  \begin{minipage}{0.9\textwidth}
+
+    \vspace{4\baselineskip}
+
+    Sometimes what goes without saying is best said anyway.
+
+    \vspace{\baselineskip}
+    {\hfill\raggedright -- Ian M. Banks, \textit{The Hydrogen Sonata}\hspace{0.25cm}}
+  \end{minipage}
+\end{center}
+
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE]{\thepage\quad\smallcaps{Appendices}}
+\fancyhead[RO]{\smallcaps{\newlinetospace{Appendix \thechapter: \leftmark}}\quad\thepage}
+
+\titleformat{\chapter}%
+  [display]% shape
+  {\relax\ifthenelse{\NOT\boolean{@tufte@symmetric}}{\begin{fullwidth}}{}}% format applied to label+text
+  {\textsc{\Large Appendix \thechapter}}% label
+  {0pt}% horizontal separation between label and title body
+  {\LARGE}% before the title body
+  [\ifthenelse{\NOT\boolean{@tufte@symmetric}}{\end{fullwidth}}{}]% after the title body
+
+
+\crefalias{chapter}{appendix}
+\crefalias{section}{appendix}
+\include{parts/appendix/notation}
+
+% Smash all the floats on the same page as much as possible
+\renewcommand{\textfraction}{.01}
+\renewcommand{\floatpagefraction}{.99}
+\setcounter{topnumber}{20}
+\setcounter{bottomnumber}{20}
+\setcounter{totalnumber}{40}
+
+\include{parts/appendix/reps}
+\include{parts/appendix/hf}
+\include{parts/appendix/gka}
+\include{parts/appendix/software}
+
+\end{appendices}
+
+\backmatter
+
+\end{document}
+
+
+% I saw the best minds of my generation destroyed by madness, starving hysterical naked, [...]
+% who passed through universities with radiant cool eyes hallucinating Arkansas and Blake-light tragedy among the scholars of war,
+% who were expelled from the academies for crazy & publishing obscene odes on the windows of the skull, [...]
+% who scribbled all night rocking and rolling over lofty incantations which in the yellow morning were stanzas of gibberish [...]
+% -- Allen Ginsberg, Howl

@@ -1,0 +1,51 @@
+%!TEX root = ../../da.tex
+
+\cleardoublepage
+\thispagestyle{plain}
+
+% \textsc{\large \noindent Abstract}\\ \\
+% \vspace{\baselineskip}
+
+{\normalfont\Large\noindent Abstract}
+\vspace{\baselineskip}
+
+\noindent
+Computer simulations of molecules and materials are an indispensable tool for physics, chemistry, and materials science. A wide range of methods are available for this task: On one end, first-principles electronic structure approaches, which numerically solve the Schrödinger equation, obtain high accuracy at high computational cost. On the other end, forcefields, simple analytical approximations, are fast to evaluate, but require parametrisation and an explicit model of desired physical interactions.
+Machine learning is increasingly used to bridge the gap between these two extremes, aiming to combine high accuracy with computational efficiency. To this end, regression models are trained on quantum-mechanical reference calculations and then used as surrogate model during simulations.
+
+This thesis considers two topics related to such models: Representations of atomistic systems, and the application of machine-learning potentials to thermal transport simulations.
+
+Efficient learning in this setting requires models, and therefore input features, that respect fundamental symmetries.
+We comprehensively review and discuss such representations and relations between them.
+For selected representations, we compare energy predictions for a range of datasets in numerical experiments controlled for data distribution, regression method, and hyperparameter optimisation.
+
+The Green-Kubo method is a rigorous framework for thermal transport simulations in materials.
+It is based on equilibrium molecular dynamics simulations, requiring both an accurate description of the potential energy surface and careful consideration of convergence in simulation duration and size.
+In this context, machine-learning potentials trained with first-principles data promise the ability to reach convergence at a fraction of the computational cost.
+This thesis adapts the implementation of the Green-Kubo approach to the recently developed class of message-passing machine-learning potentials, which iteratively consider semi-local interactions beyond the initial interaction cutoff. 
+We derive an adapted heat flux formulation for such potentials that can be implemented using automatic differentiation without compromising computational efficiency.
+The approach is validated by computing the thermal conductivity of zirconia, tin selenide, and silicon with message-passing neural networks.
+
+
+\clearpage
+\thispagestyle{plain}
+
+{\normalfont\Large\noindent Zusammenfassung}
+\vspace{\baselineskip}
+
+\begin{otherlanguage}{german}
+\noindent
+Computersimulationen von Molekülen und Materialien sind ein wichtiges Werkzeug für Chemie, Physik, und Materialwissenschaft. Es stehen dazu ein Spektrum an Methoden zur Verfügung: Auf der einen Seite stehen quantenmechanische Ansätze, die numerisch die Schrödingergleichung lösen und somit unter großem Rechenaufwand genaue Ergebnisse erzielen können. Auf der anderen Seite stehen einfache analytische Näherungen, sogenannte Kraftfelder, die sehr effizient sind, jedoch für neue Probleme parametrisiert werden müssen, und bei denen physikalische Wechselwirkungen explizit modelliert werden müssen. Methoden aus dem maschinellen Lernen werden zunehmend dazu verwendet, diese Extreme zusammenzuführen und Genauigkeit mit Effizienz zu vereinbaren. Dabei werden Regressionsmodelle auf Referenzrechnungen trainiert und dann als Ersatz für quantenmechanische Rechnungen in Simulationen verwendet.
+
+Diese Arbeit setzt sich mit der Konstruktion und Anwendung solcher Modelle auseinander und erforscht dabei zwei verschiedene Themen: Die Darstellung von Molekülen und Materialien für maschinelles Lernen, und die Anwendung von tiefen neuronalen Netzwerken auf die Simulation von Wärmetransport.
+
+Für das effiziente maschinelle Lernen in diesem Zusammenhang werden Modelle benötigt, bei denen grundlegende physikalische Symmetrien berücksichtigt werden. Von entscheidender Bedeutung ist dabei die angemessene Darstellung von atomistischen Systemen, auf deren Basis die Regression stattfindet. Wir fassen bestehende Methoden für die Konstruktion solcher Darstellungen zusammen, und zeigen dabei Zusammenhänge und gemeinsame Konstruktionsprinzipien auf. Ausgewählte Methoden werden in numerischen Experimenten auf verschiedenen Datensätzen verglichen. Dabei werden andere Faktoren wie die statistische Verteilung der Daten, die Regressionsmethode, oder die Optimierung von Hyper-Parametern gleich gehalten.
+
+Die Green-Kubo-Methode ist ein Ansatz für die Simulation von thermischer Leitfähigkeit. Sie basiert auf Molekulardynamik, und benötigt daher sowohl ein genaues Modell der Potentialoberfläche als auch eine genaue Betrachtung der Konvergenz bezüglich der Simulationsgröße und -dauer. In diesem Zusammenhang versprechen Kraftfelder, die auf quantenmechanischen Referenzrechnungen trainiert worden sind, konvergierte Ergebnisse in einem Bruchteil der Rechenzeit zu liefern.
+In dieser Arbeit wird die Implementierung der Green-Kubo-Methode auf Kraftfelder erweitert die durch eine vor kurzem entwickelte Klasse von neuronalen Netzwerken, sogenannte Message-Passing-Netzwerke, beschrieben werden. In solchen Kraftfeldern können Wechselwirkungen über die lokalen Nachbarschaften von Atomen hinausreichen. 
+Wir leiten eine passende Formulierung des Wärmestroms her welche mit automatischer Differenzierung effizient implementiert werden kann.
+Diese Methode wird dann für die Vorhersage der thermischen Leitfähigkeit von Zirconiumdioxid, Zinnselenid, und Silizium angewendet.
+
+% , die auf solche Kraftfelder zutrifft und mit
+
+\end{otherlanguage}

@@ -1,0 +1,415 @@
+%!TEX root = ../../da.tex
+
+% NOPE: consider more advanced layout
+% all the results should be on the verso, the discussion on the recto side
+% pointers: https://latex.org/forum/viewtopic.php?t=1089
+
+\chapter{Benchmark}
+\label{ch:repsbench}
+
+In this section, we benchmark the three selected representations, \sfs, \soap, and \mbtr, on three publicly available datasets, \dsgdb, \dsba, and \dstco, probing to what extent the choice of representation can influence prediction accuracy. The benchmark datasets are related to screening applications, rather than \md, and we therefore focus on energy predictions, as opposed to forces and dynamical properties. For \mlps, different benchmarking approaches must be taken, which are discussed in other works, for instance \eref{zcwo2020q}.
+
+\begin{table*}
+		\caption[][1.5\baselineskip]{
+			Overview of related work.
+			\textit{Finite systems}: study uses data\-sets of finite systems, such as molecules or clusters;
+			\textit{Periodic systems}: uses data\-sets of periodic systems, such as crystalline materials;
+			\textit{Other properties}: evaluate properties other than energy (and forces);
+			\textit{numerical\,/\,structural\,/\,regression \hps}: which \hps were optimised automatically.
+			\label{tab:repsbench-related}}
+		\begin{tabular}[t]{l*{11}c c} \toprule
+			& \multicolumn{11}{c}{Reference} \\ \cmidrule(lr){2-12}
+			& \cite{fhrl2017q} 
+			& \cite{hjrf2020q} 
+			& \cite{zcwo2020q} 
+			& \cite{sgc2019q}  
+			& \cite{nrwh2019q} 
+			& \cite{sthr2019q} 
+			& \cite{ook2020q} 
+			& \cite{kklm2020q} 
+			& \cite{pdlg2021q} 
+			& \cite{jmhf2018q} 
+			& \cite{gfic2021q}
+			& here \\ \midrule
+			Finite systems    & \yes & \yes & \no   & \yes & \no  & \yes & \yes & \yes & \yes & \yes  & \yes & \yes \\
+			Periodic systems  & \no  & \yes & \yes  & \no  & \yes & \no  & \yes & \no  & \no  & \no   & \yes & \yes \\
+			Other~properties  & \yes & \yes & \no   & \no  & \no  & \yes & \yes & \yes & \yes & \no   & \yes  & \no  \\
+			Numerical \hps     & \no  & \yes & \yes  & \no  & \no  & \yes & \no  & \no  & \no  & \yes  & \no & \yes \\
+			Structural \hps    & \no  & \no  & \no   & \no  & \no  & \no  & \no  & \no  & \no  & \no   & \no & \yes \\
+			Regression \hps    & \yes & \yes & \yes  & \yes & \yes & \yes & \no  & \yes & \no  & \yes  & \no & \yes \\
+			Timings           & \no  & \no  & \yes  & \yes & \no  & \no  & \no  & \no  & \no  & \no   & \no  & \yes \\
+			\bottomrule
+		\end{tabular}
+\end{table*}
+
+
+\newthought{Works introducing novel representations} often compare their performance estimates with those reported in the literature.
+While such comparisons are useful, it can be difficult to draw conclusions on representations only, as other factors differ, for instance the
+datasets, training and test set choices, regressions methods, choice of \hps, validation procedures, and reported quantities.
+% Accurate, reliable performance estimates require a systematic comparison that controls for the above factors, which we perform in this work.
+In this work, we aim to control for such factors, in particular regression method, data distribution, and \hp optimisation approach. 
+
+\newthought{Several other studies} systematically measured and compared prediction errors of representations, which are listed in \cref{tab:repsbench-related}.
+In the table, we distinguish between studies that automatically optimise
+numerical \hps of representations, for example, the width of a normal distribution;
+structural \hps of representations, for example, choice of basis functions;
+and \hps of the regression method, for example, regularisation strength.
+
+\section{Datasets}
+
+\subsection{\dsgdb}
+
+\marginnote{We use the version available at \url{qmml.org}, which offers a convenient format for parsing, and exclude all structures in the \texttt{uncharacterized.txt} file and those listed in the \texttt{readme.txt} file as \scare{difficult to converge}, as those are potentially problematic.
+Total energies were converted to energies of atomisation by subtracting the atomic contributions given in file \texttt{atomref.txt}.
+We further exclude structures with $\leq 6$ non-H atoms.
+}
+The \dsgdb{} dataset~\cite{rdrl2014q,rdrl2015q}, also known as \texttt{gdb9-14}, contains \num{133885} small organic molecules composed of H, C, N, O, F with up to 9 non-H atoms, and is a standard benchmark dataset for \ml models.
+
+It is a subset of the \gls{gdb17}~\cite{rdbr2012q}.
+Molecular ground state geometries and properties, including energetics, are computed with \gls{dft} using the \gls{b3lyp}~\cite{sdcf1994q} hybrid functional with 6-31G(2df,p) basis set.
+
+In this benchmark, we predict the atomisation energy at \qty{0}{K}.
+
+\subsection{\dsba}
+
+\marginnote{We use the version available at \url{qmml.org}, removing structures with fewer than 5 atoms in the simulation cell. No further processing, beyond the stratification discussed below, is applied.}
+The \dsba{} dataset~\cite{nrwh2019q}, also known as \texttt{dft-10b}, contains unrelaxed geometries and their enthalpies of formation for the 10 binary alloys \ch{AgCu}, \ch{AlFe}, \ch{AlMg}, \ch{AlNi}, \ch{AlTi}, \ch{CoNi}, \ch{CuFe}, \ch{CuNi}, \ch{FeV}, and \ch{NbNi}.
+For each alloy system, unrelaxed geometries with lattice parameters from Vegard's rule \cite{v1921p,da1991p} and energies are computed for all possible unit cells~\cite{hf2008p} with 1--8 atoms for \gls{fcc} and \gls{bcc} lattices, and 2--8 atoms for \gls{hcp} lattices, 
+using the \gls{pbe} functional~\cite{pbe1996p} with \gls{paw} potentials and generalized regular $k$-point grids \cite{wmm2016p,mjhh2018p}.
+The dataset contains \num{631} \gls{fcc}, \num{631} \gls{bcc}, and \num{333} \gls{hcp} structures per alloy system, yielding \num{15950} structures in total. 
+
+We predict enthalpies of formation.
+
+\subsection{\dstco}
+
+% NOTE: we ignore duplicate structures. 
+% unclear why, but i seem to have double-checked that it doesn't change anything.
+\marginnote{Once again, the version of the dataset available at \url{qmml.org} is used. Only structures with more than 10 atoms in the simulation cell are used.}
+The \dstco{} dataset \cite{sgzs2019q} is a Kaggle challenge \cite{kaggle} dataset containing 3\,000 ternary oxides,\footnote{(Al$_x$-Ga$_y$-In$_z$)$_2$O$_3$ with $x+y+z=1$.} of potential interest as transparent conducting oxides.
+We predict formation and bandgap energies of relaxed structures, using either relaxed (\dstcor) or approximate (\dstcou) structures from Vegard's rule as input.
+Geometries and energies are computed with \dft using the \gls{pbe} exchange-correlation functional as implemented in \aims~\cite{FHI-aims} with tight settings.
+
+The challenge scenario is to predict formation and band-gap energies of relaxed structures from unrelaxed geometries obtained via Vegard's rule.
+This is equivalent to strong noise or bias in the inputs.
+Unlike pure benchmarking scenarios, where computationally expensive relaxed geometries are given, the challenge scenario is closer to a virtual screening application in that Vegard's rule geometries are computationally inexpensive to obtain.
+
+The dataset contains all structures from the challenge training and leaderboard data.
+We report \gls{rmse}, as opposed to the \gls{rmsle} used in the challenge.
+
+\clearpage
+\section{Method}
+
+Our overall goal in this benchmark is to isolate the impact of representations on prediction error.
+We therefore attempt to keep all other possible factors constant, designing the experiment to treat all representations as similarly as possible. In this section, we briefly discuss our design choices.
+
+\paragraph{Stratification} 
+Rather than sampling subsets purely at random, we use multivariate stratification to ensure that subsets are representative of the overall dataset.
+This reduces the variance of performance estimates and ensures the validity of the \gls{iid} data assumption inherent in \ml.
+
+\marginnote{Additional information is given in the dataset repository.}
+We achieve this by using a simple Monte-Carlo approach, iterating until selected statistics of each subset match the parent dataset within a fractional tolerance, typically ${<}\qty{1}{\percent}$.
+For dataset \dsgdb, these were number of N, O and F atoms, number of molecules with 7, 8 and 9 non-H atoms, binned number of atoms (with H), and binned energy.
+For dataset \dsba, these were number of all constituting elements, unit cells with 6, 7, 8, and 9 atoms, binned sizes and energies. 
+For dataset \dstco, these were number of Al, Ga, In, O atoms, unit cells with 20, 30, 40, 60, 80 atoms, and binned energies.
+
+\paragraph{Subsets}
+For training and validation, data subsets were sampled as follows:
+An \newterm{outer validation set}%
+\footnote{In the literature, the terms \scare{test set} and \scare{validation set} are sometimes used with different meaning.
+To avoid confusion, we use \scare{outer} for the subset employed to measure performance, and \scare{inner} for the subset employed to optimise \hps.}
+was drawn using the procedure detailed above (10\,k molecules for \dsgdb{}, 1\,k structures for \dsba{}, 600 structures for \dstco{}).
+From the remaining entries, \newterm{outer training sets} of sizes 100, 250, 650, 1\,600, 4\,000 and 10\,000 for datasets \dsgdb{}, \dsba{} and 100, 160, 250, 400, 650, 1\,000 and 1\,600 for dataset \dstco{} were randomly drawn.
+These sizes were chosen to be equidistant in log-space.
+Each outer training set was then split into an \newterm{inner training set} and an \newterm{inner validation set} by randomly drawing the latter.
+We used an 80\,\,/\,20 split, yielding inner validation sets of size 20, 50, 130, 320, 800, 2\,000 for datasets \dsgdb{}, \dsba{} and 20, 32, 50, 80, 130, 200, 320 for \dstco{}.
+The whole procedure was repeated 10 times, yielding 10 different outer train/validation splits.
+
+\paragraph{Regression Method}
+% \marginnote{We note in passing that the predictions of \gls{krr} are identical to those of \gls{gpr}.}
+We use \gls{krr} (\cref{ch:ml}), with a Gaussian kernel as \ml model. \Gls{krr} is a widely-used non-parametric regression method, with few tunable \hps: In the present setting, we must only tune the length scale of the Gaussian kernel, $\sigma$, and the regularisation strength $\lambda$. Another advantage of \gls{krr} is that training amounts to solving a convex optimisation problem; results are therefore deterministic.
+
+\paragraph{Representations}
+We compare the selected representations discussed in \cref{sec:repr-selected}: \sfs, \soap, and \mbtr. \sfs and \soap are local representations, representing the $k$-body function and density expansion approaches. \mbtr is a global representation based on on $k$-body functions.
+
+For the $k$-body approaches we consider variants with $k{=}2$ and $k{=}2,3$. For \soap, which corresponds to $k{=}2,3$, a variation in body-order is not available. Details of remaining \hp choices are discussed in the supplementary material of reference~\cite{lgr2022q}.
+
+\paragraph{Hyper-Parameter Optimisation}
+\marginnote{In order to execute the described \hp optimisation approach, I developed the \texttt{cmlkit} package, described in \cref{sec:si-cmlkit}.}
+For this work, we adopt an end-to-end perspective, essentially considering \hp optimisation as part of the training procedure. The \scare{models} being compared are therefore not a combination of representation and regressor with \emph{fixed} \hps. Instead, we compare model families, or search spaces, fixing only broad architectural choices, and allowing ranges of possible parameters for all other \hps. For each training set size, we then optimise \hps on the training set, using the inner train/validation splits. Once \hps have been determined, the model is re-trained on the entire outer training sets and used to predict the corresponding outer validation set. For computational efficiency, we only tune \hps on one outer split, rather then re-tuning for each. Once the search space has been defined, no human input is needed, the \hp tuning procedure is fully automatic.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{img/reps/fig_hpo.pdf}
+  \caption[][-1\baselineskip]{
+  Sketch of the \hp optimisation approach. \Glspl{tpe}, implemented in the \texttt{hyperopt} package~\cite{byc2013m}, are used to sample representation parameters and starting parameters for a local grid search of \gls{krr} parameters. The overall loss function is the mean \gls{rmse} over inner training/validation splits.
+  }
+  \label{fig:repsbench-hpo}
+\end{figure}
+\noindent
+Due to the combinatorial nature of these search spaces, a full enumeration is unfeasible.
+Instead, we use a model-based stochastic optimisation method based on \glspl{tpe}~\cite{bbbk2011m,byc2013m}.
+In a nutshell, this method models the space of possible models as a tree-structured set of choices, for instance, between different $k$-body functions, or different values of a numerical \hp.
+\Glspl{tpe} treat this search space as a prior distribution over \hps, updated every time a loss is computed to increase prior weight around \hp settings with better loss. Search therefore amounts to drawing samples from this distribution, and, once the loss is evaluated, updating the probability distribution. This approach has the advantage of being straightforward to parallelise, as samples can be drawn while others are being evaluated.
+In defining the search space, we use uniform priors throughout, discretising numerical \hps on logarithmic or linear grids as necessary.
+
+For \gls{krr} parameters, we adopt a two-step procedure: \gls{tpe} is used to determine starting parameters for a local grid search of $\sigma$ and $\lambda$, which attempts to find the nearest local minimum of the loss landscape.
+The loss for this second optimisation is the mean \gls{rmse} over all ten inner splits, and its result is used as loss for \gls{tpe}. This allows the fine-tuning of \gls{krr} parameters without requiring the recomputation of representations. We use the best result, judged by final loss, of three independent runs of the \hp optimisation procedure.
+
+\marginnote{Details on the search spaces used in this work can be found in the supplementary material of reference~\cite{lgr2022q}.}
+We aim for similarly-sized search spaces for all numerical \hps, and a comprehensive selection of structural ones, treating all representations on an equal footing as much as possible. Some choices, however, have to be excluded \emph{a priori} to avoid excessive computational cost.
+
+
+\paragraph{Learning Curves}
+\marginnote[2\baselineskip]{Note that we use base-10 logarithms for learning curves.}
+The main outcome of this study are learning curves, which show the dependence of prediction error $\epsilon$ on training set size $n$.
+Asymptotically, we assume the error to decay as a negative power~\cite{afs1992m,mfsa1996m} $\epsilon = a' n^{-b}$.
+On a log-log plot, $\epsilon$ is therefore linear, $\log \epsilon = a - b \log(n)$, and the offset~$a = \log a'$ and slope~$b$ can be used to characterise predictive performance of models~\cite{hl2016q}.
+For asymptotic fits, we weight training set sizes by the standard deviation over their respective splits to attenuate for small sample effects,
+as the above equation is valid only in the limit $n \rightarrow \infty$.
+
+% \begin{equation}
+%  	\epsilon = a' n^{-b} \, .
+%  \end{equation}
+% \begin{equation}
+% 	\log \epsilon = a - b \log(n) \, ,
+% \end{equation}
+% and the offset~$a = \log a'$ and slope~$b$ can be used to characterize predictive performance of models~\cite{hl2016q}.
+% As we predict computational data, the estimated quantities are essentially noise-free (except for numerical noise, which is negligible for converged calculations)
+% and representations are unique.
+%
+
+%
+
+
+\paragraph{Timings}
+Additionally, we report timings for the calculation of representations and kernel matrices. Experiments were run on a single core of an Intel Xeon E5-2698v4 \SI{2.2}{\giga\hertz} processor on the \texttt{draco} \gls{hpc} system. For consistency, all timings were run on the first outer validation set of each dataset. Reported timings are the mean over three repetitions, and then further averaged over the number of entries in the respective evaluation sets. Kernel matrices are computed between all points in the respective validation set, and therefore averaged over the squared number of entries.
+
+\paragraph{Pareto Frontiers}
+Based on learning curves and timings, we also report on the relationship between computational cost and accuracy.
+When comparing observations in two dimensions, here time~$t$ and error~$\epsilon$, there is no unique ordering~$<$,
+and we resort to the usual notion of dominance:
+Let $\vec{x}, \vec{x'} \in \reals^d$;
+then $\vec{x}$ dominates $\vec{x'}$ if $x_i \leq x'_i$ for all dimensions~$i$ and $x_i < x'_i$ for some~$i$.
+The set of all non-dominated points is called the Pareto frontier, indicating the \scare{best possible} tradeoff between compute times and error.
+
+
+\begin{figure}
+  \centering
+  \subfloat{
+    \includegraphics[width=\textwidth]{img/reps/fig_lc_qm9_rmse}
+    \label{fig:lc_qm9_rmse}
+  }
+
+  \subfloat{
+    \includegraphics[width=\textwidth]{img/reps/fig_lc_ba10_rmse}
+    \label{fig:lc_ba10_rmse}
+  }
+
+  \subfloat{
+    \includegraphics[width=\textwidth]{img/reps/fig_lc_xnmd18_rmse}
+    \label{fig:lc_xnmd18_rmse}
+  }
+
+  \caption{Learning curves for selected representations on datasets \dsgdb{} (top), \dsba{} (centre), and \dstcor{} (bottom).
+		Shown are \gls{rmse} and \gls{rrmse} of energy predictions on out-of-sample-data as a function of training set size.
+		Boxes, whiskers, bars, crosses show interquartile range, total range, median, mean, respectively.
+		Lines are fits to theoretical asymptotic \gls{rmse}.
+		\\\\
+		See \cref{fig:si-repsbench_lcs_mae} for \gls{mae}.
+	}
+	\label{fig:repsbench-lcs}
+\end{figure}
+
+
+\paragraph{Error Metrics}
+We report \gls{rmse}, the loss minimized by least-squares regression such as \gls{krr}, and thus a natural choice. Additionally, we provide the \gls{rrmse}, as a quantity that can be compared across datasets. Both are defined in \cref{sec:si-ml_lossf}.
+For comparison with literature results, we also give \gls{mae} in \cref{fig:si-repsbench_lcs_mae,fig:si-repsbench_pareto_mae,fig:si-repsbench_nmd18_mae}.
+
+% more sanity
+\clearpage
+\section{Results}
+
+\Cref{fig:repsbench-lcs} displays the learning curves for the main considered datasets, \dsgdb, \dsba, and \dstcor.
+Asymptotically, observed prediction accuracies relate as
+%
+\begin{align}
+	\text{SF}(k{=}2,3) & \prec   \text{SF}(k{=}2) ,     & \text{MBTR}(k{=}2,3) & \preceq \text{MBTR}(k{=}2) , \notag \\
+	\text{SOAP}   & \prec   \text{SF}(k{=}2,3) , & \text{SOAP}     & \prec   \text{MBTR}(k{=}2,3) , \notag\\
+	\text{SF}(k{=}2,3) & \preceq \text{MBTR}(k{=}2,3) , & \text{SF}(k{=}2)     & \prec   \text{MBTR}(k{=}2) , \notag
+\end{align}
+%
+where $A \prec B$ ($A \preceq B$) indicates that $A$ has lower (or equal) estimated error than~$B$ asymptotically.
+Except for $\text{MBTR}(k{=}2,3) \not\preceq \text{SF}(k{=}2)$ on dataset \dstcor{},
+%
+\begin{equation}
+	\text{SOAP} \prec \text{SF}(k{=}2,3) \preceq \text{MBTR}(k{=}2,3) \prec \text{SF}(k{=}2) \prec \text{MBTR}(k{=}2) .\notag
+\end{equation}
+% 
+We conclude that, for energy predictions, accuracy improves with interaction order and for local representations over global ones.
+The magnitude of these effects varies across datasets.
+
+Converged prediction errors are in reasonable agreement with the literature (see \cref{tab:si-repsbench_lit_qm9,tab:si-repsbench_lit_ba10,tab:si-repsbench_lit_nmd18}), considering the lack of standardised conditions such as sampling, regression method, \hp optimisation, target properties, and reported performance statistics.
+
+
+\begin{figure}
+  \centering
+  \subfloat{
+    \includegraphics[width=\textwidth]{img/reps/fig_pareto_qm9_rmse}
+    \label{}
+  }
+
+  \subfloat{
+    \includegraphics[width=\textwidth]{img/reps/fig_pareto_ba10_rmse}
+    \label{}
+  }
+
+  \subfloat{
+    \includegraphics[width=\textwidth]{img/reps/fig_pareto_xnmd18_rmse}
+    \label{}
+  }
+
+  \caption{Compute times of selected representations for datasets \dsgdb{} (top), \dsba{} (centre), and \dstcor{} (bottom).
+  Shown are \gls{rmse} and \gls{rrmse} of energy predictions on out-of-sample-data as a function of the time needed to compute all representations in a training set.
+  Lines indicate Pareto frontiers; inset numbers show training set sizes.
+  \\\\
+  See \cref{fig:si-repsbench_pareto_mae} for \gls{mae}.
+	}
+	\label{fig:repsbench-pareto}
+\end{figure}
+
+
+\begin{table}
+	\caption{Computational cost of calculating representations.
+		Shown are mean $\pm$ standard deviation over all training set sizes of a dataset.
+		}
+		\label{tab:repsbench-compcosts}
+
+	\begin{tabular}[b]{@{}llcr@{}}
+		\toprule
+		Time in ms& \multicolumn{3}{c}{Dataset} \\ \cmidrule(lr){2-4}
+		Representation & \multicolumn{1}{c}{\dsgdb} & \multicolumn{1}{c}{\dsba} & \multicolumn{1}{c}{\dstco} \\
+		\midrule
+		MBTR $k{=}2$   & \num{0.76\pm 0.32 } &     {13 $\pm$ 5.1} & \num{340 \pm 99 } \\
+		SF $k{=}2$     & \num{1.4 \pm 0.18 } & \num{3.3 \pm 1.4 } & \num{8.2 \pm 1.1 } \\
+		MBTR $k{=}2,3$ & \num{12  \pm 6.9  } & \num{290 \pm 140 } & 28\,k $\pm$ 4.4\,k \\
+		SF $k{=}2,3$   & \num{2.8 \pm 0.85 } & \num{27  \pm 12  } & \num{98 \pm 89 } \\
+		SOAP         & \num{1.9 \pm 0.54 } & \num{9.1 \pm 4.8 } & \num{19 \pm 8.6 } \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+
+\newthought{Computational costs, shown in} \cref{fig:repsbench-pareto,tab:repsbench-compcosts,tab:repsbench-compcosts_kernel,tab:repsbench-total_timing}, tend to increase with predictive accuracy, due to the cost of additional training data and higher body-order terms.
+Representations should therefore be selected based on a target accuracy, constrained by available computing resources.
+\soap largely lies on the Pareto frontier, only occasionally dominated by less accurate, but faster $\text{SF}(k{=}2)$ representations.
+Computational cost of \mbtr with $k{=}2,3$ increases significantly for periodic systems, and in particular for \dstco, which includes larger simulation cells than \dsba.
+
+
+\begin{table}
+	\caption{Computational cost of calculating single system-system kernel matrix elements.
+		Shown are mean $\pm$ standard deviation over all training set sizes of a dataset.
+		}
+		\label{tab:repsbench-compcosts_kernel}
+
+	\begin{tabular}[b]{@{}llcr@{}}
+		\toprule
+		Time in \unit{\micro\second} & \multicolumn{3}{c}{Dataset} \\ \cmidrule(lr){2-4}
+		Representation & \multicolumn{1}{c}{\dsgdb} & \multicolumn{1}{c}{\dsba} & \multicolumn{1}{c}{\dstco} \\
+		\midrule
+		MBTR $k=2$ & \num{0.16 \pm 0.00 } & \num{0.64 \pm 0.00 } & \num{0.13 \pm 0.05 } \\
+		SF $k=2$ & \num{12.16 \pm 1.80 } & \num{8.90 \pm 1.39 } & \num{72.95 \pm 4.71 } \\
+		MBTR $k=2,3$ & \num{0.90 \pm 0.00 } & \num{7.01 \pm 0.16 } & \num{0.92 \pm 0.96 } \\
+		SF $k=2,3$ & \num{17.41 \pm 3.25 } & \num{20.03 \pm 4.02 } & \num{106.35 \pm 14.87 } \\
+		SOAP & \num{59.78 \pm 37.73 } & \num{72.60 \pm 19.70 } & \num{296.23 \pm 258.28 } \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+To some extent, however, the fast calculation of local representations is balanced out by the higher cost of computing kernel matrices, as seen in \cref{tab:repsbench-compcosts_kernel}. Local representations require the intermediate computation of an atom-atom kernel matrix (see \cref{sec:ml-krr}), and therefore the calculation of the kernel scales quadratically with the number of atoms.\footnote[][-1\baselineskip]{Methods to mitigate this scaling behaviour exist; an overview of sparsity-based approaches can be found in reference \cite{dbcc2021q}.
+}
+\Cref{tab:repsbench-total_timing} shows the resulting overall computational cost of predictions. Despite the higher cost of computing the representation, the global \mbtr{} remains competitive in overall performance, with the exception of \dstco and $k{=}2,3$.
+
+\begin{table*}
+	\caption[][1.5\baselineskip]{Overview of computational costs.
+		Shown are runtime estimates for prediction with $N_{\text{train}}{=}N_{\text{pred}}{=}\num{10000}$.
+		%
+		Based on mean compute times $t_{\text{rep}}$ for representations and $t_{\text{kernel}}$ for kernel matrices from \cref{tab:repsbench-compcosts,tab:repsbench-compcosts_kernel}, we estimate total prediction times as $N_{\text{test}} \cdot t_{\text{rep}} + N_{\text{train}} \cdot N_{\text{test}} \cdot t_{\text{kernel}}$.
+		Times are rounded to the nearest second, minute, or hour.
+		\label{tab:repsbench-total_timing}}
+	
+		\begin{tabular}{l rll rll rll}
+			\toprule
+			& \multicolumn{9}{c}{Dataset} \\ \cmidrule(lr){2-10}
+			& \multicolumn{3}{c}{\dsgdb} & \multicolumn{3}{c}{\dsba} & \multicolumn{3}{c}{\dstco} \\ \cmidrule(lr){2-4} \cmidrule(lr){5-7} \cmidrule(lr){8-10}
+			Representation 
+			& \multicolumn{1}{c}{$t_{\text{rep}}$} & \multicolumn{1}{c}{$t_{\text{kernel}}$} & \multicolumn{1}{c}{total} 
+			& \multicolumn{1}{c}{$t_{\text{rep}}$} & \multicolumn{1}{c}{$t_{\text{kernel}}$} & \multicolumn{1}{c}{total} 
+			& \multicolumn{1}{c}{$t_{\text{rep}}$} & \multicolumn{1}{c}{$t_{\text{kernel}}$} & \multicolumn{1}{c}{total}\\
+		 % 
+		\midrule
+		%\input stab_times_total_test
+		MBTR $k{=}2$   & 8s &+ 16s &= 23s & 2m &+ 1m &= 3m & 57m &+ 13s &= 57m \\
+		SF $k{=}2$     & 14s &+ 20m &= 20m & 33s &+ 15m &= 15m & 1m &+ 2h &= 2h \\
+		MBTR $k{=}2,3$ & 2m &+ 1m &= 3m & 49m &+ 12m &= 1h & 76h &+ 2m &= 77h \\
+		SF $k{=}2,3$   & 28s &+ 29m &= 29m & 4m &+ 33m &= 38m & 16m &+ 3h &= 3h \\
+		SOAP         & 19s &+ 2h &= 2h & 2m &+ 2h &= 2h & 3m &+ 8h &= 8h \\
+		\bottomrule
+	\end{tabular}
+\end{table*}
+
+
+\newthought{Dependence of predictive accuracy} on interaction order has been observed by others~\cite{ptm2018q,hjrf2020q,fchl2018q,wt2018q,s2018Cq}
+% hjrf2020q: Figs. 8 and 9; fchl2018q: Fig. 9; wt2018q: indirect (squaring improves prediction error)
+and might be partially due to a higher resolution of structural features; some structures cannot be distinguished from two-body (and even three-body) features alone~\cite{pwcc2020q}.
+However, such degeneracies are not the only factor: Even if structures can be distinguished in principle by distances alone, angular terms allow more immediate characterisation of structure, for instance in carbon rings of organic molecules appearing in \dsgdb~\cite{ptm2018q}.
+These effects may become visible in different data regimes: In \dsba{}, differences in accuracy between $k{=}2$ and $k{=}2,3$ appear only larger training set sizes, potential due to the resolution limit of $k{=}2$ features, whereas in \dsgdb{}, where angular features are immediately relevant, differences apear even for small training set sizes.
+\marginnote[1\baselineskip]{Similar observations have been made for equivariant \nns: In \gls{mace}, where body-order can be explicitly controlled, Batatia~\etal{}~\cite{bkoc2022q} observe a systematic increase in slope with body-order $\nu$. However, the relationship between $\nu$, degree $L$ of employed intermediate equivariant layers, and learning curves remains an active domain of investigation~\cite{bmsk2022q}.}
+We observe an increase in the slope of the learning curves, with body-order, varying in magnitude between data-sets.
+ % For instance, Batzner~\etal{}~\cite{bmsk2022q} observe increase in slope with $L$ from $L=0$ to $L=1$ but not further, and find that $L=1$ outperforms \gls{fchl} models with explicit $k=3$ terms.
+
+% should only appear for sufficient training data, such as for \dsba{}. In other datasets, such as \dsgdb, where angular terms are immediately relevant for the characterisation of carbon scaffolds~\cite{ptm2018q}, we observe similar behaviour. Therefore, resolution of near-degenerate structures cannot be the only factor.
+% Unclear:
+% The latter would only show for sufficient training data, such as for dataset \dsba{}.
+% We do not observe this for dataset \dsgdb{}, possibly because angular terms might be immediately relevant for characterising organic molecules' carbon scaffolds~\cite{ptm2018q}.
+
+\newthought{Better performance of local representations} might be due to higher resolution and better generalisation 
+(both from representing only a small part of the whole structure), and has also been observed by others~\cite{jmhf2018q,hxh2020q}.
+The impact of assuming additivity is unclear but likely depends on the structure of the modeled property, see \cref{sec:si-reps-extensive}.
+Our comparison includes only a single global representation (\gls{mbtr}), warranting further study of the locality aspect.
+
+% by \gls{rrmse} 
+\clearpage
+\newthought{Predictive accuracy is worse} for solid-state datasets compared to the molecular \dsgdb{} one. 
+This might indicate that periodic systems pose harder learning tasks than molecules.
+
+\mbtr performs worse for solid-state datasets than for the \dsgdb{} one, in particular for \dstcor{}. 
+This might be due to lack of intrinsic scaling with number of atoms, impeding interpolation between unit cells of different size.
+The high computational cost of \mbtr with $k{=}3$ for in this setting also renders HP optimisation more difficult.
+
+\newthought{For the \dsgdb{} dataset at} \num{1600} training samples, we observe an increase in \gls{rmse} standard deviation compared to neighbouring training set sizes for most methods. 
+Comparing to \gls{mae}, see \cref{fig:si-repsbench_lcs_mae}, which exhibits no such effect, and investigating errors individually, revealed that this is due to outliers. Few predictions with high error appear in some, but not all, outer splits. 
+The problematic structures are ring molecules, and are not present in the outer training split used for \hp optimisation. 
+This stresses the importance of carefully stratifying benchmark datasets, and highlights the limitations of the present approach to \hp optimisation, which only considered one of the outer training sets.
+
+
+\newthought{\Cref{fig:repsbench-nmd18} presents results} for the \dstco{} dataset with approximate geometries obtained from Vegard's rule, which we term \dstcou{}.
+In contrast to relaxed structures, such geometries can be obtained at almost no cost, and could be used in virtual screening campaigns.
+
+We observe
+\emph{(i)} a strong increase in prediction errors (\qtyrange{24}{26}{\percent} for \gls{rrmse}, from \qtyrange{3}{10}{\percent}),  % from 3-10% to 24%
+\emph{(ii)} collapse of all representations to similar performance,
+\emph{(iii)} large differences between \gls{mae} and \gls{rmse}, see \cref{fig:si-repsbench_nmd18_mae}, indicating significant outliers.
+
+From this, we conclude that 
+the map from unrelaxed structures to ground-state energies is harder to learn than the map from relaxed structures to their energies, as it requires implicitly approximating the relaxation process.
+This mismatch between structures and property dominates the error, so representations are not the limiting factor in this setting.
+
+% \noindent
+\newthought{Our findings suggest} the following guidance:
+%
+\begin{itemize}
+	\item If their prediction errors are sufficient for an application, we recommend $k{=}2$ versions of simple representations such as \sfs and \mbtr as they are fastest to compute. 
+	\item For large systems, local representations should be used.
+	\item For strong noise or bias on input structures, as in dataset~\dstcou{}, performance differences between representations vanish,
+		and computationally cheaper features that do not satisfy the requirements in \cref{ch:repsb} (descriptors) suffice.
+\end{itemize}

@@ -1,0 +1,21 @@
+%!TEX root = ../../da.tex
+
+\chapter{Summary}
+\label{ch:gka-end}
+
+This chapter discussed the application of the methods developed in \cref{part:hf} in practice, studying thermal transport in selected materials with two different \glps.
+
+\Cref{ch:gk-model,ch:gk-conv,ch:gk-res} discussed the prediction of thermal conductivity of zirconia (\ch{ZrO2}) across temperatures using the SchNet~\cite{sktm2017q,sktm2019q} \glp. Using a simple training scheme based on $NpT$ \gls{aimd} simulations was found to yield an \mlp that remains stable up to \qty{1800}{K}, but becomes unstable with the onset of oxygen diffusion at elevated temperatures. Nevertheless, the potential was found to predict thermal conductivities at lower temperatures in excellent agreement with another \mlp~\cite{vkjk2021q}, and in good agreement with experimental measurements~\cite{rwpm1998t,bflm2000t,mlld2004t}. We also verified that the heat flux formulations in \cref{ch:gk-hf} are equivalent to the Hardy form, and that neglecting semi-local interactions leads to an underestimation of $\kappa$ by \qty{40}{\percent}.
+
+To study applicability in different settings, we then investigated both a material with high anharmonicity, \ch{SnSe} at \qty{300}{K}, and a low-anharmonicity material, \ch{Si} at \qty{400}{K}, with the \sok~\cite{fum2022q} \glp. Good agreement with other \gk approaches~\cite{bhke2021t,lqzg2021q,kpsc2023t}, as well as experiment~\cite{wbcr2016t}, was achieved for \ch{SnSe}, using \sok \glps trained on thermalisation trajectories of a previous \aigk study~\cite{kpsc2023t}. For \ch{Si}, using a \sok model trained on samples generated via normal mode sampling, size convergence could not be achieved with the present implementation, and a likely underestimation of $\kappa$ was observed.
+
+
+\section*{Limitations}
+
+We identify a number of limits and challenges for \glp-driven \gk simulations in practice.
+
+First of all, as seen for \ch{Si}, and to a lesser extent \ch{ZrO2} at low temperatures, materials with low anharmonicity, which require large simulation cells and durations, pose a computational challenge for \mlps, where typically available implementations are not yet as scalable and efficient as \ffs.  In such settings, the use of extrapolation methods for \gk, or thermal transport approaches based on the \gls{bte}, which are suitable for harmonic systems, may be preferable.
+
+Beyond convergence, which can in principle be tackled via an optimised implementation, we have also encountered a core challenge with \mlps: the procurement of suitable training data. In this thesis, simple training schemes based on \aimd (\ch{ZrO2}, \ch{SnSe}) and stochastic sampling (\ch{Si}) have been employed, which do not consider model uncertainty and do not feature active learning. While good accuracy has been achieved in the investigated cases, shortcomings of such methods have become apparent: Stability of \md simulations at higher temperatures is compromised in \ch{ZrO2}, where defect formation is not fully modeled, and potential bias has been identified in \ch{Si}.
+
+This challenge is related to the question of model reliability. In a practical setting, a measure of uncertainty in predictions is required to avoid unphysical predictions, which lead to instabilities, or a biased sampling of the \pes. Such an uncertainty metric can then also be employed to select additional training data. A brief discussion of such methods can be found in \cref{sec:ml-mlps}.

@@ -1,0 +1,216 @@
+%!TEX root = ../../da.tex
+
+\chapter{Green-Kubo Convergence and Workflow}
+\label{ch:gk-conv}
+
+\begin{chapquote}{William Gibson, \textit{Pattern Recognition}}
+  Homo sapiens is about pattern recognition, he says.\\ Both a gift and a trap.
+\end{chapquote}
+
+\noindent
+In \cref{ch:gk}, a number of approximations required for a practical application of the \gk method were discussed. Now, we investigate the impact of these approximations for zirconia and the SchNet \mlp, and determine parameters that yield converged results.
+The primary parameters determining convergence are the size of the simulation cell $N$ and the simulation duration $\td$. Additional parameters enter through the employed noise reduction scheme, the determination of the integration cutoff, and through computational efficiency considerations.
+
+In principle, all such parameters can depend on \emph{each other}; the level of convergence reached with regards to some parameters can influence the behaviour of others.
+Additionally, the convergence behaviour is dependent on the considered temperature and phase.
+In order to cope with this combinatorial problem, where an exhaustive search of all parameters is impractical, we first develop a general understanding of the behaviour of the system, fixing some parameters \emph{a priori}. We then investigate the sensitivity of results with respect to these initial choices, and relax them where possible.
+
+\newthought{This section is organised} accordingly: After initially describing the parameters and choices to be considered in \cref{sec:gkc_params}, we perform a number of overview experiments in \cref{sec:gkc_explore} to establish general trends.
+Then, in \cref{sec:gkc_noise}, we consider noise reduction, investigating the impact of different parameters and choices.
+Next, computational parameters are investigated in \cref{sec:gkc_ens_n}.
+Finally, in \cref{sec:gkc_Nt} we study the convergence with respect to simulation size and duration.
+The final choices of parameters are summarised in \cref{sec:gkc_sum}.
+
+\section{Workflow and Parameters}
+\label{sec:gkc_params}
+
+We recall the Green-Kubo relation from \cref{eq:gk_greenkubo_ensemble}, and now recast it in the concrete form that is used in the present implementation, which is based on Knoop~\etal{}~\cite{ksc2023t}.
+For a simulation cell\footnote[][-2\baselineskip]{The origin of the supercells used is discussed in \cref{sec:si-gknet_zro_lattice}; experimental lattice parameters are used, as opposed to determining them using the \mlp.} of size $N$, we simulate $n$ trajectories, indexed by $s$, with starting conditions sampled from an $NVT$ thermalisation trajectory, for a duration $\td$.
+At every $\nhf$-th timestep, we compute the instantaneous heat flux\footnote{As discussed previously, we use $\Jint$ in place of the full $\J$ that includes a convective term. The impact of this choice is discussed in \cref{sec:si-gkc_conv}.} $\J_s(\tau)$, subtracting a non-diffusive gauge term.\footnote{
+The gauge term slightly differs from the one used by Knoop~\etal For the present simulation durations and system sizes, we find no significant differences.
+Details are discussed in \cref{sec:si-gkc_gauge_term}.
+}
+
+For the resulting set of time-series $\J_s(\tau)$, we first subtract the time average $\braket{\J_s}$, and then compute the set of \glspl{hfacf} 
+\begin{equation}
+  % TODO: is the prefactor correct?
+  % see https://github.com/flokno/python_recipes/blob/master/mathematics/correlation_function/autocorrelation.ipynb
+  \ehfacft_s(\tau) = \frac{1}{\td-\tau} \int_0^{\td-\tau} \intd \tau' \, \J_s(\tau + \tau') \otimes \J_s(\tau')
+\end{equation}
+for each trajectory, which is subsequently averaged to yield $\ehfacft(\tau)$.
+The integral of $\ehfacft(\tau)$ yields the cumulative thermal conductivity
+\begin{equation}
+  \tk(\tau) \defas \int_0^{\tau} \, \intd \tau'\, \ehfacft(\tau') \, ,
+\end{equation}
+which is subject to a lowpass filter, parametrised by a filter frequency $\omegaf$.
+From this filtered $\tk(\tau)$, the smoothed \hfacf is obtained via finite differences to determine a cutoff time $\tc$, yielding the final thermal conductivity
+\begin{equation}
+  \tk = \tk(\tc) \, .
+\end{equation}
+In this work, we consider the isotropic thermal conductivity\footnote{
+  In principle, convergence can be considered separately for the different components. However, no reference results are available for individual components, so this was not pursued.
+}
+\begin{align}
+    \kappa
+    = \trace{\tk} / 3
+    = 
+    \int_0^{\tc} \,
+    \intd \tau\,
+    \trace{\ehfacft(\tau)}/3
+    =
+    \int_0^{\tc} \,
+    \intd \tau\,
+    \ehfacf(\tau)
+    = \kappa(\tc)
+    \,,
+    \label{eq:gkc_gk}
+\end{align}
+The cutoff time is then taken to be the the first zero crossing of the \hfacf, $\ehfacf(\tc) = 0$.
+
+\marginnote[2\baselineskip]{Main convergence parameters $N$ and $\td$ are represented as $(N,\td)$ in this section.}
+\newthought{To summarise, we must consider} the following parameters:
+\begin{itemize}[itemsep=0pt,topsep=0.5\baselineskip]
+  \item $(N,\td)$, characterising size and duration of simulations,
+  \item $\nens$, the number of independent trajectories,
+  \item $\omegaf$, the filter width,
+  \item $\nhf$, the spacing of heat flux computations.
+\end{itemize}
+We additionally briefly consider the relative importance and implementation of the two components of the noise reduction approach.
+
+\section{Exploration}
+\label{sec:gkc_explore}
+
+We begin by investigating the dependence of $\kt$ on $N$ and $\td$, making the preliminary choices of $n{=}11$, $\nhf{=}1$, and $\omegaf{=}\qty{1}{THz}$.
+Considered choices for $N$ and $\td$, also shown in \cref{fig:gkc_nt}, are
+\begin{itemize}[itemsep=0pt,topsep=0.5\baselineskip]
+  \item \scare{production} setting $\zrocc$, and its variant with reduced $\td$,
+  \item \scare{unconverged} setting $\zrouc$, and its variant with increased $\td$,
+  \item \scare{light} setting $\zrosc$ chosen as balance between convergence and computational cost,
+  \item \scare{tight} setting $\coco{4116}{2}$.
+\end{itemize}
+This set of choices allows us to separate the convergence with respect to $N$ and $\td$, and investigate the suitability of the final settings for the remainder of this work.
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{img/plot/gk/zro_kc_overview_m_300.pdf}
+  \caption{
+  $\kt$ for monoclinic zirconia at \qty{300}{K} for different $N$ and $\td$.
+  Opaque lines indicate $\kt$ with applied noise reduction, translucent ones without.
+  % Vertical lines indicate $\tc$ as determined from the smoothed \hfacf.
+  }
+  \label{fig:gkc_overview_m_300}
+\end{figure}
+\noindent
+At \qty{300}{K}, \cref{fig:gkc_overview_m_300}, we find that lower $N$ and $\td$ yield correspondingly lower estimates for $\kappa$. 
+At larger $\td$, noise removal has less impact, as overall noise is reduced.
+
+Both observations are consistent with expectations: Larger simulation cells can capture long-wavelength phonons and reduce unphysical boundary scattering. Longer simulation times allow spurious correlations to average out, and ensure that all relevant transport processes are captured.
+\begin{figure}
+  \includegraphics[width=\textwidth]{img/plot/gk/zro_kc_overview_t_1400.pdf}
+  \caption{
+  $\kt$ for tetragonal zirconia at \qty{1400}{K} for different $N$ and $\td$.
+  Opaque lines indicate $\kt$ with applied noise reduction, translucent ones without.
+  }
+  \label{fig:gkc_overview_t_1400}
+\end{figure}
+The same pattern holds at \qty{1400}{K}, \cref{fig:gkc_overview_t_1400}, with significantly reduced overall noise. At this elevated temperature, the \gls{pes} is less harmonic, and average phonon lifetimes are reduced, and consequently, $\kt$ converges faster with integration time.
+This also yields faster convergence with respect to $N$ and $\td$.
+The employed noise reduction approach is effective for both \scare{unconverged} and \scare{converged} settings, as well as temperatures and phases.
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{img/plot/gk/zro_kc_ens_m_300.pdf}
+  \caption{
+  $\kt$ for monoclinic zirconia at \qty{300}{K}, comparing ensemble average and single trajectories.
+  Opaque lines indicate $\kt$ with applied noise reduction, translucent ones without.
+  % \\\\
+  % Results for the tetragonal phase in \cref{fig:si-gkc_ens_t_1400}.
+  }
+  \label{fig:gkc_ens_m_300}
+\end{figure}
+
+% \clearpage
+\newthought{So far, we have considered} $\kt$ averaged over eleven trajectories. Let us now broadly investigate the impact of this averaging. We consider $\zrocc$ in \cref{fig:gkc_ens_m_300}.
+The averaged $\kt$ exhibits significantly reduced noise compared to individual trajectories, both with and without explicit noise reduction.
+The standard error of the ensemble average exceeds the level of residual noise.
+This observation extends across temperatures and phases (not shown).
+
+% \clearpage
+\section{Noise Reduction}
+\label{sec:gkc_noise}
+
+In \cref{sec:gkc_explore}, we observed that, after sufficient integration times, and for sufficiently converged choices of $\td$, averaged $\kt$ exhibits little residual noise.
+However, noise plays a significant role in the automated determination of the integration cutoff, which is based on the \hfacf $\ehfacf(\tau)$, rather than $\kt$ directly.
+
+Noise reduction must therefore be considered. We follow the approach of Knoop~\etal~\cite{ksc2023t}.
+It consists of \emph{(a)} the removal of a gauge term\footnote{See \cref{sec:si-gkc_gauge_term}.} from $\J$, and \emph{(b)} filtering $\kt$ with a lowpass filter.
+\begin{figure*}
+  \includegraphics[width=\textwidth]{img/plot/gk/zro_kc_noise_parts_m_300_converged.pdf}
+  \caption{
+  $\kt$ (top) and $\ehfacf(\tau)$ (bottom) for monoclinic zirconia at \qty{300}{K} for \scare{production} parameter choices $\zrocc$, comparing different components of the noise reduction approach.
+  The checkmark \yes{} indicates that the component is used, while \no{} indicates that it is disabled.
+  For filtering, $\omegaf{=}\qty{1}{THz}$ was used.
+  The vertical lines in the bottom plot indicate the cutoff time $\tc$.
+
+  See \cref{fig:si-gkc_hfacf_noise_comparison_unconverged,fig:si-gkc_hfacf_noise_comparison_converged_m_1400} for other settings and temperatures.
+  }
+  \label{fig:gkc_hfacf_noise_comparison}
+\end{figure*}
+The impact of both components is shown in \cref{fig:gkc_hfacf_noise_comparison}.
+Without noise reduction, high-frequency fluctuations dominate the \hfacf $\ehfacf(\tau)$ and prevent an automatic determination of the integration cutoff time $\tc$. Removing a gauge term, reduces, but does not fully remove such noise. In contrast, the filtering approach is able to reduce most noise even without the removal of the gauge term.
+
+However, the removal of the gauge term becomes relevant for the \scare{unconverged} setting, shown in \cref{fig:si-gkc_hfacf_noise_comparison_unconverged}. In order to treat all choices of $N$ and $\td$ on an equal footing, we therefore employ both mechanisms jointly.
+At higher temperature, see \cref{fig:si-gkc_hfacf_noise_comparison_converged_m_1400}, overall noise is reduced, but similar observations can be made.
+
+\newthought{Having established the} necessity of noise removal, we now study the impact of $\omegaf$. Knoop~\etal{} propose to automatically determine $\omegaf$ based on the lowest significant frequencies of the \gls{vdos}.
+However, this implies that $\omegaf$ depends on the particular trajectory under consideration, and can vary across temperature. In this work, we intend to compare results across temperatures and trajectories, and therefore require a robust and consistent choice.
+We therefore choose a fixed $\omegaf{=}\qty{1}{THz}$, which approximately corresponds to the first peak in \cref{fig:gkm_vdos}, and study its overall impact on $\kt$ and $\ehfacf(\tau)$.
+The result can be seen in \cref{fig:si-gkc_freq_m_300_converged,fig:si-gkc_freq_t_1400_converged,fig:si-gkc_freq_m_300_semi,fig:si-gkc_freq_t_1400_semi}.
+
+No strong dependence of the final thermal conductivity on the filter frequency is observed, and $\omegaf{=}\qty{1}{THz}$ is found to be a robust choice across temperatures, phases, and levels of convergence.
+
+% \section{Cutoff Determination}
+% don't need it. -- everything ok with baseline stuff
+
+\section{Spacing and Number of Trajectories}
+\label{sec:gkc_ens_n}
+
+Since the computation of the heat flux incurs additional computational cost, and since the processes relevant for heat transport occur on longer timescales than single simulation timesteps, the heat flux can be computed at a larger spacing $\nhf{>}1$ for efficiency.
+% We consider the impact of the spacing parameter $\nhf$.
+
+\Cref{fig:si-gkc_spacing_m_300_semi,fig:si-gkc_spacing_m_1400_semi} show the dependence of $\kt$, and the value for $\kappa$ determined by the first zero crossing of the \hfacf, on this parameter. Across temperatures, spacings up to $n_{\text{hf}}{=}3$ yield identical results. We choose $n_{\text{hf}}{=}2$ to ensure consistency.
+
+To some extent, the number of independent trajectories, $n$, is considered in the reported standard error. Nevertheless, an insufficient number of trajectories could lead to strong statistical fluctuations in reported results, which should be avoided. In \cref{fig:si-gkc_ens_conv_m_300_converged,fig:si-gkc_ens_conv_t_1400_converged}, the dependence of $\kappa$ on $n$ is briefly considered; the chosen number of trajectories, $n{=}11$, is found to be more than sufficient.
+
+
+\section{Size and Time}
+\label{sec:gkc_Nt}
+
+Having determined noise reduction and computational settings, we can now finally investigate convergence with respect to $N$ and $\td$. 
+
+\begin{figure*}
+  \includegraphics[width=\textwidth]{img/plot/gk/zro_kc_nt_m_300.pdf}
+  \caption{
+  $\kappa$ for monoclinic zirconia at \qty{300}{K} for different choices of $N$ and $\td$.
+  Error bars indicate the standard error across trajectories.
+  $N$ is shown as $N^{1/3}$, which is proportional to the length scale of the simulation cell.
+  For each choice of $N$, $\td$ from \qtyrange{0.1}{2.0}{ns} are shown with a horizontal offset.
+  \scare{Production}, \scare{light}, \scare{unconverged} and \scare{tight} choices are indicated; for the \scare{production} setting, the standard error is also shown as a shaded band.
+  \\\\
+  See \cref{fig:si-gkc_nt_m_1400,fig:si-gkc_nt_t_1400} for other temperatures and phases.
+  }
+  \label{fig:gkc_nt}
+\end{figure*}
+
+\noindent
+\Cref{fig:gkc_nt} shows convergence with respect to simulation duration~$t$ and simulation cell size $N$ at \SI{300}{K}, \cref{fig:si-gkc_nt_m_1400,fig:si-gkc_nt_t_1400} results for other temperatures.
+The chosen \scare{production} settings, $\zrocc$, are found to contain the results for higher $N$ and $\td$ within the associated standard error, with the exception of \qty{1400}{K} in the monoclinic phase. In that case, unsystematic convergence behaviour at $N{>}324$ is observed, which may be due to the emerging instability of the monoclinic phase at that temperature.
+Nevertheless, differences between the chosen settings and $\kappa$ at higher $N$ and $\td$ do not exceed \qty{10}{\percent}.
+
+We conclude that $\zrocc$ is sufficient for the computation of $\kappa$ across the temperatures and phases relevant for the present work.
+Additionally, the \scare{light} settings $\zrosc$ are found to provide an acceptable estimate of the converged $\kappa$ at reduced computational cost.
+
+\section{Summary}
+\label{sec:gkc_sum}
+
+For $N$ and $\td$, the \scare{production} settings $\zrocc$ are used for most results reported in \cref{ch:gk-res}. In the case of computationally expensive heat flux variations, \scare{light} settings $\zrosc$ are used instead.
+Additional choices are: $\omegaf{=}\qty{1}{THz}$ for filtering, $\nhf{=}2$ as spacing for heat flux computation, and the usage of $\Jint$ in place of $\J$.
+% aesthetics (see \cref{sec:si-gkc_conv}).

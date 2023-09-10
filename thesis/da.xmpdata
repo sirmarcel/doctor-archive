@@ -1,0 +1,91 @@
+% Replace the following information with your document's actual
+% metadata. If you do not want to set a value for a certain parameter,
+% just omit it.
+%
+% Symbols permitted in metadata
+% =============================
+% 
+% Within the metadata, all printable ASCII characters except
+% '\', '{', '}', and '%' represent themselves. Also, all printable
+% Unicode characters from the basic multilingual plane (i.e., up to
+% code point U+FFFF) can be used directly with the UTF-8 encoding. 
+% Consecutive whitespace characters are combined into a single
+% space. Whitespace after a macro such as \copyright, \backslash, or
+% \sep is ignored. Blank lines are not permitted. Moreover, the
+% following markup can be used:
+%
+%  '\ '         - a literal space  (for example after a macro)                  
+%   \%          - a literal '%'                                                 
+%   \{          - a literal '{'                                                 
+%   \}          - a literal '}'                                                 
+%   \backslash  - a literal '\'                                                 
+%   \copyright  - the (c) copyright symbol                                      
+%
+% The macro \sep is only permitted within \Author, \Keywords, and
+% \Org.  It is used to separate multiple authors, keywords, etc.
+% 
+% List of supported metadata fields
+% =================================
+% 
+% Here is a complete list of user-definable metadata fields currently
+% supported, and their meanings. More may be added in the future.
+% 
+% General information:
+%
+%  \Author           - the document's human author. Separate multiple
+%                      authors with \sep.
+%  \Title            - the document's title.
+%  \Keywords         - list of keywords, separated with \sep.
+%  \Subject          - the abstract. 
+%  \Org              - publishers.
+% 
+% Copyright information:
+%
+%  \Copyright        - a copyright statement.
+%  \CopyrightURL     - location of a web page describing the owner
+%                      and/or rights statement for this document.
+%  \Copyrighted      - 'True' if the document is copyrighted, and
+%                      'False' if it isn't. This is automatically set
+%                      to 'True' if either \Copyright or \CopyrightURL
+%                      is specified, but can be overridden. For
+%                      example, if the copyright statement is "Public
+%                      Domain", this should be set to 'False'.
+%
+% Publication information:
+%
+% \PublicationType   - The type of publication. If defined, must be
+%                      one of book, catalog, feed, journal, magazine,
+%                      manual, newsletter, pamphlet. This is
+%                      automatically set to "journal" if \Journaltitle
+%                      is specified, but can be overridden.
+% \Journaltitle      - The title of the journal in which the document
+%                      was published. 
+% \Journalnumber     - The ISSN for the publication in which the
+%                      document was published.
+% \Volume            - Journal volume.
+% \Issue             - Journal issue/number.
+% \Firstpage         - First page number of the published version of
+%                      the document.
+% \Lastpage          - Last page number of the published version of
+%                      the document.
+% \Doi               - Digital Object Identifier (DOI) for the
+%                      document, without the leading "doi:".
+% \CoverDisplayDate  - Date on the cover of the journal issue, as a
+%                      human-readable text string.
+% \CoverDate         - Date on the cover of the journal issue, in a
+%                      format suitable for storing in a database field
+%                      with a 'date' data type.
+
+
+\PublicationType {book}
+\Title        {Machine Learning for Atomistic Modeling: Representations and Thermal Transport}
+\Doi          {10.14279/depositonce-18647}
+\Author       {Marcel F. Langer}
+
+\Copyright    {Creative Commons Attribution 4.0 International (CC BY 4.0)}
+\CopyrightURL {http://creativecommons.org/licenses/by/4.0/}
+
+\Keywords     {machine learning\sep quantum mechanics\sep materials science\sep automatic differentiation\sep thermal transport}
+
+\Subject      {Computer simulations of molecules and materials are an indispensable tool for physics, chemistry, and materials science. A wide range of methods are available for this task: On one end, first-principles electronic structure approaches, which numerically solve the Schrödinger equation, obtain high accuracy at high computational cost. On the other end, forcefields, simple analytical approximations, are fast to evaluate, but require parametrisation and an explicit model of desired physical interactions.
+Machine learning is increasingly used to bridge the gap between these two extremes, aiming to combine high accuracy with computational efficiency. To this end, regression models are trained on quantum-mechanical reference calculations and then used as surrogate model during simulations. This thesis considers two topics related to such models: Representations of atomistic systems, and the application of machine-learning potentials to thermal transport simulations. Efficient learning in this setting requires models, and therefore input features, that respect fundamental symmetries. We comprehensively review and discuss such representations and relations between them. For selected representations, we compare energy predictions for a range of datasets in numerical experiments controlled for data distribution, regression method, and hyperparameter optimisation. The Green-Kubo method is a rigorous framework for thermal transport simulations in materials. It is based on equilibrium molecular dynamics simulations, requiring both an accurate description of the potential energy surface and careful consideration of convergence in simulation duration and size. In this context, machine-learning potentials trained with first-principles data promise the ability to reach convergence at a fraction of the computational cost. This thesis adapts the implementation of the Green-Kubo approach to the recently developed class of message-passing machine-learning potentials, which iteratively consider semi-local interactions beyond the initial interaction cutoff.  We derive an adapted heat flux formulation for such potentials that can be implemented using automatic differentiation without compromising computational efficiency. The approach is validated by computing the thermal conductivity of zirconia, tin selenide, and silicon with message-passing neural networks.}

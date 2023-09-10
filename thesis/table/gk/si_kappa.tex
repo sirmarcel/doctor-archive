@@ -1,0 +1,35 @@
+
+% 300 natural (142 + 156 + 148 + 150 + 144)/5 = 148
+% 400 natural (97.6 + 105 + 98.9)/3 = 100.5
+% 500 natural (69.4 + 80 + 76.2)/3 = 75.2
+
+% 300 Pure (140 + 165 + 156)/3 = 153
+% 400 Pure 93.9
+% 500 Pure 73.6
+
+\begin{table*}
+    \caption[][\baselineskip]{Overview of reported thermal conductivity for \ch{Si}. Experimental values have been averaged over references. Only selected, representative, \ff results are shown. Error bars for reference~\cite{crs2017t} have been estimated from the nearest data point.}
+    \label{tab:kappa-si}
+    \begin{tabular}{l l l | r r r}
+    \toprule
+    References & \pes/Sample & Method & $\kappa$ at \qty{300}{K} & $\kappa$ at \qty{400}{K} & $\kappa$ at \qty{500}{K} \\
+    \midrule
+    \cite{smsd1963t,gs1964t,hpl1972t,rhds2003t,kgtp2004t} & Natural \ch{Si} & Experiment & \num{148} & \num{101} & \num{75} \\
+    \cite{fmgm1968t,rhds2003t,kgtp2004t} & \ch{^{28}Si} & Experiment & \num{153} & \num{94} & \num{74} \\
+    \midrule
+    Carbogno~\etal~\cite{crs2017t} & \dft (PBEsol) & \gk (extrapolated) \hspace{0.2cm} & -- & \num{127\pm29} & -- \\
+    Carbogno~\etal~\cite{crs2017t} & \dft (LDA) & \gk (extrapolated) & -- & \num{105\pm25} & -- \\
+    Plata~\etal~\cite{pnnc2017t} & \dft (\gls{pbe}) & \gls{bte} & \num{144} & -- & -- \\
+    Broido~\etal~\cite{bmms2007t} & \dft & \gls{bte} & \num{156} & -- & -- \\
+    \midrule
+    He~\etal~\cite{hsdg2012t} & Tersoff \ff & \gk & \num{197\pm34} & -- & -- \\
+    Howell~\cite{h2012t} & \sw \ff & \gk & -- & -- & \num{206\pm8} \\
+    \midrule
+    Qian~\etal~\cite{qpwy2019q} & \acs{gap} \mlp & \gk & \num{124\pm22} & \num{77\pm19} & \num{61\pm17} \\
+    Qian~\etal~\cite{qpwy2019q} & \acs{gap} \mlp & \gls{bte} & \num{137} & \num{99} & \num{77} \\
+    Li~\etal~\cite{lll2020q} & DeepPot-SE \mlp & \gls{bte} & \num{140} & \num{100} & \num{64} \\
+    \midrule
+    This work & \sok \mlp & \gk (unconverged) & -- & \num{56\pm4} & -- \\
+    \bottomrule
+    \end{tabular}
+\end{table*}

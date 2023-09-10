@@ -1,0 +1,32 @@
+
+\begin{tikzpicture}[
+    scale=0.9,
+    x = 0.8cm,
+    y = 0.8cm,
+    >=stealth,
+    atom/.style = {circle, fill=black, minimum size=6pt,
+              inner sep=0pt, outer sep=0pt},
+    ]
+
+\node[atom] (atom_0) at (1.0,1.5){};
+
+\node[atom] (atom_1) at (2.0,1.5){};
+
+\node[atom] (atom_2) at (3.0,1.5){};
+
+\node[atom] (atom_3) at (4.0,1.5){};
+
+\node[atom] (atom_4) at (5.0,1.5){};
+
+\draw [->, solid, very thick, color=extra_0] (atom_0) -- (atom_1);
+\draw [->, solid, very thick, color=extra_1] (atom_1) -- (atom_2);
+\draw [->, solid, very thick, color=extra_2] (atom_2) -- (atom_3);
+\draw [->, solid, very thick, color=extra_3] (atom_3) -- (atom_4);
+\draw [->, solid, very thick, color=extra_4] (atom_4) to [bend right=80] node [midway, above]{} (atom_0);
+
+\node [] (number ) at (0.25, 0.3) {\small{1}};
+
+\draw [solid] (0, 0) rectangle (6, 3);
+
+
+\end{tikzpicture}

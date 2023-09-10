@@ -1,0 +1,240 @@
+%!TEX root = ../../da.tex
+
+% \chapter{Quantum Mechanics and the Many-Body Problem}
+\chapter{Quantum Mechanics}
+\label{ch:qm}
+
+\begin{chapquote}{M. John Harrison, \textit{Light}}
+	\quotes{At the moment,} the mathematics announced, \quotes{I'm solving Schrödinger's equation on a grid of ten spatial and four temporal dimensions. No one else can do that.}
+\end{chapquote}
+
+\marginnote[\baselineskip]{Full introductions to quantum mechanics can be found in many textbooks, for instance Dirac~\cite{dirac1958} and Napolitano and Sakurai~\cite{sakurai2011}. An excellent overview of quantum chemistry can be found in reference~\cite{h2018p}, and a more detailed account of \acs{dft} in reference~\cite{k2018p}.}
+\noindent
+This section reviews select concepts of \qm, and the approximations employed for this thesis.
+First, we briefly introduce the mathematical formulation of \qm, and the particular problem of describing an atomistic system of nuclei and electrons.
+Then, strategies for solving this computationally challenging problem, even when reduced to electrons, are discussed. Armed with an approximate solution to the electronic Schrödinger equation, we then introduce the \glsfirst{bo} \glsfirst{pes}.
+
+\section{Quantum Mechanics and Quantum Chemistry}
+
+To date, \qm provides the most accurate and well-tested description of the behaviour of matter at the atomic scale.
+% \footnote{In this thesis, we will often refer to \scare{microscopic}, as opposed to \scare{macroscopic}, behaviour. This should be taken to indicate behaviour at the scale of atoms, which however often cannot be observed with conventional optical microscopy.}
+Its formal machinery, developed from the 1920s onwards, is based on abstract state vectors, or \newterm{kets}, $\ket{\phi}$ in a Hilbert space that describes the overall state space of the quantum-mechanical system.
+
+Linear operators $\op{O}$ act on kets in that space; self-adjoint operators\footnote{In a finite-dimensional complex vector space, this is equivalent to the matrix representation of the operator being Hermitian, i.e., equivalent to its conjugate transpose.} correspond to physical observables. The dynamics of a quantum system are governed by the time-dependent \newterm{Schrödinger equation}
+\begin{equation}
+	\op{H} \ket{\phi;t} = i \hbar \partdiff{t} \ket{\phi;t} \, , 
+\end{equation}
+where $\op{H}$, the \newterm{Hamiltonian}, evaluates the total energy.
+If $\op{H}$ is not dependent on time, which is the case considered in this thesis, the time-evolution of any initial state $\ket{\phi;t_0}$ is given by its expansion in the eigenstates of $\op{H}$.\footnote[][-2\baselineskip]{More precisely, letting $a$ label eigenstates of an operator that commutes with $\op{H}$, with corresponding energy eigenvalues $E_a$, the state at time $t$ is given by $\sum_a\nolimits \exp{(-i E_a (t-t_0)/\hbar)} \ket{a} \braket{a | \phi;t_0}$: The dynamics are fully determined by the solution of the time-independent Schrödinger equation. A full exposition of quantum dynamics can be found in reference~\cite[ch.~2]{sakurai2011}.}
+It is therefore sufficient to solve the time-independent Schrödinger equation, which poses an eigenvalue problem
+\begin{equation}
+	\op{H} \ket{\phi} = E \ket{\phi} \, ,
+\end{equation}
+where $E$ is the total energy of the quantum system.
+
+\newthought{For the systems of concern} in this thesis, which are composed of $N$ atomic nuclei\footnote[][-\baselineskip]{We do not consider the internal structure of nuclei.} with charges $Z_i$ and masses $m_i$, as well as $n$ electrons, which all share the mass $\mel$, the Hamiltonian in atomic units is
+\begin{align}
+	\op{H} &= \op{T}_{\text{el}} + \op{T}_{\text{nuc}} + \op{H}_{\text{el-el}} + \op{H}_{\text{nuc-nuc}} + \op{H}_{\text{el-nuc}}\\
+	&= 
+	% - \frac{1}{2} \sum_{p=1}^n \frac{\partial^2}{\partial \R^2_p} 
+	% - \frac{1}{2} \sum_{i=1}^N \frac{\mel}{M_i} \frac{\partial^2}{\partial \R^2_i} \\
+	- \frac{1}{2} \sum_{p=1}^n \oppe_p
+	- \frac{1}{2} \sum_{i=1}^N \frac{\mel}{m_i} \opp_i \\
+	&\quad+ \sum_{p=1}^n \sum_{q<p} \frac{1}{\magnitude{\opre_p - \opre_q}}
+	+ \sum_{i=1}^N \sum_{j<i} \frac{Z_i Z_j}{\magnitude{\opr_i - \opr_j}}
+	- \sum_{p=1}^n \sum_{i=1}^N \frac{Z_i}{\magnitude{\opr_i - \opre_p}}
+	\, ,
+\end{align}
+with $\opp$ denoting momentum and $\opr$ position operators, and a superscript $\text{e}$ indicating electronic quantities. Solving this problem is the main task of quantum chemistry.
+\marginnote[-6\baselineskip]{We note that this Hamiltonian is non-relativistic, and contains no spin-dependent terms. However, relativistic effects cannot be simply discarded; approximations are employed in practice~\cite{lbs1994p,hb2017p,zyzb2021p}.
+
+% : Near the cores, where the Coulomb potential displays a singularity, the wave functions become significantly distorted by such effects. In principle, including them would require solving the Dirac equation~\cite{d1928Ap,d1928Bp} in place of the Schrödinger equation, leading to multi-component wave functions in terms of spinors, as discussed in \cite[appendix~O]{martin2020}. In practice, relativistic effects are often approximated by introducing correction terms without expanding to spinors, leading to \newterm{scalar} approximations. The calculations with the \aims code~\cite{FHI-aims} performed for this thesis use such a scalar approximation~\cite{lbs1994p}. An overview and benchmark of approaches is given in reference~\cite{hb2017p}.
+
+In the context of this section, spin enters through the spin-statistics theorem~\cite{p1940p}, which places additional constraints on the solutions: Wave functions, i.e., eigenkets in position representation, must be anti-symmetric.}
+
+As a first step towards solving this problem, we separate the electronic states from the nuclear ones, motivated by the appearance of the mass ratio $\mel/m_i \approx 10^{-4} - 10^{-6}$ in $\op{T}_{\text{nuc}}$. 
+This can be achieved by expanding the full solution of $\op{H}$ in terms of solutions $\ket{\phi_a}$ of the \emph{electronic} Hamiltonian
+\begin{equation}
+	\Hel = \op{T}_{\text{el}} + \op{H}_{\text{el-el}} + \op{H}_{\text{el-nuc}}  \,, \label{eq:qm-he}
+\end{equation}
+describing the electrons in an external potential $\op{H}_{\text{el-nuc}}$ which parametrically depends on atomic positions.
+Neglecting terms of the order $(\mel/m_i)^{1/4}$, which describe the coupling of electronic states due to the nuclei, leads to a set of separate nuclear Schrödinger equations enumerated by the electronic states $a$ with energy $E_a$:
+\begin{equation}
+	(\op{T}_{\text{nuc}} + \op{H}_{\text{nuc-nuc}} + E_a) \ket{\chi} = E \ket{\chi} \, . \label{eq:qm-nse}
+\end{equation}
+This approximation is known as the \glsfirst{bo} approximation~\cite{bo1927p}.
+Intuitively, we have made the assumption that the response of the electrons to movement of the nuclei is instantaneous.
+
+We now further assume that the electronic ground state ($a{=}0$) is sufficiently separated from the first excited state ($a{=}1$)\footnote{At \qty{300}{K}, thermal energy is $k_{\rm B} \cdot \qty{300}{K}  \approx \qty{26}{meV}$, smaller than typical bandgaps for the materials investigated in this work (semiconductors and insulators)~\cite[ch.~28]{ashcroft1976}.} such that the electronic system remains in the ground state as atomic positions change. We can therefore identify a single potential energy surface, the \bo \pes, on which the nuclei move. It will be discussed further in \cref{sec:qm-bo}.
+
+\newthought{We now turn our attention} to the task of obtaining the ground-state solution $\ket{\phi_0}$ of the electronic Schrödinger equation. Despite the simplification of neglecting nuclear degrees of freedom, analytical solutions are unknown for any but the simplest systems.
+% , and no solutions at all are available for solids.
+% Q: surely, someone has done this for harmonium in pbc?
+Therefore, we must rely on numerical methods for practical uses.\footnote[][-2\baselineskip]{Such methods are typically called \newterm{ab initio} or \newterm{first-principles} methods.}
+
+\marginnote{A complete introduction to Slater determinants and approaches to construct many-body states is given in Szabo and Ostlund~\cite{szabo1989}. For the remainder of this section, we largely follow the exposition by Foulkes~\cite{f2020p}.}
+Let us briefly consider the difficulty of this task. For an exact solution, we must find the lowest eigenvalue of the electronic Hamiltonian in an appropriate basis, constructed from a complete basis for the individual electron states. Equivalently, we could attempt to directly solve the Schrödinger equation as a partial differential equation in the position basis, constructing a many-body wave function.
+We could also exploit the Rayleigh-Ritz variational principle,\footnote[][-1\baselineskip]{The variational principle is a standard tool in \qm, introduced, for instance in \cite[ch.~5.4]{sakurai2011} or \cite[ch.~1.3]{szabo1989}. A historical overview can be found in reference~\cite{gw2012p}.} which states that the ground state minimises the energy, i.e.,\marginnote[\baselineskip]{$\ket{\Psi}$ is a trial wavefunction.}
+\begin{equation}
+	\label{eq:qm-min}
+	\ket{\phi_0} = \argmin_{\ket{\Psi}} \frac{\braket{\Psi|\Hel|\Psi}}{\braket{\Psi | \Psi}} \, .
+\end{equation}
+
+
+In all cases, we face the additional constraint that electrons, being spin-1/2 fermions, cannot occupy the same state due to the Pauli exclusion principle~\cite{p1940p}.
+% , or rather the spin-statistics theorem. no one likes a smartass
+Therefore, a naive ansatz requires at least $k \geq n$ states $\ket{a=1...k}$ for each electron,\footnote{More precisely, since the Hamiltonian does not include spin, $n/2$ would be sufficient, as each state can be occupied by two opposite-spin electrons.
+
+We also note that the single-electron states must be obtained from a single-electron basis first. The Hartree-Fock approach, introduced below, is one way to accomplish this.
+} leading to an overall Hilbert space of dimension at least $n^n$.
+% Even for the primitive cell of silicon, which contains \num{28} electrons, this results in a state-space of dimension $\approx \num{3e+40}$, making it prohibitive to even instantiate the Hamiltonian in memory.
+
+Some relief is brought by the realisation that we do not require a description of the individual states of each electron, which are indistinguishable -- it is sufficient to consider the $\binom{k}{n}$ ways to distribute $n$ electrons into $k$ available states, or \emph{orbitals}. We term each such selection $\boldsymbol{a}$, a one-hot vector\footnote{Entries are either $0$ or $1$.} of dimension $k$ indicating which $n$ states are occupied.\footnote{This can be naturally expressed in terms of second quantisation, i.e., the introduction of number states and ladder operators. In the interest of brevity, we do not pursue this here.} From this, one can then construct a suitably anti-symmetric state from a linear combination of states $\ket{a_1, a_2, ..., a_k}$ using Slater determinants, which form a complete basis of the anti-symmetric \gls{fci} subspace. We can also note that $\Hel$ only contains one- and two-electron operators, so we can avoid instantiating the $k^n \times k^n$ Hamiltonian, and instead focus on its matrix elements in the anti-symmetric subspace.
+
+\newthought{If we further restrict} ourselves to using a single Slater determinant, in other words, aim to find the single $\boldsymbol{a}$ and corresponding set of orbitals that minimise the energy, we arrive at the \gls{hf} method~\cite{h1928p,f1930p}. Working it out in detail is beyond the scope of this thesis; the end result are a set of single-particle equations in an effective potential obtained by averaging over all electrons. The overall model must be solved iteratively in a \gls{scf} iteration.
+% TODO: write an appendix or similar on what a "single Slater determinant" means in terms of actual states. this'll make HF a bit more clear; at the moment it's a bit confusing to talk about occupations and changing the states. the point is that the states are already superpositions of a given basis, from which we *then* make a determinant.
+
+Beyond \gls{hf}, many more sophisticated methods can be constructed, often using its single-electron basis functions as starting point. While such \glsfirst{fci} methods in practice scale exponentially with the number of electrons,\footnote{For instance, using $k=2n$ single-electron states yields $\binom{2n}{n} \approx 2^{2n}/\sqrt{n}$ for large $n$ via Stirling's approximation.} it can be used for small systems, or serve as the basis for other methods. Coupled cluster methods, for instance, operate in terms of creation/annihilation operators -- adding/removing electrons from a \gls{hf} ground state -- becoming equivalent to \gls{fci} if all excitations are considered. However, the expansion can often be truncated at single, double, or triple excitations with reasonable accuracy, yielding a significant reduction in cost compared to \gls{fci}. However, computational cost still scales approximately as $\bigo{n^{6-7}}$, making it difficult to apply to larger systems.
+
+Alternative approaches that attempt to circumvent the eigenvalue problem of directly solving the Schrödinger equation exist:
+Variational quantum Monte Carlo approaches stochastically evaluate the right-hand side in \cref{eq:qm-min}, and then minimise over some parametrised ansatz for $\ket{\Psi}$. Recently, \gls{nn} ansatzes have emerged as a promising direction for this type of method~\cite{hscn2022a}.
+Diffusion Monte Carlo methods take a different approach, noting that $\exp{(-\tau \op{H})}$ acting one a ket $\ket{\Psi}$ will yield the ground state in the limit of $\tau \rightarrow \infty$. One can then re-interpret the time-evolution as a stochastic diffusion-and-branching process of classical particles, which can be simulated numerically. However, the fermionic nature of electrons causes additional difficulty, making further approximations necessary.
+
+\section{Density-Functional Theory}
+
+We have seen that the many-body nature of the electronic state, combined with the anti-symmetry constraint, causes great difficulty in the search for the ground state. This motivates the search for a method that avoids dealing with the many-body wave function altogether.
+
+% outtake:  $\braket{\Psi|\Hel|\Psi}$
+\newthought{This method is} \gls{dft}, which descends from the Hohenberg-Kohn theorems~\cite{hk1964p}, stating that \emph{(a)} there is a one-to-one correspondence between the ground state electron density\footnote{
+	$n_0(\R) \defas \braket{\phi_0 | \sum_{p=1}^n\nolimits \delta(\R - \opre_p) | \phi_0}$.
+	Computing the density requires evaluating the $3(n-1)$ dimensional integral
+	$n_0(\R) = n \integral{}^3\R_2\, ...\, \intd^3 \R_n \magnitude{\phi_0(\R, \R_2, ... \R_n)}^2$;
+	the anti-symmetry of the wave function allows the permutation of arguments such that $\R$ can be shifted to the first position.
+	% $\phi_0(\R_1, \R_2, ..., \R_n) \defas \braket{\R_1, \R_2, ..., \R_n | \phi_0}$.
+} $n_0(\R)$, the \scare{external} potential appearing as $ \op{H}_{\text{el-nuc}}$ in \cref{eq:qm-he}, and the ground state itself, and \emph{(b)} that the ground state density minimises the energy when phrased as a functional of the density, $E[n]$.
+This reduces the dimensionality of the problem considerably: Instead of considering a wave function with $3n$ coordinates, we can focus on a scalar field in three dimensions!
+
+However, our problem is not yet solved. Consider the energy functional for a given density $n$
+\begin{equation}
+	E[n] = \braket{\Psi[n] | \op{T}_{\text{el}} + \op{H}_{\text{el-el}} | \Psi[n]} + E_{\text{ext}}[n] \,
+\end{equation}
+where the latter part corresponds to the \scare{external} potential due to $\op{H}_{\text{el-nuc}}$, and the former to the \scare{universal} terms that are independent of external circumstances.
+While $E_{\text{ext}}$ can be straightforwardly phrased in terms of the density,\footnote{In the present case, it is simply the electrostatic energy of a charge density in the potential of the nuclei, $- \integral{}^3\R\,  n(\R) \sum_i Z_i/\magnitude{\R_i - \R}$.} the universal functional retains the full difficulty of the many-body problem of interacting electrons, as it is unknown how to phrase it directly in terms of the density~\cite[ch.~6.4]{martin2020}.
+% discarded: cite Martin p. 136
+
+Relief is provided by the Kohn-Sham scheme~\cite{ks1965p},\footnote{From this point on, \gls{dft} will typically refer to Kohn-Sham \gls{dft}.} which introduces an auxiliary system of \emph{non-interacting} electrons\footnote{The state of the Kohn-Sham system is also given by a Slater determinant.
+Interestingly, one can show that for a complete basis, a single such determinant is sufficient to reproduce the exact density. This appears to hold with reasonable accuracy for finite basis sets as well~\cite{jj2020p}.
+}
+with the same ground-state density $n$. The functional is then split further
+\begin{equation}
+	E[n] = T_{\text{aux}}[n] + E_{\text{aux, es}}[n] + E_{\text{ext}}[n] + E_{\text{xc}}[n] \, ,
+\end{equation}
+with $T_{\text{aux}}$ describing the kinetic energy of the auxiliary electrons, $E_{\text{aux, es}}$ the electrostatic energy of their charge distribution interacting with itself, and $E_{\text{xc}}$ absorbs all the remaining contributions.
+Minimising this functional with respect to the states of the auxiliary electrons yields a set of single-particle Schrödinger equations, which in turn depend on the density, and must therefore be solved self-consistently until some convergence criterion is reached, similar to the \gls{scf} iterations in the \gls{hf} method.
+
+\newthought{With this procedure}, we have now further isolated the difficulty of the many-body problem in the exchange-correlation functional $E_{\text{xc}}[n]$.
+Treating it exactly would be equivalent to solving the full problem, so approximate exchange-correlation functionals must be used.
+All known such approximations are uncontrolled; their exact impact on accuracy is unknown and they cannot be systematically improved.
+Their validity must therefore be checked empirically, comparing to experiment or other, more computationally demanding, methods.
+Nevertheless, in practice, even simple approximations are often found to be sufficient for many cases of interest, yielding a method of overall $\bigo{n^3}$ scaling.\footnote{Variations of \dft with different scaling behaviour exist, for instance linear-scaling formulations~\cite{k1996p,g1999p,bm2012p}, which exploit locality (see also reference \cite[ch.~18]{martin2020}), or \dft with hybrid or double-hybrid funtionals~\cite{g2006p}, which scale more steeply than cubically.}
+% done: does cubic scaling hold for all functionals? maybe we can find a reference that actually analyses it?
+% It turns out that in practice, rough approximations of this term are often sufficient to predict physical quantities. Nevertheless, approximating the exchange-correlation term is an essentially uncontrolled approximation, whose accuracy must be validated empirically.
+
+The most straightforward approximation for $E_{\text{xc}}$ is the \gls{lda}, which simply takes the density at each spatial point into account. In that case, the general functional of the density at \emph{every} spatial point at once is replaced by an operation acting on the density at each point \emph{separately}, which is then integrated over the simulation domain to yield $E_{\text{xc}}$.\footnote{The mapping between electron density $n(
+\R)$ and and energy density $\dense(\R)$ is often based on the energy density of the homogeneous electron gas, which can be obtained via diffusion Monte Carlo approaches~\cite{ca1980p}.}
+
+Beyond \gls{lda}, improvements can be achieved by adding information of the local \emph{gradient} of the density as well, leading to the \gls{gga} class of approaches, of which the \gls{pbe}~\cite{pbe1996p} functional is one. \Gls{pbe}, and its re-parametrisation for solids, PBEsol~\cite{przb2008t}, will be used in latter parts of this thesis.
+
+More sophisticated exchange-correlation functionals can also be constructed. For instance, hybrid functionals include a portion of \gls{hf} information. Efforts to integrate \gls{ml} approaches into \gls{dft} have been made~\cite{srmb2012q,khbg2022q}.
+ For instance, the \gls{dm21} functional~\cite{kmhc2021q} predicts the strength of different elements of hybrid functionals (the \newterm{enhancement factors}) based on local features.
+% maybe not: cite srmb2012q
+% note:
+% A list of the failures of DFT with present-day functionals includes: (i) van der Waals forces are not properly described, (ii) negative ions are usually not bound, i.e. electron affinities are too small, (iii) the Kohn–Sham potential falls off exponentially for large distances instead of ∝ 1/r, (iv) band gaps are underestimated in both LDA and GGA by approximately 50%, (v) cohesive energies are overestimated in LDA and underestimated in GGA, (vi) strongly correlated solids such as NiO and FeO are predicted as metals and not as antiferromagnetic insulators.
+% from: https://www.uni-ulm.de/fileadmin/website_uni_ulm/nawi.inst.250/Lehre/TheoChem1_Skript_Stud.pdf
+
+% removed
+% \Gls{dft}, despite the inherent approximation of the exchange-correlation functional, has been extraordinarily successful in describing quantum systems of moderate size. Many foundational papers have received thousands of citations, and TODO of overall computing resources in \gls{hpc} facilities is dedicated to \gls{dft}.
+
+\section{Born-Oppenheimer Potential Energy Surface}
+\label{sec:qm-bo}
+
+Let us now assume that we have obtained an approximate ground-state solution of the electronic problem, which we term $\ket{\phi_0} = \ket{\phi[n_0]}$. Its energy eigenvalue is $E_0 = \braket{\phi_0|\Hel|\phi_0}$, which parametrically depends on the positions $\Rgen = \curlyset{\R_i}{i=1...N}$ and nuclear charges $\Charges = \curlyset{Z_i}{i=1...N}$. 
+Substituting into \cref{eq:qm-nse}, the Hamiltonian for the nuclei is therefore
+\begin{equation}
+	- \frac{1}{2} \sum_{i=1}^N \frac{\mel}{m_i} \opp_i
+	+ \sum_{i=1}^N \sum_{j<i} \frac{Z_i Z_j}{\magnitude{\opr_i - \opr_j}} 
+	+ E_0[\Rgen,\Charges] \, . \label{eq:qm-qbopes}
+\end{equation}
+In the classical limit, this Hamiltonian yields the Hamiltonian function in \cref{eq:md-H}, from which the equations of motion for the nuclei can be obtained: They move on a potential energy surface defined by the potential energy
+\begin{equation}
+	U(\Rgen, \Charges) = \frac{1}{2} \sum_{i=1}^N \sum_{\substack{j=1 \\ j \neq i}}^N \frac{Z_i Z_j}{\magnitude{\R_i - \R_j}} + E_0[\Rgen,\Charges] \, .
+\end{equation}
+The negative derivatives of $U$ with respect to $\R_i \in \Rgen$ then correspond to the forces acting on each atom, determining their dynamical behaviour. We will discuss this further in \cref{ch:md}.
+
+
+
+% Interpreted as a classical quantity, this potential energy defines the \bo \pes of an atomic system of $N$ nuclei with charges $\Charges = \curlyset{Z_i}{i=1...N}$ and positions $\Rgen = \curlyset{\R_i}{i=1...N}$ as
+% \begin{equation}
+% 	U(\Rgen, \Charges) = \frac{1}{2} \sum_{i=1}^N \sum_{\substack{j=1 \\ j \neq i}}^N \frac{Z_i Z_j}{\magnitude{\R_i - \R_j}} + E_0[\Rgen] \, .
+% \end{equation}
+% The negative derivatives of $U$ then correspond to the forces acting on each atom, which in turn determine their dynamical behaviour via Newton's equations of motion. We will use this further in \cref{ch:md}.
+
+% removed for excessive smartass
+% \marginnote[-4\baselineskip]{Arguing from the variational principle motivates how the Hellmann-Feynman theorem can apply to ground states obtained via \gls{dft}: While approximating the exchange-correlation functional has rendered the method non-variational in the sense of \cref{eq:qm-min}, the Kohn-Sham equations are also obtained via variation, and we can therefore expect their solution to be stationary.}
+
+\newthought{For now, we must} answer a more fundamental question: How do we obtain derivatives of $U$?\marginnote{See also reference~\cite[ch.~5.4]{sakurai2011}. The variational principle in \cref{eq:qm-min} can alternatively be phrased as finding a state $\ket{\phi_0}$ where the functional on the right-hand side is robust under the variation $\ket{\phi_0}+\delta\ket{\phi_0}$.}
+Essentially, the answer is contained within \cref{eq:qm-min}: The ground state minimises the functional on the right-hand side, and therefore, perturbations, or \newterm{variations}, should not change the ground state energy; the ground state is a stationary point of that functional. As a consequence, we can write~\cite[ch.~3.3]{martin2020}:
+\begin{align}
+	\totaldiff{\lambda} E_0 &= 
+	% E_0 \cancel{ \totaldiff{\lambda} \braket{\phi_0 | \phi_0}} + \braket{\phi_0 | \frac{\partial \Hel}{\partial \lambda} | \phi_0} \\
+	  \cancel{\braket{\frac{\partial \phi_0}{\partial \lambda} | \Hel | \phi_0}}
+	+ \cancel{\braket{\phi_0 | \Hel | \frac{\partial \phi_0}{\partial \lambda}}}
+	+ \braket{\phi_0 | \frac{\partial \Hel}{\partial \lambda} | \phi_0} \\
+	&=  \braket{\phi_0 | \frac{\partial \Hel}{\partial \lambda} | \phi_0} \, 
+\end{align}
+where we use $\lambda$ as any of the parameters entering $\Hel$. This result is known as the Hellmann-Feynman theorem~\cite{f1939p}.
+It allows us to compute forces for \gls{dft} by first computing the analytical derivative of the electron-nuclear Coulomb interaction, and evaluating it with a given density.\footnote{It is interesting to note that this motivates the use of \emph{learned} electronic densities to obtain forces~\cite{p2022Aa}.} No derivatives of the density must be taken, and the terms which do not depend on nuclear coordinates do not contribute. However, we have not yet accounted for additional terms arising due to practical implementation details: For instance, if basis functions depend on atomic positions, so-called Pulay forces appear~\cite{p1969p}. We also have skipped over complications arising from \emph{approximate} solutions, which break the assumption of stationarity and therefore yield non-vanishing derivatives in the first two terms.
+
+% Q: If the only terms in the forces are the electron-ion and ion-ion terms, does that mean that the forces cannot recover the remaining energy contributions? Does that mean that the BO-PES behaves differently from an ordinary function? Is this a contradiction due to the adiabatic approximation? I.e. do we have to assume that in normal MD the non-force terms simply stay approximately fixed? Would it be better to just learn the terms that actually contribute?
+
+\newthought{At this point}, we have a practical method for obtaining the energy and forces\footnote[][-1\baselineskip]{The stress can also be computed, in principle, from the Hellmann-Feynman theorem. In practice, its implementation is rather involved~\cite{kcbs2015t}.} for a given atomistic system. Let us now consider some applications for this ability.
+
+
+% Below: some snippets to extend the discussion of DFT and of Slater determinants. We should probably at least in principle discuss how to define the KS state and how to obtain all the various relevant quantities from it. Not sure it really *needs* to be in the thesis.
+
+% the corresponding Slater determinant
+% \begin{equation}
+% 	\frac{1}{\sqrt{n!}} 
+% 	\begin{vmatrix}
+% 		\ket{} & b \\
+% 		c & d
+% 	\end{vmatrix}
+% \end{equation}
+% offers a prescription to form a linear combination of the $n!$ product states to yield an antisymmetric overall state.
+
+% In the previous chapter, we have argued that, under the \bo approximation, and further assuming that our electronic system remains in the ground state at all times, the classical potential energy of the nuclei is given by
+% % \begin{equation}
+% % 	U(\Rgen) = \sum_{i=1}^N \sum_{j<i} \frac{Z_i Z_j}{\magnitude{\R_i - \R_j}} + \braket{\phi_0 | \Hel | \phi_0} \, .
+% % \end{equation}
+% \marginnote[\baselineskip]{Note that we extended the sum over double pairs. This makes it more straightforward to write out the force later.}
+% \begin{equation}
+% 	U(\Rgen) = \frac{1}{2} \sum_{i=1}^N \sum_{\substack{j=1 \\ j \neq i}}^N \frac{Z_i Z_j}{\magnitude{\R_i - \R_j}} + E_0[\Rgen] \, ,
+% \end{equation}
+% where $E_0[\Rgen]$ denotes the ground-state energy of the electronic system, which depends on the positions\footnote{Of course, additionally $U$ depends on the charges $Z_i$, which enter electrostatic terms and determine the number of electrons. In the interest of a readable notation, and since we assume they do not change over the course of a simulation, we suppress these dependencies in this chapter.} $\Rgen$ of the nuclei.
+
+% % TODO: write down how to actually define the density in terms of  \magnitude{\braket{\R | \phi_0^{\text{KS}}}}^2 or something in that direction
+% With \dft, we have introduced a method that yields $E_0$ by determining the state of the auxiliary Kohn-Sham system $\ket{\phi_0^{\text{KS}}}$ with an associated density $n_0(\R)$. The energy is then
+% \begin{align}
+% 	E_0 =& \braket{\phi_0^{\text{KS}} | \op{T}_{\text{el}} | \phi_0^{\text{KS}}}   \\
+% 	&+ E_{\text{xc}}[n_0] \\
+% 	&+ \integral{}^3\R\, \integral{}^3\R'\,  \frac{n_0(\R) n_0(\R')}{\magnitude{\R - \R'}} \\
+% 	&- \integral{}^3\R\,  n_0(\R) \sum_{i=1}^N \frac{Z_i}{\magnitude{\R_i - \R}} \, .
+% \end{align}
+% Via the Hellmann-Feynman theorem, the derivative with respect to atom positions is
+% \begin{align}
+% 	\partdiff{\R_i} U(\Rgen) =&  - \frac{1}{2} \sum_{\substack{j=1 \\ j \neq i}}^N  (\R_i - \R_j) \frac{Z_i Z_j}{\magnitude{\R_i - \R_j}^3} \\
+% 	&+ \integral{}^3\R\,  n_0(\R) (\R_i - \R) \frac{Z_i}{\magnitude{\R_i - \R}^3} \, .
+% \end{align}
+% It is interesting to note that the force does not include the first three terms in $E_0$; it only includes electrostatics terms involving nuclear positions.
+
+% Question: Is it therefore inconsistent to approximate the BO-PES with a function $U(\Rgen)$ where $\grad U$ is given by the HF forces? Would it be more consistent to include only the terms that yield the forces? Some objections: (a) these terms diverge because of electrostatics, so one must at least include eq. 2.4 in the energy, (b) it is wrong to pretend the terms in $E_0$ can be treated independently.

@@ -1,0 +1,55 @@
+
+
+\part[Review and Benchmark of Representations\\ of Molecules and Materials]{Review and Benchmark of Representations\\ of Molecules and Materials}
+\label{part:representations}
+
+\thispagestyle{plain}
+\begin{center}
+  \begin{minipage}{0.8\textwidth}
+
+    \vspace{4\baselineskip}
+
+    Such is the allegory of otherness vanquished and condemned to the servile fate of resemblance. Our image in the mirror is not innocent, then. Behind every reflection, every resemblance, every representation, a defeated enemy lies concealed. The Other vanquished, and condemned merely to be the Same. This casts a singular light on the problem of representations \el
+
+    \vspace{\baselineskip}
+    {\hfill\raggedright -- Jean Baudrillard, \textit{The Perfect Crime}\hspace{0.25cm}}
+  \end{minipage}
+\end{center}
+\vspace{2\baselineskip}
+
+\newthought{The definition of suitable input features} is a highly relevant aspect of the construction of \ml models, in particular those which do not rely on deep learning.\footnote[][3\baselineskip]{In such systems, for instance graph-based potentials discussed in \cref{ch:glps}, a rudimentary initial graph representation, which ensures translational invariance, is then augmented through \emph{learned} transformations into a richer representation. The architecture of the \nn itself has to ensure remaining invariances, for example permutation invariance through the use of commutative aggregation functions.}
+In this part of the thesis, we consider the design of such features for atomistic \ml, and particularly focus on those fulfilling fundamental physical invariances.
+We term such features \emph{representations}. 
+
+The role, requirements and different types of representations are discussed in \cref{ch:repsb}. Then, in \cref{ch:repsr}, we comprehensively survey the landscape of available representations, and discuss selected representations in detail. Finally, in \cref{ch:repsbench}, we empirically compare those selected representations, benchmarking energy predictions for organic molecules, binary alloys, and Al-Ga-In sesquioxides in numerical experiments controlled for data distribution, regression method, and \gls{hp} optimisation.
+
+\newthought{Overall, we find that, despite the wide variety} of available representations, many common construction principles, as well as an overall taxonomy, can be identified. Mainly, we distinguish between local and global representations and between using invariant $k$-body functions and explicit symmetrisation to deal with invariances.
+Empirically, when controlling for other factors,
+% keeping regression method and \hp optimisation fixed, 
+similar behaviour is observed across representations. In particular, both prediction accuracy and computational cost increase with interaction order.
+% Local representations generally outperform global ones.
+
+\clearpage
+\subsection*{Publications}
+The presented work has been published as:\\\\
+``Representations of molecules and materials for interpolation of\\ quantum-mechanical simulations via machine learning,''\\
+\textit{by} Marcel F. Langer, Alex Goeßmann, and Matthias Rupp\\
+\textit{in} npj Computational Materials \textbf{8}, 41 (2022)\\
+\href{https://doi.org/10.1038/s41524-022-00721-x}{\texttt{doi:10.1038/s41524-022-00721-x}}\\
+Referenced as \cite{lgr2022q}.
+\\\\
+Figures and text have been adapted from this publication with the kind permission of my coauthors, as permitted under the terms of the Creative Commons Attribution 4.0 International License,\\
+\nicelink{https://creativecommons.org/licenses/by/4.0/}.
+% Only work where I contributed significantly has been included in this thesis.
+
+
+\subsection*{Data and Code Availability}
+Both data and code for the findings reported in this chapter are publicly available.
+The study was performed with the \texttt{cmlkit} package, which is discussed in \cref{sec:si-cmlkit}.
+\\\\
+The following repositories are related to this work:
+\begin{itemize}
+  \item \nicelink{https://gitlab.com/repbench/repbench-project} contains all additional code specific to this project. It is available at\\ \nicelink{https://marcel.science/repbench}.
+  \item \nicelink{https://gitlab.com/repbench/repbench-datasets} contains the used data splits and the datasets in \cmlkit format.
+  \item \nicelink{https://gitlab.com/repbench/repbench-results} contains the data underlying all plots and tables, including the optimised models and \hp search spaces.
+\end{itemize}

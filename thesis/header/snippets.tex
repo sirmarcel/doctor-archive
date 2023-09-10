@@ -1,0 +1,286 @@
+%!TEX root = da.tex
+
+% deprecated
+\newcommand{\abr}[1]{\textsc{#1}}
+% \newcommand{\mlp}{\abr{mlp}}
+% \newcommand{\mlps}{\abr{mlp}s}
+% \newcommand{\mpnn}{\abr{mpnn}}
+% \newcommand{\mpnns}{\abr{mpnn}s}
+% \newcommand{\hfacf}{\abr{hfacf}}
+
+
+
+% General
+\newcommand{\scare}[1]{\lq#1\rq} 
+\newcommand{\newterm}[1]{\emph{#1}}
+\newcommand{\etal}{et~al.}
+\newcommand{\el}{{\,\ldots}\xspace}
+\newcommand{\yes}{\checkmark}
+\newcommand{\no}{$\times$}
+\newcommand{\quotes}[1]{``#1''}
+
+\newcommand{\symset}[1]{\mathcal{#1}}  % symbol of a set
+% \newcommand{\curlyset}[2]{\{\, #1\, |\, #2 \, \}}
+\newcommand{\curlyset}[2]{\Set{#1 | #2}}
+
+
+% Shorthand
+
+\newcommand{\zro}{\ch{ZrO2}}
+
+\newcommand{\dsgdb}{\texttt{qm9}\xspace}
+\newcommand{\dsba}{\texttt{ba10}\xspace}
+\newcommand{\dstco}{\texttt{nmd18}\xspace} % was: tco3; Christopher Sutton prefers NMD18
+\newcommand{\dstcou}{\texttt{nmd18u}\xspace}
+\newcommand{\dstcor}{\texttt{nmd18r}\xspace}
+
+
+
+% GK
+\newcommand{\tk}{\boldsymbol{\kappa}}
+\newcommand{\kt}{\kappa(\tau)}
+\newcommand{\ehfacf}{C}
+\newcommand{\ehfacft}{\boldsymbol{C}}
+\newcommand{\tc}{t_{\text{c}}}
+\newcommand{\nhf}{n_{\text{hf}}}
+\newcommand{\omegaf}{\omega_{\text{filter}}}
+\newcommand{\keps}{\epsilon_{\text{c}}}
+\newcommand{\coco}[2]{(#1, \qty{#2}{ns})}
+\newcommand{\zrocc}{\coco{1500}{1}}
+\newcommand{\zrouc}{\coco{96}{0.1}}
+\newcommand{\zrosc}{\coco{768}{0.5}}
+\newcommand{\snsecc}{\coco{864}{2}}
+
+% ... J
+\newcommand{\J}{\boldsymbol{J}}
+\newcommand{\Jfull}{\boldsymbol{J}_\text{full}}
+\newcommand{\Jgauge}{\boldsymbol{P}}
+\newcommand{\Jint}{\boldsymbol{J}_\text{int}}
+\newcommand{\Jdiff}{\boldsymbol{J}_\text{disp}}
+\newcommand{\Jpot}{\boldsymbol{J}_\text{pot}}
+\newcommand{\Jconv}{\boldsymbol{J}_\text{conv}}
+\newcommand{\Jintrt}{\boldsymbol{J}_{\text{int}}^{\boldsymbol{r}(t)}}
+\newcommand{\Jmpnn}{\J_{\text{Hardy}}^{\text{MPNN}}}
+\newcommand{\Jglp}{\J_{\text{Hardy}}^{\text{GLP}}}
+\newcommand{\Jdft}{\J_{\text{virial}}}
+\newcommand{\Jfan}{\J_{\text{Fan}}}
+\newcommand{\Junfolded}{\Jhardy^{\text{unfolded}}}
+\newcommand{\Jhardy}{\J_{\text{Hardy}}}
+\newcommand{\Jvirial}{\J_{\text{virial}}}
+
+% the next generation
+\newcommand{\Junf}{\J^{\text{unfolded}}_\text{pot}}
+\newcommand{\Jmic}{\J^{\text{mic}}_\text{pot}}
+\newcommand{\Jloc}{\J^{\text{local}}_\text{pot}}
+\newcommand{\Jsl}{\J^{\text{semi-local}}_\text{pot}}
+\newcommand{\Jedg}{\J^{\text{edges}}_\text{pot}}
+
+% ... without the pot suffix
+\newcommand{\Jgunf}{\J^{\text{unfolded}}}
+\newcommand{\Jgmic}{\J^{\text{mic}}}
+\newcommand{\Jgloc}{\J^{\text{local}}}
+\newcommand{\Jgsl}{\J^{\text{semi-local}}}
+\newcommand{\Jgedg}{\J^{\text{edges}}}
+
+% ... densities
+\newcommand{\densj}{\boldsymbol{j}}
+\newcommand{\dense}{e}
+\newcommand{\densgauge}{\boldsymbol{p}}
+\newcommand{\localf}[1]{\Delta(#1)}
+\newcommand{\bondf}[2]{\Lambda_{#1}(#2)}
+
+
+% MD
+\newcommand{\phasp}[2]{\Gamma_{#1}^{#2}} % phase-space point
+\newcommand{\fullphasp}{\boldsymbol{\Gamma}} % phase-space
+\newcommand{\ensemble}{\mathcal{E}}
+\newcommand{\td}{t_0}
+\newcommand{\Td}{T_0}
+\newcommand{\nens}{n}
+\newcommand{\Hamiltonian}{\mathcal{H}}
+\newcommand{\dt}{\Delta t}
+
+% Graphs/MPNN
+\newcommand{\dur}[3]{\frac{\partial U_{#1}}{\partial \R_{#2#3}}}
+\newcommand{\durm}[3]{\frac{\partial U_{#1}}{\partial \Rm_{#2#3}}}
+\newcommand{\indur}[3]{\partial U_{#1} / \partial \R_{#2#3}}
+\newcommand{\indurm}[3]{\partial U_{#1} / \partial \Rm_{#2#3}}
+
+\newcommand{\state}[2]{\boldsymbol{s}_{#1}^{#2}}
+\newcommand{\msg}[2]{\boldsymbol{m}_{#1}^{#2}}
+\newcommand{\nbh}[1]{\symset{N}(#1)}
+\newcommand{\nbht}[1]{\symset{N}^\interactions\!(#1)}
+\newcommand{\msgf}[1]{\boldsymbol{M}_{#1}}
+\newcommand{\updatef}[1]{\boldsymbol{F}_{#1}}
+\newcommand{\edge}[2]{\boldsymbol{r}_{#1#2}}
+
+\newcommand{\interactions}{M}
+\newcommand{\cutoff}{r_{\text{c}}}
+\newcommand{\onset}{r_{\text{o}}}
+\newcommand{\effcutoff}{\cutoff^{\text{eff}}}
+\newcommand{\maxcutoff}{\cutoff^{\text{max}}}
+\newcommand{\skin}{r_{\text{tol}}}
+\newcommand{\fcutoff}{f_{\text{c}}}
+
+\newcommand{\graph}{\mathcal{G}}
+\newcommand{\graphunf}{\mathcal{G}^{\text{unf}}}
+\newcommand{\vertices}{\mathcal{V}}
+\newcommand{\edges}{\mathcal{E}}
+\newcommand{\edgest}[1]{\mathcal{E}^\interactions\!(#1)}
+
+\newcommand{\patch}[1]{\mathcal{P}(#1)}
+
+% Statistics
+\newcommand{\sampled}{\,\sim\,}
+
+% ML/KRR
+
+% \newcommand{\targetf}{f}
+% \newcommand{\approxf}{f}
+% \newcommand{\krrweight}{\alpha}
+\newcommand{\inspace}{\symset{V}}
+\newcommand{\outspace}{\symset{O}}
+\newcommand{\featsp}{\symset{H}}
+
+% Math + Physics general
+\renewcommand{\vec}[1]{\boldsymbol{#1}}
+\newcommand{\grad}{\vec{\nabla}}
+\newcommand{\mat}[1]{\boldsymbol{#1}}
+\newcommand{\transpose}{\top}
+\newcommand{\defvec}[2]{\left[\, #1\, |\, #2 \, \right]^\transpose}
+\newcommand{\defvect}[2]{\left[\, #1\, |\, #2 \, \right]}
+
+\newcommand{\op}[1]{\hat #1}
+\newcommand{\opr}{\hat{\boldsymbol{r}}}
+\newcommand{\opre}{\hat{\boldsymbol{r}}^{\text{e}}}
+\newcommand{\opp}{\hat{\boldsymbol{p}}}
+\newcommand{\oppe}{\hat{\boldsymbol{p}}^{\text{e}}}
+\newcommand{\mel}{m^\text{e}}
+
+\newcommand{\R}{\boldsymbol{r}}
+\newcommand{\Rr}{\boldsymbol{r}^0}
+\newcommand{\Rnorm}{\overline{\boldsymbol{{r}}}}
+\newcommand{\Rrm}{\boldsymbol{r}^{0,\text{mic}}}
+\newcommand{\Rm}{\boldsymbol{r}^{\text{mic}}}
+\newcommand{\Rconst}{\boldsymbol{r}^{\text{const}}}
+
+% \newcommand{\Re}{\boldsymbol{r}^\text{e}}  % electron position
+
+\newcommand{\Rf}{\boldsymbol{x}}
+\newcommand{\Rfc}{x}
+
+\newcommand{\aprop}{\boldsymbol{P}}
+
+\newcommand{\U}{\boldsymbol{u}}
+\newcommand{\V}{\boldsymbol{v}}
+\newcommand{\momentum}{\boldsymbol{p}}
+\newcommand{\F}{\boldsymbol{F}}
+\newcommand{\Bary}{\boldsymbol{B}}
+\newcommand{\intd}{\text{d}}
+\newcommand{\B}[1]{\mathbf{#1}}
+\newcommand{\integral}[1]{\int_{#1} \, \text{d}}
+\newcommand{\limitintegral}[2]{\int_{#1}^{#2} \, \text{d}}
+\newcommand{\dirac}[1]{\delta(#1)}
+\newcommand{\defas}{\coloneqq}  % needs \usepackage{mathtools}
+\newcommand{\defdas}{\eqqcolon}
+\newcommand{\mbeq}{\overset{!}{=}}
+
+
+
+\newcommand{\totaldiff}[1]{\frac{\intd}{\intd #1}}
+\newcommand{\totaldifff}[2]{\frac{\intd #1}{\intd #2}}
+\newcommand{\partdiff}[1]{\frac{\partial}{\partial #1}}
+\newcommand{\partdifff}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\wholes}{{\bf Z}}
+\newcommand{\reals}{{\bf R}}
+\newcommand{\matone}{{\bf 1}}
+
+\newcommand{\zerovec}{\boldsymbol{0}}
+
+\newcommand{\bigo}[1]{O(#1)}
+
+\newcommand{\magnitude}[1]{|#1|}
+
+\newcommand{\trace}[1]{\text{tr}(#1)}
+
+% Quantum Chemistry
+\newcommand{\Hel}{\op{H}_{\text{el}}}
+
+% Solid State
+\newcommand{\stress}{\boldsymbol{\sigma}}
+\newcommand{\stressc}{\sigma}
+\newcommand{\strain}{\boldsymbol{\epsilon}}
+\newcommand{\strainc}{\epsilon}
+
+\newcommand{\virial}{\boldsymbol{\Omega}}
+
+% Groups and stuff
+\newcommand{\euc}{\text{E}}
+\newcommand{\sog}{\text{SO}}
+\newcommand{\og}{\text{O}}
+
+
+% describing atomistic systems
+\newcommand{\atom}{\mathcal{A}}
+\newcommand{\system}{\mathcal{M}}
+\newcommand{\train}{\mathcal{D}_{\text{train}}}
+\newcommand{\test}{\mathcal{D}_{\text{test}}}
+\newcommand{\ntrain}{n}
+
+\newcommand{\basis}{\boldsymbol{b}}
+\newcommand{\offset}{\boldsymbol{n}}
+\newcommand{\recip}{\boldsymbol{a}}
+\newcommand{\recipn}{\overline{\bm{a}}}
+
+\newcommand{\Rgen}{\symset{R}}
+\newcommand{\Rsc}{\symset{R_{\text{sc}}}}
+\newcommand{\Rrep}{\symset{R_{\text{rep}}}}
+\newcommand{\Rall}{\symset{R_{\text{all}}}}
+\newcommand{\Runf}{\symset{R_{\text{unf}}}}
+\newcommand{\Basis}{\symset{B}}
+\newcommand{\Recip}{\symset{A}}
+\newcommand{\Charges}{\symset{Z}}
+\newcommand{\Properties}{\symset{P}}
+
+\newcommand{\Momenta}{\symset{P}}
+
+\newcommand{\nsurf}{\boldsymbol{a}}
+
+\newcommand{\anha}{\sigma^{\text{A}}}
+
+% Reps
+\newcommand{\rep}{R}
+
+% \newcommand{\MM}{\boldsymbol{M}}
+% \newcommand{\M}{\boldsymbol{m}}
+
+\DeclareMathOperator*{\argmin}{arg\,min} % thin space, limits underneath in displays
+% \DeclareMathOperator*{\argmin}{argmin} % no space, limits underneath in displays
+
+% URLS
+\newcommand{\nicelink}[1]{\href{#1}{\texttt{#1}}}
+\newcommand{\nicedoi}[1]{\href{https://doi.org/#1}{\texttt{doi:#1}}}
+
+% Papers
+\newcommand{\PaperReps}{
+``Representations of molecules and materials for interpolation of\\ quantum-mechanical simulations via machine learning,''\\
+\textit{by} Marcel F. Langer, Alex Goeßmann, and Matthias Rupp\\
+\textit{in} npj Computational Materials \textbf{8}, 41 (2022)\\
+\href{https://doi.org/10.1038/s41524-022-00721-x}{\texttt{doi:10.1038/s41524-022-00721-x}}\\
+Referenced as \cite{lgr2022q}.}
+
+\newcommand{\PaperHF}{
+``Heat flux for semilocal machine-learning potentials,''\\
+\textit{by} Marcel F. Langer, Florian Knoop, Christian Carbogno, Matthias Scheffler, and Matthias Rupp\\
+\textit{in} Physical Review B \textit{in press}\\
+\href{https://arxiv.org/abs/2303.14434}{\texttt{arXiv:2303.14434}}\\
+Referenced as \cite{lksr2023a}.	
+}
+
+\newcommand{\PaperGLP}{
+``Stress and heat flux via automatic differentiation,''\\
+\textit{by} Marcel F. Langer, J. Thorben Frank, and Florian Knoop\\	
+\textit{in revision}\\
+\href{https://arxiv.org/abs/2305.01401}{\texttt{arXiv:2305.01401}}\\
+Referenced as \cite{lfk2023a}.	
+}

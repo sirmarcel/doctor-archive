@@ -1,0 +1,151 @@
+
+\begin{tikzpicture}[
+    x = 1.65cm,
+    y = 1.3cm,
+    >=stealth,
+    atom/.style = {circle, fill=black, minimum size=4pt,
+    inner sep=0pt, outer sep=0pt},
+    replica/.style = {circle, fill=black, minimum size=4pt,
+    inner sep=0pt, outer sep=0pt, opacity=0.5},
+]
+
+\node[replica] (rep_0_00) at (0.0,0.0){};
+    \node[replica, fill=orange, opacity=1] (rep_1_00) at (0.5,0.4){};
+    \node[replica] (rep_2_00) at (1.2,0.5){};
+    \node[replica] (rep_3_00) at (1.2,1.4){};
+    \node[replica] (rep_4_00) at (1.7,1.0){};
+    \draw [dashed] (0.0,0.0) -- (2.0,0.0);
+    \draw [dashed] (0.0,0.0) -- (0.0,1.4);
+    \node[replica] (rep_0_01) at (0.0,1.4){};
+    \node[replica, fill=orange, opacity=1] (rep_1_01) at (0.5,1.7999999999999998){};
+    \node[replica] (rep_2_01) at (1.2,1.9){};
+    \node[replica] (rep_3_01) at (1.2,2.8){};
+    \node[replica] (rep_4_01) at (1.7,2.4){};
+    % \draw [dashed] (0.0,1.4) -- (2.0,1.4);
+    \draw [dashed] (0.0,1.4) -- (0.0,2.8);
+    \node[replica] (rep_0_02) at (0.0,2.8){};
+    \node[replica, fill=orange, opacity=1] (rep_1_02) at (0.5,3.1999999999999997){};
+    \node[replica] (rep_2_02) at (1.2,3.3){};
+    \node[replica] (rep_3_02) at (1.2,4.199999999999999){};
+    \node[replica] (rep_4_02) at (1.7,3.8){};
+    % \draw [dashed] (0.0,2.8) -- (2.0,2.8);
+    \draw [dashed] (0.0,2.8) -- (0.0,4.199999999999999);
+    \node[replica] (rep_0_10) at (2.0,0.0){};
+    \node[replica, fill=orange, opacity=1] (rep_1_10) at (2.5,0.4){};
+    \node[replica] (rep_2_10) at (3.2,0.5){};
+    \node[replica] (rep_3_10) at (3.2,1.4){};
+    \node[replica] (rep_4_10) at (3.7,1.0){};
+    \draw [dashed] (2.0,0.0) -- (4.0,0.0);
+    % \draw [dashed] (2.0,0.0) -- (2.0,1.4);
+    \node[atom] (atom_0) at (2.0,1.4){};
+    \node[atom, fill=orange, opacity=1] (atom_1) at (2.5,1.7999999999999998){};
+    \node[atom] (atom_2) at (3.2,1.9){};
+    \node[atom] (atom_3) at (3.2,2.8){};
+    \node[atom] (atom_4) at (3.7,2.4){};
+    % \draw [dashed] (2.0,1.4) -- (4.0,1.4);
+    % \draw [dashed] (2.0,1.4) -- (2.0,2.8);
+    \node[replica] (rep_0_12) at (2.0,2.8){};
+    \node[replica, fill=orange, opacity=1] (rep_1_12) at (2.5,3.1999999999999997){};
+    \node[replica] (rep_2_12) at (3.2,3.3){};
+    \node[replica] (rep_3_12) at (3.2,4.199999999999999){};
+    \node[replica] (rep_4_12) at (3.7,3.8){};
+    % \draw [dashed] (2.0,2.8) -- (4.0,2.8);
+    % \draw [dashed] (2.0,2.8) -- (2.0,4.199999999999999);
+    \node[replica] (rep_0_20) at (4.0,0.0){};
+    \node[replica, fill=orange, opacity=1] (rep_1_20) at (4.5,0.4){};
+    \node[replica] (rep_2_20) at (5.2,0.5){};
+    \node[replica] (rep_3_20) at (5.2,1.4){};
+    \node[replica] (rep_4_20) at (5.7,1.0){};
+    \draw [dashed] (4.0,0.0) -- (6.0,0.0);
+    % \draw [dashed] (4.0,0.0) -- (4.0,1.4);
+    \node[replica] (rep_0_21) at (4.0,1.4){};
+    \node[replica, fill=orange, opacity=1] (rep_1_21) at (4.5,1.7999999999999998){};
+    \node[replica] (rep_2_21) at (5.2,1.9){};
+    \node[replica] (rep_3_21) at (5.2,2.8){};
+    \node[replica] (rep_4_21) at (5.7,2.4){};
+    % \draw [dashed] (4.0,1.4) -- (6.0,1.4);
+    % \draw [dashed] (4.0,1.4) -- (4.0,2.8);
+    \node[replica] (rep_0_22) at (4.0,2.8){};
+    \node[replica, fill=orange, opacity=1] (rep_1_22) at (4.5,3.1999999999999997){};
+    \node[replica] (rep_2_22) at (5.2,3.3){};
+    \node[replica] (rep_3_22) at (5.2,4.199999999999999){};
+    \node[replica] (rep_4_22) at (5.7,3.8){};
+    % \draw [dashed] (4.0,2.8) -- (6.0,2.8);
+    % \draw [dashed] (4.0,2.8) -- (4.0,4.199999999999999);
+    \draw [solid, very thick] (2.0,1.4) -- (4.0,1.4);
+\draw [solid, very thick] (4.0,1.4) -- (4.0,2.8);
+\draw [solid, very thick] (4.0,2.8) -- (2.0,2.8);
+\draw [solid, very thick] (2.0,2.8) -- (2.0,1.4);
+\draw [dashed] (6.0,0.0) -- (6.0,4.199999999999999);
+\draw [dashed] (6.0,4.199999999999999) -- (0.0,4.199999999999999);
+
+\draw [teal, solid, very thick] (atom_1) -- (atom_0);
+\draw [teal, solid, very thick] (atom_1) -- (atom_2);
+\draw [teal, solid, very thick] (atom_1) -- (atom_4);
+\draw [teal, solid, very thick] (atom_1) -- (rep_3_10);
+\draw [teal, solid, very thick] (atom_1) -- (rep_4_00);
+
+% 2.5, 1.8 - 3.2, 1.4 = +0.7, -0.4
+% 2.5, 1.8 - 1.7, 1.0 = +0.8, +0.8
+
+\draw [teal, solid, thick] (rep_1_22) -- (rep_0_22);
+\draw [teal, solid, thick] (rep_1_22) -- (rep_2_22);
+\draw [teal, solid, thick] (rep_1_22) -- (rep_4_22);
+\draw [teal, solid, thick] (rep_1_22) -- (atom_4);
+\draw [teal, solid, thick] (rep_1_22) -- (rep_3_21);
+
+\draw [teal, solid, thick] (rep_1_21) -- (rep_0_21);
+\draw [teal, solid, thick] (rep_1_21) -- (rep_2_21);
+\draw [teal, solid, thick] (rep_1_21) -- (rep_4_21);
+\draw [teal, solid, thick] (rep_1_21) -- (rep_4_10);
+\draw [teal, solid, thick] (rep_1_21) -- (rep_3_20);
+
+\draw [teal, solid, thick] (rep_1_20) -- (rep_0_20);
+\draw [teal, solid, thick] (rep_1_20) -- (rep_2_20);
+\draw [teal, solid, thick] (rep_1_20) -- (rep_4_20);
+\draw [teal, solid, thick] (rep_1_20) -- (3.7,-0.4);
+\draw [teal, solid, thick] (rep_1_20) -- (5.2,0.0);
+
+
+\draw [teal, solid, thick] (rep_1_10) -- (rep_0_10);
+\draw [teal, solid, thick] (rep_1_10) -- (rep_2_10);
+\draw [teal, solid, thick] (rep_1_10) -- (rep_4_10);
+\draw [teal, solid, thick] (rep_1_10) -- (1.7,-0.4);
+\draw [teal, solid, thick] (rep_1_10) -- (3.2,0.0);
+
+\draw [teal, solid, thick] (rep_1_00) -- (rep_0_00);
+\draw [teal, solid, thick] (rep_1_00) -- (rep_2_00);
+\draw [teal, solid, thick] (rep_1_00) -- (rep_4_00);
+\draw [teal, solid, thick] (rep_1_00) -- (-0.3,-0.4);
+\draw [teal, solid, thick] (rep_1_00) -- (1.2,0.0);
+
+
+\draw [teal, solid, thick] (rep_1_01) -- (rep_0_01);
+\draw [teal, solid, thick] (rep_1_01) -- (rep_2_01);
+\draw [teal, solid, thick] (rep_1_01) -- (rep_4_01);
+\draw [teal, solid, thick] (rep_1_01) -- (-0.3,1.0);
+\draw [teal, solid, thick] (rep_1_01) -- (rep_3_00);
+
+\draw [teal, solid, thick] (rep_1_02) -- (rep_0_02);
+\draw [teal, solid, thick] (rep_1_02) -- (rep_2_02);
+\draw [teal, solid, thick] (rep_1_02) -- (rep_4_02);
+\draw [teal, solid, thick] (rep_1_02) -- (-0.3,2.4);
+\draw [teal, solid, thick] (rep_1_02) -- (rep_3_01);
+
+
+\draw [teal, solid, thick] (rep_1_12) -- (rep_0_12);
+\draw [teal, solid, thick] (rep_1_12) -- (rep_2_12);
+\draw [teal, solid, thick] (rep_1_12) -- (rep_4_12);
+\draw [teal, solid, thick] (rep_1_12) -- (rep_4_01);
+\draw [teal, solid, thick] (rep_1_12) -- (atom_3);
+
+% bonus: draw lines extending out up to some arbitrary tolerance
+
+\draw [teal, solid, thick] (rep_4_20) -- (6.2,1.5);
+\draw [teal, solid, thick] (rep_4_21) -- (6.2,2.9);
+\draw [teal, solid, thick] (rep_4_22) -- (6.2,4.3);
+\draw [teal, solid, thick] (rep_4_12) -- (4.2,4.3);
+\draw [teal, solid, thick] (rep_4_02) -- (2.2,4.3);
+
+
+\end{tikzpicture}

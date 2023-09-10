@@ -1,0 +1,208 @@
+%!TEX root = ../../da.tex
+
+\chapter{Molecular Dynamics}
+\label{ch:md}
+
+% \begin{chapquote}{ChatGPT on Molecular Dynamics}
+% 	Molecular dynamics: the study of atoms on the move.
+% \end{chapquote}
+
+\noindent
+In the previous section, we concluded that, under appropriate assumptions, we can compute the classical\footnote{We note in passing that methods to treat nuclei in a quantum mechanical way exist. In principle, one has to solve the nuclear Schrödinger equation given by \cref{eq:qm-qbopes}. In practice, some quantities can be extracted from modified \md approaches. For instance, the quantum mechanical partition function can be computed by executing multiple dynamics simulations in parallel, coupling each replica via a spring. This \scare{ring polymer} system, in the infinite-replica limit, can then be mapped onto the quantum system. Such a \newterm{path-integral} \md treatment can become necessary at low temperatures and for light atoms.~\cite{tbmk1993p}
+
+We do not consider this further, but remark that \mlps offer an intriguing way to manage the high computational cost of such approaches.} potential energy $U$ of an atomistic system and obtain forces $\F_i = -\indur{}{i}{}$ acting on each atom via the Hellmann-Feynman theorem.
+
+% excessive
+% \footnote{From this point onwards, we will use \scare{atom} and \scare{nucleus} interchangeably.}
+
+We are therefore in a position to apply the machinery of classical mechanics, having successfully isolated quantum mechanical behaviour inside the electronic energy $E_0$.
+This section briefly discusses how this leads to \glsfirst{md}, the practice of simulating the movement of atoms on the \bo \pes by integrating their equations of motion.
+We begin with introducing these equations of motion, and then discuss how their numerical integration can be used to investigate thermodynamic properties. We conclude by discussing the use of approximate \pes such as \ffs and \mlps.
+
+\section{Equations of Motion}
+
+\marginnote[1\baselineskip]{We now drop any explicit dependence on the atomic masses $m_i$ and the charges, as they do not change during dynamics.
+% The charges in particular also determine the number of electrons, and changing them would yield a different \pes.
+% yeah but there are charged systems. let's not open this can of proverbial worms
+}
+We can study dynamical behaviour of our system by formulating the classical Hamiltonian from \cref{eq:qm-qbopes} for a given set of positions $\Rgen$ and momenta $\Momenta \defas \curlyset{\momentum_i}{i=1...N}$, which we combine in a phase-space point $\phasp{}{} \defas (\Rgen, \Momenta)$.
+To highlight time-dependence, we write\\
+$\phasp{}{t} \defdas (\Rgen(t), \Momenta(t)) \defas (\curlyset{\R_i(t)}{i=1...N}, \curlyset{\momentum_i(t)}{i=1...N}) $.
+
+The classical Hamiltonian is then
+\begin{equation}
+	\Hamiltonian(\phasp{}{t}) = \sum_{i=1}^{N} \frac{\momentum_i(t)^2}{2 m_i} + U(\Rgen(t)) \, . \label{eq:md-H}
+\end{equation}
+From this Hamiltonian, we can deduce the equations of motion for the phase-space coordinates, arriving at Newton's equations of motion.\footnote[][-4\baselineskip]{The equations of motion are
+	\begin{align*}
+		\dot \R_i(t) &= \frac{\partial \Hamiltonian}{\partial \momentum_i(t)} = \momentum_i(t) / m_i \\
+		\dot \momentum_i(t) &= -\frac{\partial \Hamiltonian}{\partial \R_i(t)} = -\frac{\partial U(t)}{\partial \R_i(t)} = \F_i(t) \, . \label{eq:md-eom}
+	\end{align*}
+} In practice, as we do not have access to a closed-form solution for $\F_i$, these equations of motion must be solved numerically, typically by integrating them from a chosen starting configuration $\phasp{}{t=0}$. 
+
+In the present work, we employ the \newterm{velocity Verlet} integrator~\cite{v1967p},\footnote[][-2\baselineskip]{
+	In particular, $t\rightarrow t+\dt$ entails~\cite{tuckerman2010}
+	\begin{align*}
+		\momentum_i(t+\frac{1}{2} \dt) &= \momentum_i(t) + \frac{1}{2} \dt \F_i(t) \\
+		\R_i(t+\dt) &= \R_i(t) + \dt \frac{\momentum_i(t+\frac{1}{2} \dt)}{m_i} \\
+		\F_i(t+\dt) &= - \frac{\partial U(\Rgen(t+\dt))}{\partial \R_i(t+\dt)} \\
+		\momentum_i(t+\dt) &= \momentum_i(t+\frac{1}{2} \dt) + \frac{1}{2 m_i} \dt \F_i(t+\dt) \, .
+	\end{align*}
+} incurring error in the positions and velocities of $\bigo{\dt^4}$ per timestep $\dt$ and $\bigo{\dt^2}$ over the course of the simulation. The scheme is symplectic\footnote{Loosely speaking, this property ensures that while total energy can fluctuate slightly during the simulation, there exists an auxiliary Hamiltonian for which energy is conserved exactly.
+% let's just completely ignore it, actually
+% A consequence of this is that the relationship between velocities and momenta becomes can become non-linear~\cite{gs2000p} -- a consideration that we ignore at present.
+} and time-reversible, and requires only a single evaluation of forces per timestep.
+This time-evolution describes an isolated system in the micro-canonical, or $NVE$ ensemble, with fixed number of particles $N$, volume $V$, and energy $E$.
+% DO NOT FUCK WITH THIS -- THE LAYOUT CANNOT HANDLE THIS BEING ANY LONGER!!!!
+
+
+\newthought{We now consider simulations} at other conditions. One such case is the canonical ensemble, $NVT$, i.e., simulations with a set temperature rather than a fixed energy. One approach to this problem is to modify the equations of motion with an additional stochastic term.\footnote{In particular, we add
+\begin{equation*}
+	\dot \momentum_i(t) = \F_i(t) - \gamma \momentum_i(t) + \sqrt{2 k_{\text{B}} T \gamma m_i} \boldsymbol{\eta}(t) \, ,
+\end{equation*}
+where $\boldsymbol{\eta}(t)$ is a stochastic noise term, $k_{\text{B}}$ the Boltzmann constant, and $\gamma$ the coupling strength.
+} Overall, these modified \newterm{Langevin} equations of motion~\cite{ss1978p} model the system in contact with a thermal bath;\footnote{Operationally, they describe the force on each particle being augmented with a random \scare{kick} that injects energy into the system.} it is subject to a \newterm{thermostat}.
+% One refers to \md modified in this manner as \scare{thermostatted}, and the process added to the time-evolution as the \scare{thermostat}.
+
+These equations of motion can be numerically integrated, similar to the $NVE$ case~\cite{vc2006p,bp2007p}. Many other approaches exist, for instance the Nosé-Hoover family of methods~\cite{n1984p,h1985p,mkt1992p}, which introduce an auxiliary system, or stochastic velocity rescaling~\cite{bdp2007p}, which directly modifies the velocities. The latter method aims to overcome shortcomings in previous approaches, such as the lack of a conserved quantity in Langevin dynamics, or the requirement for chains of Nosé-Hoover thermostats to correct lack of ergodicity in some systems.
+
+\newthought{Finally, we consider constant pressure} and temperature, the isothermal-isobaric $NpT$ ensemble, additionally introducing a \newterm{barostat}, which ensures that the system reaches, or remains at, a certain pressure.\footnote[][-4\baselineskip]{The pressure in this context is defined in terms of the stress $\stress = \stress_{\text{kin}} + \stress_{\text{pot}}$. The former term is simply
+\begin{equation}
+	\stressc_{\text{kin}}^{\alpha \beta} = \sum_i\nolimits -1/V p^\alpha_i p^\beta_i / m_i \, ,
+\end{equation}
+the contribution of an ideal gas, while the latter is the strain derivative of $U$.
+The pressure is then simply $-1/3\, \trace{\stress}$.}
+A simple barostat/thermostat was introduced by Berendsen~\etal~\cite{bpdh1984p}.
+In principle, it modifies positions and velocities at each timestep to minimise the deviations relative to the target temperature and pressure.\footnote{More precisely,
+\begin{align*}
+	\R_i(t) &\rightarrow \R_i(t) \cdot \left(1 - \dt \lambda_{\text{p}} (p - p(t))\right) \\
+	\momentum_i(t) &\rightarrow \momentum_i(t) \cdot \sqrt{1 + \dt \lambda_{\text{T}} (T/T(t)-1)} \, ,
+\end{align*}
+with parameters $\lambda$. These modifications must then be added to the numerical integration of the equations of motion.
+}
+The Berendsen approach yields efficient volume equilibration, but incorrect volume fluctuations and kinetic energy distribution, among other problems~\cite{s2013p}.
+Nevertheless, it remains the only $NpT$ method currently implemented in the \texttt{ase}~\cite{ase} package, which \texttt{FHI-vibes}~\cite{FHI-vibes} relies on, and it is used in this thesis to generate training data, for which we find this approach to be sufficient.
+% \footnote{It also has the advantage of being straightforward to modify for non-isotropic changes to the simulation cell.}
+
+% \marginnote{Implementations of many modern thermostats and barostats can be found in the \texttt{i-pi} package~\cite{ipi}.}
+In cases where such properties must be modeled accurately, alternative, more involved, barostats are used.
+Volume fluctuations can be modelled with the Bussi-Zykova-Parrinello method~\cite{bzp2009p}.
+For general, anisotropic, changes in simulation cell shape, stochastic cell rescaling~\cite{bb2020p,drbb2022p}, or Martyna-Tobias-Klein~\cite{mtk1994p} and Raiteri-Gale-Bussi~\cite{rgb2011p} approaches can be used.
+% done: cite 10.1063/1.3073889 -> bzp2009p "stochastic rescalling"
+% done: cite 10.3390/app12031139, drbb2022p + bb2020p for SCR
+% done: cite 10.1063/1.467468 MTK mtk1994p
+% done: cite 10.1088/0953-8984/23/33/334213 for RGB -> rgb2011p
+% done: cite Ceriotti, More, Manolopoulos, Comp. Phys. Comm. 185, 1019 (2013) for i-pi -> ipi
+
+\section{Thermodynamic Ensembles}
+
+With the considerations in the previous section, we have gained the ability to numerically simulate an atomic system consistent with external constraints such as a constant energy ($NVE$), constant temperature ($NVT$), or constant temperature and pressure ($NpT$) using \gls{md}. Let us now investigate how we can use this ability to compute thermodynamic ensemble averages.
+
+For this, we must first define the notion of a thermodynamic ensemble~\cite[ch.~2]{tuckerman2010}. For present purposes, it is sufficient to define it as a probability distribution $f(\Gamma)$ that assigns each possible configuration\footnote{In statistical mechanics, such a configuration is called a microstate.} of the system a probability. We consider the following ensembles:
+\marginnote[\baselineskip]{The normalisation constants, the partition functions $\mathcal{Z}$, are obtained by integrating over all possible states.}
+\begin{align}
+	&NVE&& \text{micro-canonical} && p(\Gamma) \propto \delta(E(\Gamma) - E) \nonumber\\
+	&NVT&& \text{canonical}       &&  p(\Gamma) \propto \exp{(-\beta E(\Gamma))} \nonumber\\
+	&NpT&& \text{isothermal-isobaric}       &&  p(\Gamma) \propto \exp{(-\beta (E(\Gamma) + P V))} \,,\nonumber
+\end{align}
+where $\beta = 1/(k_{\text{B}} T)$.\marginnote[-0.5\baselineskip]{$k_{\text{B}}$ is the Boltzmann constant, converting from temperature to energy.}
+In many cases, we wish to evaluate expectation values of observables $O(\Gamma)$ of the form
+\begin{equation}
+	\braket{O} = \integral{}\phasp{}{}\, O(\phasp{}{}) p(\phasp{}{}) \, .
+\end{equation}
+\md provides a straightforward way by replacing the integral over $\Gamma$ with an integral over simulation time, under the assumption of ergodicity.\footnote{A system is ergodic when the time average and ensemble average coincide. It is often difficult to prove rigorously for a given system; ergodicity is therefore often simply assumed.} We can then use our ability to numerically simulate the time evolution under a given ensemble, and compute
+\begin{equation}
+	\braket{O} = \lim_{\td \rightarrow \infty} \frac{1}{\td} \limitintegral{0}{\td} \tau\,  O(\phasp{}{\tau}) \, ,
+\end{equation}
+where $\phasp{}{\tau}$ denotes a phase-space point at time $\tau$, after simulation of its time-evolution starting from $\phasp{}{\tau=0}$.
+
+\section{Forcefields and Machine-Learning Potentials}
+\label{sec:ffs}
+
+So far, we have assumed that $U(\Rgen)$ is the \bo \pes, discussing \glsfirst{aimd}~\cite{imt2005p}.\footnote[][-5\baselineskip]{We note in passing that multiple approaches to \gls{aimd} exist. In particular, one can perform a new calculation for every timestep, i.e., new \gls{scf} iterations in the case of \dft, often using the previous density as initial guess to aid convergence. This approach is sometimes called Born-Oppenheimer \md~\cite{imt2005p}. Alternatively, in Car-Parrinello \md~\cite{cp1985p}, the electronic system is included in the dynamics simulation itself with an extended Lagrangian, and the electronic system is then kept at a low temperature, ensuring that it approaches, and then remains in, the ground state. In this thesis, \aimd is always performed with the former approach.} However, the severe computational cost of first-principles methods, even of \dft, limits the size and length scales accessible in \gls{aimd} simulations.\footnote{For illustration, on a single node on the \texttt{raven} \gls{hpc} system with $72$ cores, using the computational settings of \cref{ch:gk-model}, a single step of \gls{aimd} takes approximately four minutes for $96$ atoms. Therefore, $\approx 360$ timesteps can be computed in a day. At a typical timestep of \qty{4}{fs}, \qty{1}{ns} of simulation time would therefore require approximately two years. Such simulations can be performed with \ffs in less than a day.}
+% inpt4 @ 96 atoms took 100 runs of 120 min each for 2500 steps -> 288s/step on 1 node = 72 cores
+% inpt4 @ 324 atoms took 398 ... -> 1146s/step on 5 nodes = 360 cores
+% On one node of the \scare{raven} \gls{hpc} system, using \num{72} cores, one step of \md with $96$ atoms takes approximately five minutes. A system with \num{324} atoms and using \num{360} cores approximately \num{20} minutes.
+
+Convergence of thermodynamic observables can, however, require large simulations over long timescales (see \cref{ch:gk-conv}). The size of the simulated system limits the scale of behaviour that can be modelled; for instance, collective excitations become limited in their wavelength by the size of the simulation cell. Some systems, such as biomolecules and proteins, are challenging to model explicitly with first-principles approaches due to their large number of atoms, and the additional requirement of treating solvents.
+
+These considerations motivate the practice of approximating the \bo \pes with computationally cheaper expressions, so-called \newterm{interatomic potentials}\footnote{We will often refer to them as \scare{potentials} for brevity.} or \ffs~\cite{g2011p}. In fact, the original formulation and application of \md occurred in such a context~\cite{aw1957p,aw1959p,v1967p}, and it remains the most widely used approach in studies of the dynamics of many-atom systems today. We provide a brief overview of key ideas and methods in the following.
+% ; computationally feasible first-principles electronic structure methods were developed much later. 
+
+\newthought{The principle of such approximations} is to replace the many-body function $U(\Rgen)$, which depends jointly on \emph{all} atomic positions, with a parametrised analytical expression constructed from terms that are computed for subsets of $\Rgen$, such as pairs, triplets, or higher-order combinations. Such a \newterm{body-order expansion} will appear again in \cref{ch:repsr}. The parameters of this \ff are then optimised to match experimental values or the results of first-principles calculations.
+
+The computational cost of evaluating the resulting expression can be controlled by two main mechanisms: The truncation of interactions based on pairwise distance, which enables linear scaling with system size $N$,\footnote[][-10\baselineskip]{In this thesis, the limit $N\rightarrow\infty$ is always taken at constant density. In that case, the average number of neighbours of any atom is independent of the overall size of the system. We then further assume that the potential is defined as some function $f$ acting on all neighbours of a given atom with computational cost scaling as $\bigo{c(N_{\text{nbh}})}$, with some cost function $c$. Anticipating the introduction of atomic potential energy contributions below, this function must be evaluated $N$ times, so the overall scaling is $\bigo{N c(N_{\text{nbh}})}$. As $N_{\text{nbh}}$ is bounded, overall scaling is $\bigo{N}$. We note that this argument relies on the assumption of a homogeneous system.} and specialised techniques that make use of the structure of specific interactions to enable favourable computational scaling. For instance, for pairwise Coulomb interactions, where the sum over a periodic system is conditionally convergent~\cite{b2014p}, techniques such as Ewald summation~\cite{e1921p,dyp1993p} or fast multipole methods~\cite{gr1987p,wh1994p} are used to both resolve this issue and enable efficient evaluation.
+
+% \clearpage
+\paragraph{Additive Pairwise Potentials} The first \ff used for \md was a pairwise square well potential~\cite{aw1957p,aw1959p}.\footnote{Defined in reference~\cite{aw1959p}:
+\begin{equation*}
+	V(r) = \begin{cases}
+		\infty &  \text{for } r < r_{\text{a}} \\
+		\text{const.} & \text{for } r_{\text{a}} < r < r_{\text{b}} \\
+		0 &  \text{otherwise,}
+	\end{cases}
+\end{equation*}
+with two radii $r_{\text{a}}$ and $r_{\text{b}}$.}
+Experiments with the Lennard-Jones \cite{l1924p} potential followed shortly after. 
+It is defined as
+\begin{align}
+    U(\Rgen) &= \sum_{ij=1}^N 2 \epsilon \left( \sigma^{12}/r_{ij}^{12} -\sigma^6/r_{ij}^6 \right) \, , \label{eq:ff_lj}
+\end{align}
+with two adjustable parameters $\epsilon$ and $\sigma$; the double sum is often truncated at some cutoff radius\footnote{In practice, a cutoff function is also added to ensure continuity. See \cref{sec:lj-ar} for the form used in this work. Alternatively, Ewald summation can be used to treat all-to-all interactions in periodic systems.} $\cutoff$.
+The Lennard-Jones potential serves as a prototypical example of \newterm{pairwise additive} potentials, which consist of sums of pairwise terms. Other examples include the Buckingham~\cite{bl1938p} and Morse~\cite{m1929p} potential, as well as the pairwise Coulomb potential, which will be discussed further below. The Lennard-Jones potential is employed even today to approximate Van der Waals interactions, and is used in this thesis as a test case for which analytical derivatives are straightforward to obtain, see \cref{ch:glps}.
+
+\paragraph{Many-Body Potentials} However, in such additive pairwise potentials, all pairs of atoms are treated on an equal footing: Atomic bonding is not modeled, leading to the failure of such \newterm{non-bonded} potentials to describe systems with covalent bonds, for instance silicon. For this reason, more complex \newterm{bonded} \ffs were developed, starting with the \gls{eam}~\cite{db1983p,db1984p}, where pairwise interactions are augmented with a modification through the atomic density at $i$, and the \sw~\cite{sw1985p} potential, which added an angle-dependent triplet term in addition to a pairwise interaction.
+
+The Tersoff potential~\cite{t1988p}, introduced shortly after, is defined as 
+\begin{align}
+	U &= \sum_{ij=1}^N U_{ij} \\
+    U_{ij} &= f_{\text{rep.}}(r_{ij}) - b_{ij} f_{\text{attr.}}(r_{ij}) \\
+    b_{ij} &= (1 + \beta^n \zeta_{ij}^n)^{-1/(2n)} \\
+    \zeta_{ij} &= \sum_{k \neq i,j} f_{\text{3-bdy}}(\R_{ij}, \R_{ik}) \, .
+\end{align}
+Here, $b_{ij}$ is a \newterm{bond-order} function, $f_{\text{rep.}}$ and $f_{\text{attr.}}$ a repulsive and attractive pair potential, and $f_{\text{3-bdy}}$ a function that takes the angle between $\R_{ij}$ and $\R_{ik}$ as well as $r_{ij}$ and $r_{ik}$ into account. Other variables are free parameters.
+In this potential, the interaction between atoms $i$ and $j$ is modified by the overall environment of the pair, or bond, under consideration. This idea was extended in the Brenner~\cite{b1990p} potential, modulating interactions based on the bonds of $i$ and $j$. The general idea of modifying pairwise interactions based on atomic environments will occur again in \cref{ch:glps}.
+Since potentials of this type can no longer be decomposed into a sum over pairwise contributions that only depend on $\R_{ij}$, they are also referred to as \newterm{many-body} potentials.
+
+% \clearpage
+\paragraph{Atomic Potential Energy Contributions} Even though \ffs are naturally described in terms of sums over $n$-tuples of atoms, it is conceptually useful to recast them in terms of an additive ansatz,
+\begin{equation}
+	\label{eq:ff-ui}
+	U = \sum_{i=1}^N U_i \, ,
+\end{equation}
+simply collecting terms sharing an index. This gives rise to atomic potential energy contributions $U_i$, which are, however, not uniquely defined: Contributions can be distributed, or \newterm{partitioned}, in different ways without changing $U$ by renaming indices.\footnote{This freedom of choice will appear again as a gauge freedom of the energy density in \cref{ch:gk}.} At present, $U_i$ can each depend on all positions $\Rgen$; for finite-distance interactions,\footnote{This typically includes bonded terms, and some non-bonded ones. For instance, in this work, we use a truncated Lennard-Jones potential, which would otherwise be classified as non-bonded, but is included here.} which are studied in this thesis, it reduces to a function of a finite neighbourhood $\nbh{i}$, defined further in \cref{ch:ml}.
+
+
+\paragraph{Polarisable Potentials and Electrostatics} The most straightforward way to model electrostatic interactions is a pairwise Coulomb interaction with fixed charges $q$ located at each atom,
+\begin{equation}
+	U_{ij} \propto \frac{q_i q_j}{\magnitude{\R_{ij}}} \, .
+\end{equation}
+However, such a model cannot account for charge transfer. Therefore, many different schemes for the adjustment of charges during dynamics have been proposed, some of which are surveyed in reference~\cite{cddw2009p}. Beyond point charges located at atoms, descriptions of dipoles and higher-order multipoles can also be included in such \newterm{polarisable} \ffs. 
+
+One commonly used class of methods is charge equilibration~\cite{mgs1986p,rg1991p}. The input parameters to such a scheme are then \ff parameters, or can be predicted based on atomic environments~\cite{b2021q}.
+
+\paragraph{Reactive Forcefields} Once bonds are introduced, the modeling of bond breaking and formation, and therefore chemical reactions becomes feasible, leading to \newterm{reactive} \ffs~\cite{psaa2015p}, defined as a combination of non-bonded and bonded terms with electrostatics.
+
+Currently used reactive \ffs, such as ReaxFF~\cite{ddlg2001p,shgd2016p}, COMB~\cite{ysp2007p,ldps2012p}, MEAM~\cite{b1987p} and many others surveyed in reference~\cite{psaa2015p},\footnote{In the interest of brevity, we have not discussed \ffs focusing on biomolecular simulations, such as AMBER and CHARMM. An overview is given in reference~\cite{pc2003p}.} contain a multitude of different terms and corrections. For instance, ReaxFF is defined as~\cite{shgd2016p}
+\begin{align}
+	U &= U_{\text{bond}} + U_{\text{over}} + U_{\text{angle}} + U_{\text{torsion}} \\
+	  &\quad+ U_{\text{vdW}} + U_{\text{Coulomb}} \, ,
+\end{align}
+respectively describing bond-related interactions,\footnote{Similar in concept to the Tersoff potential described above.} penalising over-coordination,\footnote{Assigning higher energy to unphysical situations where, for instance, a carbon atom with more than four bonds.} computing angular and torsional contributions, non-bonded Van der Waals interactions, pairwise Coulomb interactions, and system-specific terms. In the classification from above, the latter two---Van der Waals and Coulomb---terms are non-bonded interactions, the remainder are considered bonded.
+
+\paragraph{Parametrisation} Each term in a \ff expression depends on a number of parameters, on the order of \num{100} in the case of ReaxFF. Parametrising such a \ff for a new material is therefore a non-trivial task, requiring global optimisation schemes and a well-curated database of reference results.
+In the case of ReaxFF, recent efforts have been made to make use of modern \ml frameworks with support for \ad, allowing the use of gradient descent methods for optimisation~\cite{dycg2021p,krma2022p}. 
+Once parametrisation for a particular material, or class of materials, is complete, \ffs often display good transferability and robustness, as many physical mechanisms are modeled explicitly. For instance, nuclear repulsion is typically included directly in the energy expression, avoiding undefined behaviour for configurations where interatomic distances are smaller than the ones seen during training.
+
+\paragraph{Machine-Learning Potentials} In parallel to the development of \ffs, and in tandem with increasing computational capabilities and the continuing development of first-principles methods, an alternative approach to the design of \ffs was developed: The use of general function interpolation, or \newterm{regression} (see \cref{ch:ml}), techniques for the reconstruction of \pes based on reference calculations.
+
+Early \glsfirst{mlp} approaches focused on interpolating the \pes in between a grid of first-principles calculations, based on the coordinates of the system at hand, and therefore limited to relatively small systems, in line with available first-principles data~\cite{bbh1986q,dnu1991q,hhlr1992q,hhr1999q}.
+Representations (see \cref{part:representations}) for high-dimensional systems appeared a decade later~\cite{lhsr2006q,bp2007q,bpkc2010q}, and constitute an active field of study today~\cite{ukkm2020q,uctm2021q,pt2021q}.
+
+In such approaches, the explicit modeling of physical interactions, based on chemical insights, intuition, or approximations, which characterises \ffs is replaced, or augmented, by fitting a flexible functional form directly to data. This brings advantages and disadvantages: On the one hand, such models can be highly expressive and model mechanisms present in the data, but not known at the time of \mlp construction, and can be systematically improved, at least in principle, by adding data. On the other hand, lacking explicit physical mechanisms can impact transferability and stability in situations not present in the training data. A recent discussion of stability in \md can be found in reference~\cite{fwgj2022a}; see also \cref{ch:ml}.
+
+Many concepts from \ff development have been included in \mlps. For instance, a majority of models\footnote{Other approaches are possible, for instance the direct prediction of forces~\cite{ctsm2017q,csmt2018q,csmt2019q} in the gradient domain.} are constructed based on the additive ansatz of \cref{eq:ff-ui}, which will be discussed further in \cref{sec:ml-mlps}. Some \mlps include interaction terms from \ffs in their architecture; a paradigmatic example is SpookyNet~\cite{ucsm2021q}, which was recently used for a large-scale biomolecular simulation~\cite{ustm2022a}.
+
+While currently available \mlps are typically less computationally efficient than \ffs, efforts have been made to close the gap~\cite{xrh2021a,jxvk2022a,pomk2023q}; efforts to include recently developed mechanisms from \mlps, such as message passing, into \ffs have also been made~\cite{xgzw2021q}. Further convergence on shared methods is anticipated as a future development.
+
+\mlps will be discussed further in \cref{ch:ml}.

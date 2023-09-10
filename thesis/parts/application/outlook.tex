@@ -1,0 +1,156 @@
+%!TEX root = ../../da.tex
+
+\chapter{Additional Materials}
+\label{ch:gk-out}
+
+\Cref{ch:gk-model,ch:gk-conv,ch:gk-res} were dedicated to validating the heat flux formulations developed in \cref{ch:gk-hf} using the SchNet \mpnn and zirconia.
+We can now turn our attention to a more recently developed \glp, the equivariant transformer \sok~\cite{fum2022q},\footnote{Implemented using \jax in \mlff~\cite{mlff}.} and other materials, to further explore the applicability of \glps to the task of computing thermal conductivities with the \gk method.
+
+In particular, we investigate the regime of high anharmonicity and consequently low thermal conductivity with \ch{SnSe}, and the regime of low anharmonicity and high thermal conductivity with \ch{Si}. The latter case presents a challenge for the \gk method, as low anharmonicity implies long phonon lifetimes and mean free paths, and hence large simulation duration and simulation cell size~\cite{mjnc2011t,hsdg2012t}. It can therefore serve to probe the limits of the implementation of the \gk method developed for this thesis.
+
+Additionally, alternative approaches for obtaining training data are explored. 
+For \ch{SnSe} (\cref{sec:gk-snse}), we make use of a dataset created in a recent work by Knoop~\etal~\cite{kpsc2023t}, who performed a large-scale study of strongly anharmonic materials with the \gls{aigk} approach. They computed $\kappa$ at \qty{300}{K} for \num{24} materials with experimentally measured thermal conductivities, as well as \num{34} additional materials where no such measurements are available.
+For each material, the dataset\footnote{Available on the NOMAD repository~\cite{kpsc2023t-data}.} contains the trajectories used to computed thermal conductivities, i.e., differing numbers of $NVE$ simulations with up to \qty{60}{ps} duration each, as well as short $NVT$ trajectories at different volumes with $\approx \num{3000}$ total calculations used for thermalisation and determination of lattice constants. 
+We use \emph{only} the latter for training and validation,\footnote{Additionally, one of the $NVE$ trajectories is used for comparing \vdos.} and then perform \gk calculations with the resulting \glps.
+For \ch{Si} (\cref{sec:gk-si}), training samples are created with a stochastic phase-space sampling scheme that does not require \aimd at all.
+
+\section{Tin Selenide}
+\label{sec:gk-snse}
+
+The first investigated material is tin selenide (\ch{SnSe}), which features low thermal conductivity and high anharmonicity ($\anha{=}0.35$ at \qty{300}{K}~\cite{k2021t}).
+In addition to the work by Knoop~\etal, this material has been previously investigated theoretically with a \gls{fcp} by Brorsson~\etal~\cite{bhke2021t}, a \mlp using \glspl{mtp} by Liu~\etal~\cite{lqzg2021q}, as well as in a number of experiments surveyed by Wei~\etal~\cite{wbcr2016t}.
+
+\clearpage
+\paragraph{Training}
+\marginnote[2\baselineskip]{Model training for \ch{SnSe} was carried out by Florian Knoop. All presented results were computed by me.}
+The model was trained on \aimd $NVT$ thermalisation trajectories at \qty{300}{K}, performed by Knoop~\etal~\cite{kpsc2023t}. All trajectories were combined, yielding an overall dataset of \num{3489} structures at four different volumes. From that dataset, \num{2400} random samples were used for training, \num{600} for validation, and the remainder for testing.
+
+The number of interaction steps $\interactions$ is varied from $\interactions{=}1$ up to $\interactions{=}3$. We fix the cutoff radius to $\cutoff{=}\qty{5}{\angstrom}$, the embedding dimension to $F{=}132$ and the maximal degree in the equivariant branch to $l_{\text{max}}{=}3$. Non-local corrections in \sok are not used, as the \glp framework as defined in \cref{ch:glps} does not describe non-local models, and consequently, no heat flux is available.
+
+The model is trained by minimising a joint loss of the potential energy and forces
+with loss weightings of \num{0.01} and \num{0.99} respectively, using the ADAM optimiser~\cite{kb2014m}. The training is stopped after \num{2500} epochs, with a batch size of \num{10}. After each epoch, the performance of the current model is evaluated on the validation data and the best-performing model is saved for production. The initial learning is set to $10^{-3}$ and is reduced every $100$k steps using exponential learning rate decay with a decay factor of $0.7$. No early stopping is employed. Training times on a single Nvidia A100 \qty{40}{GB} \gls{gpu} range from $2$h$54$min for $\interactions{=}1$ up to $6$h$46$min for $\interactions{=}3$.
+
+\paragraph{Testing}
+First, errors on the test set were evaluated. They can be found in \cref{tab:si-snse_errors_m1,tab:si-snse_errors_m2,tab:si-snse_errors_m3}. For all $\interactions$, errors are lower than reported by Liu \etal~\cite{lqzg2021q}. While going from $\interactions{=}1$ to $\interactions{=}2$ yields a large improvement in accuracy, $\interactions{=}3$ only yields minor improvements.
+
+To further test the model, the \vdos and phonon band structure are compared with results obtained with \aims.
+The results can be seen in \cref{fig:gko_snse_vdos,fig:gko_snse_phonons}: For $\interactions{=}2,3$ \sok is in excellent agreement with results obtained with \dft.
+
+
+\paragraph{Thermal Conductivity}
+Finally, we can proceed to \gk calculations.
+Following the overall workflow developed for the previous sections, approximately cubic simulation cells at different sizes were constructed from the primitive cell at \qty{300}{K}\footnote{Lattice constants \qty{11.634}{\angstrom}, \qty{4.196}{\angstrom}, and \qty{4.404}{\angstrom}.} obtained by Knoop~\etal,  and thermalised in the $NVT$ ensemble for \qty{0.2}{ns}. From the resulting trajectory, starting configurations for \num{11} trajectories were extracted.
+Finding that $\snsecc$ yield converged results (see \cref{fig:gko_snse_kappa_convergence_N_t}), we ran \num{11} \md simulations using the \texttt{glp} package, computing $\J$ at every step ($\dt{=}\qty{4}{fs}$).
+
+\Cref{tab:gko_snse_kappa} shows the result:  For $\interactions{=}2,3$, the \glp is in excellent agreement with the work by Brorsson~\etal~\cite{bhke2021t}, which uses a \gls{fcp}.
+A larger difference is observed with the work by Liu~\etal~\cite{lqzg2021q}, who, however, use the \gls{pbe} exchange-correlation functional, as opposed to PBEsol, which was used for the present work.
+The observed thermal conductivity is consistent with experiments,\footnote[][-6\baselineskip]{The comparatively large variance in quoted experimental values is due, in part, to the difficulty of obtaining pure single crystals of \ch{SnSe}. For instance, Zhao~\etal~\cite{zldk2014t} reported an ultralow thermal conductivity, but later criticism by Wei~\etal~\cite{wbcr2016t} states that these results are not intrinsic to pure \ch{SnSe}, as sample density does not match the expected value.} as well as the size-extrapolated \dft result of Knoop~\etal~\cite{kpsc2023t}.
+The anisotropy of $\tk$ in \ch{SnSe} is captured as well.
+
+\begin{table*}
+    \caption{Thermal conductivity of \ch{SnSe} at \qty{300}{K}. The right-hand side of the table shows the components of $\tk$.}
+    \input{table/gk/snse_kappa}
+    \label{tab:gko_snse_kappa}
+\end{table*}
+
+\section{Silicon}
+\label{sec:gk-si}
+
+
+% Theory:
+% Ab initio
+% Carbogno~\etal~\cite{crs2017t}, aiGK + Extrapolation
+% Broido~\etal~\cite{bmms2007t}, ai+BTE, <=300K
+% Plata~\etal~\cite{pnnc2017t}, ai+BTE 300K
+
+% FFs
+% He~\etal~\cite{hsdg2012t}, Tersoff-FF (Review of previous work; discuss convergence) @ 300K
+% Howell~\cite{h2012t}, SW-FF (Compare GK and NEMD) @ 500K and 1000K
+% Dong~\cite{dfha2018t}, Tersoff-FF (Compare GK, NEMD) @ 300K (claim convergence @ 1728)
+% Fan~\etal~\cite{fpdh2015t}, Tersoff @ 500K ("essentially no size dependence", Td = 200ns)
+% Carbogno~\etal~\cite{crs2017t}, Tersoff @ 300K and 1000K (12ns, 1728 and 4096 respectively)
+% Schelling~\etal~\cite{spk2002t}, SW @ 1000K (compare w/ NEMD) (3.3-4.1ns, 6ns at 1728) finding 1728 atoms sufficient
+
+% MLPs
+% Li~\etal~\cite{lll2020q}, DeepPot-SE (GK@1000K, otherwise ALAMODE)
+% Qian~\etal~\cite{qpwy2019q}, GAP (trained w/ sampling), GK and BTE 100K-600K
+
+% Experiments:
+% Shanks~\etal~\cite{smsd1963t} Natural, 300-1400
+% Glassbrenner~\etal~\cite{gs1964t}, Natural, 200-1500
+% Ho~\etal~\cite{hpl1972t}, Natural, 0-1700
+% Fulkerson~\etal~\cite{fmgm1968t}, Si28, 100-1300
+
+% Not used here but relevant:
+% Kremer~\etal~\cite{kgtp2004t}, Si28+Natural, <300
+% Ruf~\etal~\cite{rhds2000t,rhds2003t}, Si28+nat, <300
+
+
+After investigating a material with low thermal conductivity, we now discuss \ch{Si}, a material with high thermal conductivity and low anharmonicity ($\anha = 0.18$ at \qty{400}{K}). Thermal transport in \ch{Si} has been studied extensively in the past, both theoretically with first-principles methods~\cite{bmms2007t,crs2017t,pnnc2017t}, \ffs~\cite{hsdg2012t,h2012t,dfha2018t,fpdh2015t,crs2017t} and \mlps~\cite{qpwy2019q,lll2020q}, as well as experimentally~\cite{smsd1963t,gs1964t,fmgm1968t,hpl1972t,rhds2000t,rhds2003t,kgtp2004t}. And overview of reported values for $\kappa$ is given in \cref{tab:kappa-si}.
+
+\paragraph{Convergence}
+Convergence issues for the \gk method \ffs and \aigk due to low anharmonicity have been discussed previously.
+
+He~\etal~\cite{hsdg2012t} review prior work with \ffs and perform a convergence study at \qty{300}{K} with the Tersoff \ff, finding that at least $N{=}64000$ atoms and on the order of $\td{=}\qty{10}{ns}$ of simulation time per trajectory are required. Also working with the Tersoff \ff, Dong~\etal~\cite{dfha2018t} report convergence with $N{=}1728$ and $\td{=}\qty{10}{ns}$ at \qty{300}{K}. Fan~\etal~\cite{fpdh2015t} observe no significant size dependence at \qty{500}{K} with a total simulation time\footnote{$\Td\defas\nens\td$.} $\Td{=}\qty{200}{ns}$. Carbogno~\etal~\cite{crs2017t} report convergence with approximately \qty{12}{ns} and $N{=}1728$ at \qty{300}{K} and $N{=}4096$ at \qty{1000}{K}.
+
+For the \sw \ff, Howell~\cite{h2012t} find that $N{=}1728$ and $\Td{\geq}\qty{80}{ns}$ at \qty{500}{K} and $\Td{=}\qty{60}{ns}$ at \qty{1000}{K} are sufficient. Also for the \sw \ff, Schelling \etal~\cite{spk2002t} determine $N{=}1728$ and $\Td{=}\qtyrange{3}{6}{ns}$ as converged.
+
+In the case of \aigk, Carbogno~\etal~\cite{crs2017t} develop an extrapolation scheme to correct finite-size effects, using $N{=}96$ atoms and a total simulation duration of $\Td{=}\qty{0.2}{ns}$ in the \aimd trajectories. The extrapolation technique is stated to be responsible for up to \qty{50}{\percent} of thermal conductivity at low temperatures with these settings.
+
+For \mlps, Qian~\etal~\cite{qpwy2019q} use a \gls{gap} trained with data obtained via stochastic sampling of normal modes, and compute thermal conductivity both with a \gls{bte} approach and the \gk method. No information on convergence is given. Another \mlp work by Li~\etal~\cite{lll2020q} uses a \gls{bte} approach~\cite{tgt2014t} for temperatures below \qty{1000}{K}, and the \gk method at \qty{1200}{K} with $N{=}20000$; simulation duration is not given.
+
+\newthought{In summary, no clear} consensus on convergence for \ffs and \mlps can be identified, beyond requiring at least $N{=}1728$ atoms and approximately \qty{10}{ns} of simulation time per trajectory. Anticipating challenging convergence behaviour, and aiming to compare with results by Carbogno~\etal~\cite{crs2017t}, we therefore choose \qty{400}{K}, rather than room temperature, as target temperature.
+
+\paragraph{Training}
+Training data for \ch{Si} was generated with a stochastic phase-space sampling scheme described in reference~\cite{shm2017t}, generating independent samples at different temperatures based on harmonic normal modes. For training data, samples were generated at \qtyrange{200}{800}{K} in steps of \qty{200}{K}, stretching a \num{216}-atom supercell of the \qty{0}{K} primitive cell with \num{7} different uniform strains from $0.95$ to $1.25$. For each of the \num{28} possible combinations, \num{64} samples were generated, yielding a total of \num{1792} geometries, which were computed with \aims, the light basis sets, the PBEsol~\cite{przb2008t} exchange-correlation functional, and a $2\times2\times2$ $k$-grid. As a test set, the same procedure was repeated for \qtyrange{300}{900}{K} with \num{5} strains from $0.9$ to $1.3$ and \num{32} samples each, generating \num{320} test structures. In total, approximately \num{2200} first-principles calculations were performed. A similar scheme was used by Qian~\etal~\cite{qpwy2019q}.
+
+Training proceeded as described previously for \ch{SnSe}, using \num{1200} structures for training, and \num{300} for validation. The maximum number of epochs was set to \num{3000}. Training on an Nvidia V100 \qty{32}{GB} \gls{gpu} took $2$h$52$min for $\interactions{=}1$, $5$h$28$min for $\interactions{=}2$, and $8$h$15$min for $\interactions{=}3$.
+
+\paragraph{Testing}
+% ==> l1_cu5.0_ef_1/module/test_on_test.txt <==
+% energy (meV): RMSE: 92.4688 / MAE: 71.8210 / maxAE: 295.3312 / R$^2$: 99.9784
+% forces (meV/Å): RMSE: 45.5592 / MAE: 35.1807 / maxAE: 330.7921 / R$^2$: 99.7029
+% stress (kbar): RMSE: 0.8973 / MAE: 0.6349 / maxAE: 2.5944 / R$^2$: 99.8320
+
+% ==> l2_cu5.0_ef_1/module/test_on_test.txt <==
+% energy (meV): RMSE: 42.3110 / MAE: 33.1063 / maxAE: 153.6074 / R$^2$: 99.9955
+% forces (meV/Å): RMSE: 23.6281 / MAE: 18.0433 / maxAE: 274.2255 / R$^2$: 99.9201
+% stress (kbar): RMSE: 0.9403 / MAE: 0.6905 / maxAE: 2.2113 / R$^2$: 99.8155
+
+% ==> l3_cu5.0_ef_1/module/test_on_test.txt <==
+% energy (meV): RMSE: 34.6730 / MAE: 25.9488 / maxAE: 150.2103 / R$^2$: 99.9970
+% forces (meV/Å): RMSE: 16.7011 / MAE: 12.6485 / maxAE: 142.6790 / R$^2$: 99.9601
+% stress (kbar): RMSE: 0.9720 / MAE: 0.6784 / maxAE: 2.9101 / R$^2$: 99.8029
+Errors on the test set were evaluated first and are given in \cref{tab:si-si_errors_m1,tab:si-si_errors_m2,tab:si-si_errors_m3}. For $\interactions{=}2,3$, errors are comparable to \gls{gap} as reported in reference~\cite{qpwy2019q}, where the test set is sampled at the same temperatures as training, and only two temperatures are used.
+
+Next, the phonon band structure, displayed in \cref{fig:gko_si_phonons}, is computed for all three models. For $\interactions{=}2,3$, good agreement with \aims is found. Anticipating high computational cost due to convergence requirements, we therefore continue with $\interactions{=}2$.
+
+\paragraph{Thermal Conductivity}
+With the final \scare{production} $\interactions{=}2$ model, \gk calculations at \qty{400}{K} were performed, using the \qty{0}{K} lattice obtained with \aims for simplicity.\footnote{The lattice constant is \qty{5.444}{\angstrom}. Dependence of results on lattice parameters was checked; no strong impact was observed.} 
+From an $8$-atom cubic primitive cell, supercells with $512$, $1728$, and $4096$ were constructed and thermalised with the Langevin thermostat for \qty{0.4}{ns}, extracting \num{11} starting configurations for \gk runs.
+For each, $NVE$ \md with \qty{20}{ns} duration and a timestep of $\dt{=}\qty{2}{fs}$ was run, computing the heat flux every \qty{20}{fs}.\footnote{With these settings, using \glpc and an Nvidia V100 \qty{32}{GB} \gls{gpu}, one trajectory at $N{=}4096$ requires approximately \num{200} \gls{gpu} hours. The calculation of the heat flux, responsible for half the time, can be parallelised across timesteps for efficiency. $N{=}1728$ and $N{=}512$ require 100 and 50 \gls{gpu} hours respectively.}
+% 100 GPUh + 43 GPUh
+% 46 GPUh + 36 = 96
+% 13 GPUh + 16 = 45
+
+\Cref{fig:gko_si_kappa_convergence_N_t} shows convergence behaviour in both simulation cell size $N$ and simulation duration $\td$. For sufficiently high values of $\td$, a systematic increase of $\kappa$ with simulation cell size is observed, which has not yet terminated at the largest $N$ investigated. With the current implementation of the heat flux in \glpc, and \qty{32}{GB} of \gls{gpu} memory, larger simulation cells could not be studied.
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{img/plot/gk/si_kappa_convergence_N_t.pdf}
+  \caption[][-0.5\baselineskip]{
+  $\kappa$ for \ch{Si} at \qty{400}{K} for different choices of $N$ and $\td$.
+  Error bars indicate the standard error across trajectories.
+  $N$ is shown as $N^{1/3}$, which is proportional to the length scale of the simulation cell.
+  For each choice of $N$, $\td$ from \qtyrange{1}{20}{ns} are shown with a horizontal offset.
+  Largest simulation is indicated, the associated standard error is also shown as a shaded band.
+  }
+  \label{fig:gko_si_kappa_convergence_N_t}
+\end{figure}
+
+Therefore, no converged value for $\kappa$ at \qty{400}{K} can be reported here. The value obtained for $N{=}4096$ and $\td{=}\qty{20}{ns}$, \qty{56\pm4}{W\per(m.K)}, underestimates experimental values, as shown in \cref{tab:kappa-si}, by \qty{45}{\percent} and the extrapolated \aigk result by Carbogno~\etal~\cite{crs2017t} by \qty{55}{\percent}. Another \mlp using the \gk method, reported by Qian~\etal~\cite{qpwy2019q}, also underestimates $\kappa$, albeit by only \qty{24}{\percent}.
+
+\input{table/gk/si_kappa}
+\vspace{\baselineskip}
+
+\noindent
+Setting aside the issue of convergence, our model appears to underestimate thermal conductivity obtained via the \gk method in this case. Comparing \gls{bte} and \gls{gk} approaches with the \gls{gap} \mlp, Qian~\etal{} observe a difference of around \qty{22}{\percent} at \qty{400}{K}, with the \gk method underestimating $\kappa$ as well. As a similar sampling scheme is used in their work, this may indicate a systematic bias due to not relying on \aimd to generate samples. As all training and test data, as well as the phonon band structure used for model validation, rely on the harmonic approximation, biased representation of anharmonicity may have gone unnoticed. A comparison of training methods, and calculation of results with \gls{bte} methods, or the extrapolation scheme by Carbogno~\etal~\cite{crs2017t} and Knoop~\etal~\cite{kpsc2023t,kpsc2023t}, is left for future work.
