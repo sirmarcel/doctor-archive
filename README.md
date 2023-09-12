@@ -17,10 +17,10 @@ Each subfolder in this repository contains a `README.md` with additional informa
 
 The plots are largely based on data published previous in:
 
-- https://github.com/sirmarcel/gknet-archive [doi:10.5281/zenodo.7767432](https://doi.org/10.5281/zenodo.7767432)
-- https://github.com/sirmarcel/glp-archive [doi:10.5281/zenodo.7852530](https://doi.org/10.5281/zenodo.7852530)
+- https://github.com/sirmarcel/gknet-archive ([doi:10.5281/zenodo.7767432](https://doi.org/10.5281/zenodo.7767432))
+- https://github.com/sirmarcel/glp-archive ([doi:10.5281/zenodo.7852530](https://doi.org/10.5281/zenodo.7852530))
 
-Any missing data can be found in this repository.
+Any additional data required by this thesis can be found in this repository.
 
 ## Versions
 
