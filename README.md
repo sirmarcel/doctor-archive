@@ -15,7 +15,7 @@ Each subfolder in this repository contains a `README.md` with additional informa
 
 ## Related other repositories
 
-The plots are largely based on data published previous in:
+The plots are largely based on data published previously in:
 
 - https://github.com/sirmarcel/gknet-archive ([doi:10.5281/zenodo.7767432](https://doi.org/10.5281/zenodo.7767432))
 - https://github.com/sirmarcel/glp-archive ([doi:10.5281/zenodo.7852530](https://doi.org/10.5281/zenodo.7852530))
